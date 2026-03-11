@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashing Lights — Kanye West</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,700;1,300&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05060a;--term-bg:#080910;--term-border:#181b2c;
+  --green:#00ff88;--green-dim:rgba(0,255,136,0.07);
+  --amber:#ffaa00;--cyan:#00e5ff;--white:#e8eaf0;
+  --muted:#373c57;--muted2:#1e2238;--spotify:#1DB954;
+}
+html,body{height:100%;background:var(--bg);font-family:'Share Tech Mono',monospace;overflow:hidden;color:var(--white)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:999;opacity:0.28;animation:grain .35s steps(1) infinite}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-2%,-2%)}20%{transform:translate(2%,2%)}
+  30%{transform:translate(-1%,1%)}40%{transform:translate(1%,-1%)}50%{transform:translate(-2%,1%)}
+  60%{transform:translate(2%,-2%)}70%{transform:translate(0,2%)}80%{transform:translate(-1%,0)}90%{transform:translate(1%,1%)}}
+
+.glow-orb{position:fixed;width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,255,136,0.05) 0%,transparent 65%);
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;transition:background .6s}
+.flash-overlay{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:998;transition:opacity .04s}
+.flash-overlay.flash{opacity:0.09}
+
+/* ── LAYOUT ── */
+.scene{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:12px 12px 0}
+
+/* ── TERMINAL ── */
+.terminal{width:100%;max-width:920px;flex:1;min-height:0;background:var(--term-bg);
+  border:1px solid var(--term-border);border-radius:10px 10px 0 0;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px #ffffff05,0 30px 90px rgba(0,0,0,0.95);overflow:hidden}
+
+.titlebar{background:#0e1020;border-bottom:1px solid var(--term-border);padding:10px 16px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dots{display:flex;gap:7px}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
+.titlebar-text{flex:1;text-align:center;font-size:11px;color:var(--muted);letter-spacing:.1em}
+.titlebar-text em{color:var(--green);font-style:normal}
+
+.terminal-body{flex:1;min-height:0;overflow:hidden;padding:16px 24px 12px;display:flex;flex-direction:column}
+
+.hdr{font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px solid #14172a;padding-bottom:10px;margin-bottom:12px;flex-shrink:0}
+.hdr .cmd{color:var(--green)}.hdr .val{color:var(--cyan)}
+.track-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);letter-spacing:.07em;display:block;margin:2px 0}
+
+/* ── CONTENT ROW ── */
+.content-row{flex:1;min-height:0;display:flex;gap:16px;overflow:hidden}
+
+/* Lyrics */
+.lyrics-col{flex:1;min-width:0;position:relative;overflow:hidden}
+.section-label{position:absolute;top:0;left:0;font-size:10px;color:var(--amber);
+  letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .35s}
+.section-label.show{opacity:1}
+.lyric-prev{position:absolute;top:20px;left:0;right:0;font-family:'DM Sans',sans-serif;
+  font-size:clamp(11px,1.6vw,15px);font-weight:300;font-style:italic;color:var(--muted);
+  opacity:0;transition:opacity .4s;line-height:1.5}
+.lyric-prev.show{opacity:1}
+.lyric-display{position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:center;align-items:flex-start;gap:6px}
+.lyric-line{font-family:'DM Sans',sans-serif;font-size:clamp(18px,3vw,34px);
+  font-weight:700;color:var(--white);line-height:1.25;opacity:0;
+  transform:translateY(18px) skewX(-1.5deg);transition:none;max-width:100%;letter-spacing:-.01em;
+  text-shadow:0 0 35px rgba(0,255,136,0.12)}
+.lyric-line.active{opacity:1;transform:translateY(0) skewX(0);
+  transition:opacity .22s ease,transform .38s cubic-bezier(.22,1,.36,1)}
+.lyric-line.exit{opacity:0;transform:translateY(-16px) skewX(1.5deg);
+  transition:opacity .18s ease,transform .28s ease}
+.idle-msg{position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:center;align-items:flex-start;gap:8px;color:var(--muted);font-size:11px}
+.idle-big{font-family:'Bebas Neue',sans-serif;font-size:48px;color:#181b2c;letter-spacing:.08em}
+.cursor-blink{display:inline-block;width:9px;height:16px;background:var(--green);
+  animation:blink 1s step-end infinite;vertical-align:middle;margin-left:3px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.timestamp{position:absolute;bottom:0;right:0;font-size:10px;color:var(--muted);letter-spacing:.05em}
+.timestamp .cur{color:var(--green)}
+
+/* ── RIGHT PANEL ── */
+.right-col{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+
+/* Spotify embed */
+.spotify-panel{background:#0d0f1c;border:1px solid var(--term-border);border-radius:8px;overflow:hidden;flex-shrink:0}
+.panel-title{padding:7px 10px;font-size:10px;color:var(--muted);letter-spacing:.08em;
+  border-bottom:1px solid var(--term-border);display:flex;align-items:center;gap:6px}
+.panel-title svg{flex-shrink:0}
+
+/* ── LYRICS LIST PANEL ── */
+.lyrics-list-panel{
+  background:#0d0f1c;border:1px solid var(--term-border);border-radius:8px;
+  flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;
+  position:relative;
+}
+.lyrics-list-title{
+  padding:7px 10px;font-size:10px;color:var(--muted);letter-spacing:.1em;
+  border-bottom:1px solid var(--term-border);flex-shrink:0;display:flex;align-items:center;gap:6px;
+  position:relative;z-index:3;background:#0d0f1c;
+}
+.lyrics-list-title em{color:var(--green);font-style:normal}
+
+/* Real scrollable container */
+.lyrics-list-scroll{
+  flex:1;min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  position:relative;
+  scroll-behavior:smooth;
+  /* custom thin scrollbar */
+  scrollbar-width:thin;
+  scrollbar-color:var(--muted2) transparent;
+}
+.lyrics-list-scroll::-webkit-scrollbar{width:3px}
+.lyrics-list-scroll::-webkit-scrollbar-track{background:transparent}
+.lyrics-list-scroll::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px}
+.lyrics-list-scroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* top/bottom fade masks — sit above the scroll area, pointer-events:none */
+.lyrics-list-panel::before,
+.lyrics-list-panel::after{
+  content:'';position:absolute;left:0;right:0;height:40px;pointer-events:none;z-index:2;
+}
+.lyrics-list-panel::before{
+  top:28px; /* below title bar */
+  background:linear-gradient(to bottom,#0d0f1c 30%,transparent);
+}
+.lyrics-list-panel::after{
+  bottom:0;
+  background:linear-gradient(to top,#0d0f1c 30%,transparent);
+}
+
+/* inner padding so first/last items can center */
+.lyrics-list-inner{
+  display:flex;flex-direction:column;
+  padding:50px 0 50px; /* top/bottom room so active line can scroll to center */
+}
+
+/* Each row */
+.ll-row{
+  padding:6px 14px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  font-weight:400;
+  color:var(--muted);
+  line-height:1.55;
+  letter-spacing:.01em;
+  transition:
+    color .3s ease,
+    opacity .3s ease,
+    font-weight .25s ease,
+    background .2s ease,
+    padding-left .25s ease;
+  opacity:.38;
+  cursor:pointer;
+  border-left:2px solid transparent;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ll-row:hover{
+  opacity:.75;
+  color:var(--white);
+  background:rgba(255,255,255,0.03);
+  padding-left:18px;
+}
+
+/* active = currently playing line */
+.ll-row.ll-active{
+  color:var(--green);
+  font-weight:700;
+  font-size:13px;
+  opacity:1;
+  border-left:2px solid var(--green);
+  padding-left:16px;
+  background:rgba(0,255,136,0.04);
+  text-shadow:0 0 16px rgba(0,255,136,0.3);
+}
+
+/* ±2 neighbours */
+.ll-row.ll-near{
+  color:var(--white);
+  opacity:.62;
+  font-weight:500;
+}
+
+/* section header dividers */
+.ll-row.ll-section{
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px;
+  color:var(--amber);
+  opacity:.55;
+  letter-spacing:.14em;
+  padding:10px 14px 3px;
+  cursor:default;
+  border-left:2px solid transparent;
+  white-space:nowrap;
+}
+.ll-row.ll-section:hover{
+  background:transparent;padding-left:14px;opacity:.55;
+}
+.ll-row.ll-section.ll-active,
+.ll-row.ll-section.ll-near{
+  color:var(--amber);opacity:.9;font-size:9px;font-weight:400;
+  text-shadow:none;border-left-color:transparent;background:transparent;
+}
+
+/* pop-in animation on active */
+@keyframes llPop{
+  0%  {opacity:.5;transform:translateX(-3px)}
+  60% {transform:translateX(1px)}
+  100%{opacity:1;transform:translateX(0)}
+}
+.ll-row.ll-active{animation:llPop .3s cubic-bezier(.22,1,.36,1) both}
+
+/* ── PLAYER DOCK ── */
+.player-dock{width:100%;max-width:920px;background:#0b0d18;
+  border:1px solid var(--term-border);border-top:none;border-radius:0 0 10px 10px;
+  padding-bottom:12px;flex-shrink:0;box-shadow:0 20px 60px rgba(0,0,0,0.9)}
+
+/* Seek bar */
+.seek-wrap{position:relative;height:30px;display:flex;align-items:center;
+  padding:0 16px;cursor:pointer;user-select:none}
+.seek-track{flex:1;height:4px;background:var(--muted2);border-radius:2px;position:relative;transition:height .15s}
+.seek-wrap:hover .seek-track{height:6px}
+.seek-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));
+  border-radius:2px;width:0%;pointer-events:none;box-shadow:0 0 10px rgba(0,255,136,0.4);
+  position:relative;transition:width .1s linear}
+.seek-thumb{position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);opacity:0;transition:opacity .15s;pointer-events:none}
+.seek-wrap:hover .seek-thumb{opacity:1}
+.seek-markers{position:absolute;top:0;bottom:0;left:16px;right:16px;pointer-events:none}
+.s-mark{position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:2px;height:10px;background:rgba(255,170,0,0.35);border-radius:1px}
+.s-mark-lbl{position:absolute;top:0;transform:translate(-50%,-100%);margin-top:-3px;
+  font-size:8px;color:rgba(255,170,0,0.55);letter-spacing:.06em;
+  white-space:nowrap;opacity:0;transition:opacity .15s}
+.seek-wrap:hover .s-mark-lbl{opacity:1}
+.seek-tip{position:absolute;top:4px;transform:translateX(-50%);
+  background:#1a1d2e;border:1px solid var(--term-border);
+  font-size:10px;color:var(--cyan);padding:2px 7px;border-radius:3px;
+  pointer-events:none;opacity:0;white-space:nowrap;transition:opacity .1s}
+.seek-wrap:hover .seek-tip{opacity:1}
+
+/* Controls */
+.controls{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 0;gap:8px;flex-wrap:wrap}
+.ctrl-left{display:flex;align-items:center;gap:10px}
+.ctrl-mid{display:flex;align-items:center;gap:10px}
+.ctrl-right{display:flex;align-items:center;gap:10px}
+.play-btn{background:none;border:1px solid var(--term-border);color:var(--green);
+  font-family:'Share Tech Mono',monospace;font-size:11px;padding:5px 14px;
+  border-radius:4px;cursor:pointer;letter-spacing:.08em;transition:all .2s;white-space:nowrap}
+.play-btn:hover{background:var(--green-dim);border-color:var(--green);box-shadow:0 0 14px rgba(0,255,136,0.12)}
+.sync-btn{background:none;border:1px solid rgba(255,170,0,0.3);color:var(--amber);
+  font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;
+  border-radius:4px;cursor:pointer;letter-spacing:.06em;transition:all .2s;white-space:nowrap}
+.sync-btn:hover{background:rgba(255,170,0,0.07);border-color:var(--amber)}
+.time-lbl{font-size:11px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+.time-lbl .cur{color:var(--green)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px var(--green);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.status-txt{font-size:10px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
+.waveform{display:flex;align-items:center;gap:2px;height:18px}
+.wave-bar{width:2px;background:var(--green);border-radius:1px;height:4px;opacity:.35;transition:height .08s,opacity .08s}
+.vol-wrap{display:flex;align-items:center;gap:5px}
+.vol-icon{font-size:11px;color:var(--muted)}
+.vol-slider{-webkit-appearance:none;appearance:none;width:55px;height:3px;background:var(--muted2);border-radius:2px;outline:none;cursor:pointer}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--spotify);cursor:pointer}
+.kb-hint{font-size:9px;color:var(--muted2);letter-spacing:.04em;display:flex;gap:8px}
+.kb-hint kbd{background:#13162a;border:1px solid var(--muted2);border-radius:2px;padding:1px 4px;color:var(--muted);font-family:inherit}
+
+/* Sync flash */
+@keyframes syncFlash{0%{background:rgba(255,170,0,0.15)}100%{background:transparent}}
+.sync-flash{animation:syncFlash .4s ease-out}
+</style>
+</head>
+<body>
+<div class="flash-overlay" id="flashOverlay"></div>
+<div class="glow-orb" id="glowOrb"></div>
+
+<div class="scene">
+  <div class="terminal">
+    <div class="titlebar">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <div class="titlebar-text"><em>lyrics</em> — flashing_lights.js — Kanye West ft. Dwele</div>
+      <div style="width:52px"></div>
+    </div>
+
+    <div class="terminal-body">
+      <div class="hdr">
+        <span class="cmd">$</span> <span class="val">node flashing_lights.js --player=youtube --sync=auto</span><br>
+        <span class="track-title">FLASHING LIGHTS</span>
+        <span style="color:var(--muted)">Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007) &nbsp;·&nbsp; 3:57</span>
+      </div>
+
+      <div class="content-row">
+        <!-- LYRICS -->
+        <div class="lyrics-col">
+          <div class="section-label" id="sectionLabel"></div>
+          <div class="lyric-prev" id="lyricPrev"></div>
+          <div class="lyric-display" id="lyricDisplay">
+            <div class="idle-msg" id="idleMsg">
+              <div class="idle-big">READY</div>
+              <div>Press <span style="color:var(--green)">▶</span> on the video →<span class="cursor-blink"></span></div>
+              <div style="font-size:9px;color:var(--muted2);margin-top:4px">lyrics auto-sync to YouTube time</div>
+            </div>
+          </div>
+          <div class="timestamp"><span class="cur" id="timeDisplay">0:00</span> / 3:57</div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-col">
+          <!-- YouTube Player -->
+          <div class="spotify-panel">
+            <div class="panel-title">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#ff4444"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.25 3.5-6.25 3.5z"/></svg>
+              <span style="color:#ff4444">YouTube</span>
+              <span style="color:var(--muted)" id="ytStatusLabel">— loading...</span>
+            </div>
+            <div id="yt-player-container" style="width:100%;aspect-ratio:16/9;background:#000;display:block"></div>
+          </div>
+
+          <!-- Lyrics list panel -->
+          <div class="lyrics-list-panel">
+            <div class="lyrics-list-title">
+              <em>▸ LYRICS</em>
+              <span style="color:var(--muted2)">— full track</span>
+            </div>
+            <div class="lyrics-list-scroll" id="llScroll">
+              <div class="lyrics-list-inner" id="llInner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER DOCK -->
+  <div class="player-dock">
+    <div class="seek-wrap" id="seekWrap">
+      <div class="seek-track" id="seekTrack">
+        <div class="seek-fill" id="seekFill"><div class="seek-thumb"></div></div>
+      </div>
+      <div class="seek-markers" id="seekMarkers"></div>
+      <div class="seek-tip" id="seekTip">0:00</div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-left">
+        <div class="status-dot"></div>
+        <span class="status-txt" id="statusText">IDLE</span>
+        <div class="waveform" id="waveformEl"></div>
+      </div>
+      <div class="ctrl-mid">
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶ LYRICS</button>
+        <button class="sync-btn" id="syncBtn" onclick="syncNow()" title="Press when song starts to sync lyrics">⟳ SYNC NOW</button>
+        <span class="time-lbl"><span class="cur" id="timeDock">0:00</span> / 3:57</span>
+      </div>
+      <div class="ctrl-right">
+        <div class="kb-hint">
+          <span><kbd>Space</kbd> play/pause</span>
+          <span><kbd>S</kbd> sync</span>
+          <span><kbd>←</kbd><kbd>→</kbd> ±5s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  FULL LYRICS — exact LRC timestamps from official track
+//  Matched to YouTube: https://youtu.be/ZAz3rnLGthg
+// ═══════════════════════════════════════════════════════════
+// All timestamps sourced from official LRC file [length: 03:57]
+// Matched line-by-line to YouTube: https://youtu.be/ZAz3rnLGthg
+const lyrics = [
+  // ── INTRO — Dwele ─────────────────────────────
+  {t:0.00,  text:"",                                               section:"INTRO — DWELE"},
+  {t:22.62, text:"Flashing lights",                                section:""},
+  {t:27.92, text:"Flashing lights",                                section:""},
+  {t:33.17, text:"Flashing lights",                                section:""},
+  {t:38.49, text:"Flashing lights",                                section:""},
+
+  // ── VERSE 1 — Kanye West ──────────────────────
+  {t:42.62, text:"She don't believe in shootin' stars",            section:"VERSE 1 — KANYE WEST"},
+  {t:45.35, text:"But she believe in shoes and cars",              section:""},
+  {t:48.15, text:"Wood floors in the new apartment",               section:""},
+  {t:50.78, text:"Couture from the store's departments",           section:""},
+  {t:53.44, text:"You more like love to start shit",               section:""},
+  {t:56.12, text:"I'm more of the trips to Florida",               section:""},
+  {t:58.46, text:"Ordered the hors d'oeuvres, views of the water", section:""},
+  {t:61.05, text:"Straight from a page of your favorite author",   section:""},
+  {t:64.61, text:"And the weather so breezy",                      section:""},
+  {t:66.49, text:"Man, why can't life always be this easy?",       section:""},
+  {t:69.10, text:"She in the mirror, dancin' so sleazy",           section:""},
+  {t:71.83, text:"I get a call like, \"Where are you, Yeezy?\"",   section:""},
+  {t:74.56, text:"And try to hit you with the ol-wu-wopte",        section:""},
+  {t:77.05, text:"Till I got flashed by the paparazzi",            section:""},
+  {t:80.28, text:"Damn, these niggas got me",                      section:""},
+  {t:82.42, text:"I hate these niggas more than a Nazi",           section:""},
+
+  // ── CHORUS 1 — Dwele ──────────────────────────
+  {t:83.66, text:"As I recall, I know you love to show off",       section:"CHORUS — DWELE"},
+  {t:88.78, text:"But I never thought that you would take it this far", section:""},
+  {t:94.17, text:"What do I know?",                                section:""},
+  {t:96.87, text:"Flashing lights",                                section:""},
+  {t:99.51, text:"What do I know?",                                section:""},
+  {t:102.21,text:"Flashing lights (Know)",                         section:""},
+
+  // ── VERSE 2 — Kanye West ──────────────────────
+  {t:107.36,text:"I know it's been a while, sweetheart",           section:"VERSE 2 — KANYE WEST"},
+  {t:109.21,text:"We hardly talk, I was doin' my thing",           section:""},
+  {t:112.65,text:"I know it was foul, baby",                       section:""},
+  {t:114.50,text:"Ay, babe, lately you've been all on my brain",   section:""},
+  {t:117.65,text:"And if somebody woulda told me a month ago",     section:""},
+  {t:120.08,text:"Frontin', though, yo, I wouldn't wanna know",    section:""},
+  {t:123.10,text:"If somebody woulda told me a year ago",          section:""},
+  {t:125.41,text:"It'll go get this difficult",                    section:""},
+  {t:127.71,text:"Feelin' like Katrina with no FEMA",              section:""},
+  {t:130.88,text:"Like Martin with no Gina",                       section:""},
+  {t:133.52,text:"Like a flight with no Visa",                     section:""},
+  {t:135.38,text:"First class with the seat back, I still see ya", section:""},
+  {t:138.31,text:"In my past, you on the other side of the glass", section:""},
+  {t:141.50,text:"Of my memory's museum",                          section:""},
+  {t:143.53,text:"I'm just sayin', hey, Mona Lisa",                section:""},
+  {t:145.78,text:"Come home, you know you can't roam without Caesar", section:""},
+
+  // ── CHORUS 2 — Dwele ──────────────────────────
+  {t:147.25,text:"As I recall, I know you love to show off",       section:"CHORUS — DWELE"},
+  {t:152.42,text:"But I never thought that you would take it this far", section:""},
+  {t:157.76,text:"What do I know?",                                section:""},
+  {t:160.53,text:"Flashing lights",                                section:""},
+  {t:163.19,text:"What do I know?",                                section:""},
+  {t:165.79,text:"Flashing lights (Know)",                         section:""},
+
+  // ── OUTRO — Dwele & Kanye ─────────────────────
+  {t:168.51,text:"As you recall, you know I love to show off",     section:"OUTRO — DWELE & KANYE"},
+  {t:173.60,text:"But you never thought that I would take it this far", section:""},
+  {t:178.96,text:"What do you know?",                              section:""},
+  {t:181.74,text:"Flashing lights",                                section:""},
+  {t:184.32,text:"What do you know?",                              section:""},
+  {t:187.04,text:"Flashing lights (Know)",                         section:""},
+
+  // ── OUTRO INSTRUMENTAL ────────────────────────
+  {t:191.70,text:"♪",                                              section:"OUTRO INSTRUMENTAL"},
+  {t:202.96,text:"Flashing lights",                                section:""},
+  {t:208.29,text:"Flashing lights",                                section:""},
+  {t:215.00,text:"",                                               section:""},
+];
+
+const sections = [
+  {t:22.62,  label:"INTRO"},
+  {t:42.62,  label:"VERSE 1"},
+  {t:83.66,  label:"CHORUS"},
+  {t:107.36, label:"VERSE 2"},
+  {t:147.25, label:"CHORUS"},
+  {t:168.51, label:"OUTRO"},
+];
+
+const TOTAL    = 237; // 3:57
+const YT_ID    = 'ZAz3rnLGthg'; // https://youtu.be/ZAz3rnLGthg
+
+// ─── State ────────────────────────────────────────────────
+let ytPlayer    = null;
+let ytReady     = false;
+let playing     = false;
+let raf         = null;
+let waveTimer   = null;
+let currentIdx  = -1;
+let currentEl   = null;
+let isDragging  = false;
+let dragWasPlay = false;
+
+// ─── DOM ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const seekFill    = $('seekFill');
+const seekTrack   = $('seekTrack');
+const seekWrap    = $('seekWrap');
+const seekTip     = $('seekTip');
+const seekMarkers = $('seekMarkers');
+const timeDisplay = $('timeDisplay');
+const timeDock    = $('timeDock');
+const lyricDisp   = $('lyricDisplay');
+const lyricPrev   = $('lyricPrev');
+const sectionLbl  = $('sectionLabel');
+const idleMsg     = $('idleMsg');
+const playBtn     = $('playBtn');
+const statusText  = $('statusText');
+const flashOver   = $('flashOverlay');
+const glowOrb     = $('glowOrb');
+const waveformEl  = $('waveformEl');
+const ytLabel     = $('ytStatusLabel');
+
+// ─── Waveform ─────────────────────────────────────────────
+for(let i=0;i<20;i++){
+  const b=document.createElement('div');b.className='wave-bar';waveformEl.appendChild(b);
+}
+function startWave(){
+  if(waveTimer)return;
+  const tick=()=>{
+    if(!playing){waveTimer=null;return;}
+    waveformEl.querySelectorAll('.wave-bar').forEach(b=>{
+      b.style.height=(3+Math.random()*13)+'px';
+      b.style.opacity=.25+Math.random()*.75;
+    });
+    waveTimer=setTimeout(tick,75);
+  };
+  waveTimer=setTimeout(tick,75);
+}
+function freezeWave(){
+  clearTimeout(waveTimer);waveTimer=null;
+  waveformEl.querySelectorAll('.wave-bar').forEach(b=>{b.style.height='4px';b.style.opacity='.2';});
+}
+
+// ─── Section markers ──────────────────────────────────────
+sections.forEach(s=>{
+  const pct=(s.t/TOTAL)*100;
+  const m=document.createElement('div');m.className='s-mark';m.style.left=pct+'%';
+  const l=document.createElement('div');l.className='s-mark-lbl';l.textContent=s.label;l.style.left=pct+'%';
+  seekMarkers.appendChild(m);seekMarkers.appendChild(l);
+});
+
+// ─── Seek bar ─────────────────────────────────────────────
+function getPct(clientX){
+  const r=seekTrack.getBoundingClientRect();
+  return Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+}
+
+seekWrap.addEventListener('mousemove',e=>{
+  const pct=getPct(e.clientX);
+  seekTip.textContent=fmt(pct*TOTAL);
+  const wr=seekWrap.getBoundingClientRect(),tr=seekTrack.getBoundingClientRect();
+  seekTip.style.left=(tr.left-wr.left+pct*tr.width)+'px';
+  if(isDragging){
+    seekFill.style.width=(pct*100)+'%';
+    const tf=fmt(pct*TOTAL);timeDisplay.textContent=tf;timeDock.textContent=tf;
+  }
+});
+seekWrap.addEventListener('mousedown',e=>{
+  isDragging=true;dragWasPlay=playing;
+  if(playing){pauseAll();}
+  seekFill.style.width=(getPct(e.clientX)*100)+'%';
+});
+document.addEventListener('mouseup',e=>{
+  if(!isDragging)return;isDragging=false;
+  seekTo(getPct(e.clientX)*TOTAL,dragWasPlay);
+});
+seekWrap.addEventListener('touchstart',e=>{
+  isDragging=true;dragWasPlay=playing;
+  if(playing){pauseAll();}
+},{passive:true});
+seekWrap.addEventListener('touchmove',e=>{
+  if(!isDragging)return;
+  const pct=getPct(e.touches[0].clientX);
+  seekFill.style.width=(pct*100)+'%';
+  const tf=fmt(pct*TOTAL);timeDisplay.textContent=tf;timeDock.textContent=tf;
+},{passive:true});
+seekWrap.addEventListener('touchend',e=>{
+  if(!isDragging)return;isDragging=false;
+  seekTo(getPct(e.changedTouches[0].clientX)*TOTAL,dragWasPlay);
+});
+
+// ─── Helpers ──────────────────────────────────────────────
+function fmt(s){const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,'0')}`}
+function triggerFlash(){flashOver.classList.add('flash');setTimeout(()=>flashOver.classList.remove('flash'),65);}
+function safeGetTime(){
+  if(ytReady){try{return ytPlayer.getCurrentTime();}catch(e){}}
+  return 0;
+}
+
+// ─── Core play/pause/seek ─────────────────────────────────
+function pauseAll(){
+  playing=false;
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  freezeWave();
+  if(ytReady) ytPlayer.pauseVideo();
+  playBtn.textContent='▶ PLAY';
+  statusText.textContent='PAUSED';
+}
+
+function playAll(){
+  playing=true;
+  startWave();
+  if(ytReady) ytPlayer.playVideo();
+  playBtn.textContent='⏸ PAUSE';
+  statusText.textContent='PLAYING';
+  if(!raf) raf=requestAnimationFrame(loop);
+}
+
+function seekTo(t,resume){
+  const c=Math.max(0,Math.min(TOTAL,t));
+  currentIdx=-1;
+  if(currentEl){currentEl.remove();currentEl=null;}
+  lyricPrev.textContent='';lyricPrev.classList.remove('show');
+  seekFill.style.width=(c/TOTAL*100)+'%';
+  timeDisplay.textContent=fmt(c);timeDock.textContent=fmt(c);
+  if(c<1&&idleMsg) idleMsg.style.display='flex';
+  if(ytReady){ytPlayer.seekTo(c,true);}
+  if(resume) playAll();
+  else {
+    playing=false;
+    playBtn.textContent='▶ PLAY';
+    statusText.textContent='PAUSED';
+  }
+  // jump lyrics list
+  let idx=0;
+  for(let i=0;i<lyrics.length;i++){if(lyrics[i].t<=c)idx=i;else break;}
+  userScrolling=false;
+  updateLyricsList(idx,true);
+}
+
+function togglePlay(){
+  if(!ytReady){statusText.textContent='YT LOADING...';return;}
+  if(!playing) playAll();
+  else pauseAll();
+}
+
+function syncNow(){
+  // Re-sync: treat current YT time as authoritative, just reset lyric pointer
+  currentIdx=-1;
+  if(currentEl){currentEl.remove();currentEl=null;}
+  lyricPrev.textContent='';lyricPrev.classList.remove('show');
+  if(idleMsg) idleMsg.style.display='none';
+  if(!playing) playAll();
+  const sb=$('syncBtn');
+  sb.classList.add('sync-flash');
+  setTimeout(()=>sb.classList.remove('sync-flash'),400);
+  statusText.textContent='SYNCED ✓';
+}
+
+function setVol(v){if(ytReady)ytPlayer.setVolume(parseInt(v));}
+
+// ─── Main render loop ─────────────────────────────────────
+function loop(){
+  if(!playing){raf=null;return;}
+  const t=Math.min(safeGetTime(),TOTAL);
+  seekFill.style.width=(t/TOTAL*100)+'%';
+  const tf=fmt(t);timeDisplay.textContent=tf;timeDock.textContent=tf;
+
+  let idx=-1;
+  for(let i=0;i<lyrics.length;i++){if(lyrics[i].t<=t)idx=i;else break;}
+  if(idx!==currentIdx&&idx>=0){currentIdx=idx;showLyric(idx);}
+  if(t>=TOTAL){onEnd();return;}
+  raf=requestAnimationFrame(loop);
+}
+
+function onEnd(){
+  playing=false;raf=null;freezeWave();
+  playBtn.textContent='↺ RESTART';statusText.textContent='FINISHED';
+}
+
+// ─── Lyric display ────────────────────────────────────────
+const glowMap={
+  'CHORUS':'rgba(0,229,255,0.08)','VERSE':'rgba(0,255,136,0.07)',
+  'HOOK':'rgba(255,220,100,0.05)','OUTRO':'rgba(140,90,255,0.06)',
+  'INTRO':'rgba(200,200,255,0.04)','':'rgba(0,255,136,0.04)'
+};
+const flashRx=/flash|lights|Katrina|Mona|Caesar|Gina|FEMA|Visa|Nazi|paparazzi/i;
+
+function showLyric(i){
+  const e=lyrics[i];if(!e)return;
+  if(idleMsg) idleMsg.style.display='none';
+  if(currentEl){
+    lyricPrev.textContent=currentEl.textContent;
+    currentEl.classList.add('exit');
+    const old=currentEl;setTimeout(()=>old.remove(),320);currentEl=null;
+    lyricPrev.classList.add('show');
+    setTimeout(()=>lyricPrev.classList.remove('show'),2800);
+  }
+  if(e.section){sectionLbl.textContent='▸ '+e.section;sectionLbl.classList.add('show');}
+  else sectionLbl.classList.remove('show');
+  if(e.text){
+    const el=document.createElement('div');el.className='lyric-line';el.textContent=e.text;
+    lyricDisp.appendChild(el);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('active')));
+    currentEl=el;
+    if(flashRx.test(e.text)) triggerFlash();
+  }
+  const key=Object.keys(glowMap).find(k=>k&&(e.section||'').includes(k))||'';
+  glowOrb.style.background=`radial-gradient(circle,${glowMap[key]} 0%,transparent 68%)`;
+  updateLyricsList(i,false);
+}
+
+// ─── Lyrics list panel ────────────────────────────────────
+const llInner  = $('llInner');
+const llScroll = $('llScroll');
+const llRows   = [];
+const lyricIdxToRow = {};
+
+(function buildList(){
+  let lastSection='';
+  lyrics.forEach((entry,i)=>{
+    if(entry.section && entry.section!==lastSection){
+      const h=document.createElement('div');
+      h.className='ll-row ll-section';
+      h.textContent='▸ '+entry.section;
+      llInner.appendChild(h);
+      llRows.push({el:h,lyricIdx:-1,t:entry.t});
+      lastSection=entry.section;
+    }
+    const r=document.createElement('div');
+    r.className='ll-row';
+    r.textContent=entry.text||'·';
+    if(!entry.text){r.style.opacity='0.1';r.style.cursor='default';}
+    else{
+      r.title='Jump to '+fmt(entry.t);
+      r.addEventListener('click',()=>{userScrolling=false;seekTo(entry.t,playing);});
+    }
+    llInner.appendChild(r);
+    const ri=llRows.length;
+    lyricIdxToRow[i]=ri;
+    llRows.push({el:r,lyricIdx:i,t:entry.t});
+  });
+})();
+
+let llActiveRow=-1;
+let userScrolling=false;
+let userScrollTimer=null;
+
+llScroll.addEventListener('wheel',()=>pauseAutoScroll(),{passive:true});
+llScroll.addEventListener('touchmove',()=>pauseAutoScroll(),{passive:true});
+llScroll.addEventListener('mousedown',()=>pauseAutoScroll());
+
+function pauseAutoScroll(){
+  userScrolling=true;clearTimeout(userScrollTimer);
+  userScrollTimer=setTimeout(()=>{userScrolling=false;},3000);
+}
+
+function scrollToActive(ri,instant){
+  if(userScrolling)return;
+  const row=llRows[ri];if(!row)return;
+  const containerH=llScroll.clientHeight;
+  const target=row.el.offsetTop - containerH/2 + row.el.clientHeight/2;
+  if(instant) llScroll.scrollTop=Math.max(0,target);
+  else llScroll.scrollTo({top:Math.max(0,target),behavior:'smooth'});
+}
+
+function updateLyricsList(lyricIdx,instant){
+  const ri=lyricIdxToRow[lyricIdx];if(ri===undefined)return;
+  if(llActiveRow>=0){
+    llRows[llActiveRow].el.classList.remove('ll-active');
+    [-2,-1,1,2].forEach(o=>{const n=llActiveRow+o;if(n>=0&&n<llRows.length)llRows[n].el.classList.remove('ll-near');});
+  }
+  llRows[ri].el.classList.add('ll-active');
+  [-2,-1,1,2].forEach(o=>{const n=ri+o;if(n>=0&&n<llRows.length)llRows[n].el.classList.add('ll-near');});
+  llActiveRow=ri;
+  scrollToActive(ri,instant);
+}
+
+// ─── Keyboard ─────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='KeyS'){e.preventDefault();syncNow();}
+  if(e.code==='ArrowRight'){e.preventDefault();if(ytReady)seekTo(Math.min(safeGetTime()+5,TOTAL),playing);}
+  if(e.code==='ArrowLeft') {e.preventDefault();if(ytReady)seekTo(Math.max(safeGetTime()-5,0),playing);}
+});
+
+// ─── YouTube IFrame API ───────────────────────────────────
+window.onYouTubeIframeAPIReady=function(){
+  ytPlayer=new YT.Player('yt-player-container',{
+    videoId: YT_ID,
+    playerVars:{
+      autoplay:0, rel:0, modestbranding:1, iv_load_policy:3,
+      origin: window.location.origin || 'http://localhost:3000'
+    },
+    events:{
+      onReady(e){
+        ytReady=true;
+        ytPlayer.setVolume(parseInt(document.getElementById('volSlider').value));
+        ytLabel.textContent='— ready ✓';
+        ytLabel.style.color='var(--green)';
+        statusText.textContent='YT READY';
+      },
+      onStateChange(e){
+        if(e.data===YT.PlayerState.PLAYING){
+          if(!playing){
+            playing=true;
+            playBtn.textContent='⏸ PAUSE';
+            statusText.textContent='PLAYING';
+            startWave();
+            if(idleMsg) idleMsg.style.display='none';
+            if(!raf) raf=requestAnimationFrame(loop);
+          }
+        }
+        if(e.data===YT.PlayerState.PAUSED && playing){
+          pauseAll();
+        }
+        if(e.data===YT.PlayerState.ENDED) onEnd();
+      },
+      onError(e){
+        ytLabel.textContent='— blocked (use SYNC)';
+        ytLabel.style.color='var(--amber)';
+        statusText.textContent='YT BLOCKED';
+      }
+    }
+  });
+};
+
+// Load YT API
+(function(){
+  const s=document.createElement('script');
+  s.src='https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
