@@ -1,1570 +1,3460 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Flashing Lights — Kanye West</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,700;1,300&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#05060a;--term-bg:#080910;--term-border:#181b2c;
-  --green:#00ff88;--green-dim:rgba(0,255,136,0.07);
-  --amber:#ffaa00;--cyan:#00e5ff;--white:#e8eaf0;
-  --muted:#373c57;--muted2:#1e2238;--spotify:#1DB954;
-}
-html,body{height:100%;background:var(--bg);font-family:'Share Tech Mono',monospace;overflow:hidden;color:var(--white)}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
-  background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
-body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:999;opacity:0.28;animation:grain .35s steps(1) infinite}
-@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-2%,-2%)}20%{transform:translate(2%,2%)}
-  30%{transform:translate(-1%,1%)}40%{transform:translate(1%,-1%)}50%{transform:translate(-2%,1%)}
-  60%{transform:translate(2%,-2%)}70%{transform:translate(0,2%)}80%{transform:translate(-1%,0)}90%{transform:translate(1%,1%)}}
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Flashing Lights — Kanye West</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,700;1,300&display=swap');
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #05060a;
+        --term-bg: #080910;
+        --term-border: #181b2c;
+        --green: #00ff88;
+        --green-dim: rgba(0, 255, 136, 0.07);
+        --amber: #ffaa00;
+        --cyan: #00e5ff;
+        --white: #e8eaf0;
+        --muted: #373c57;
+        --muted2: #1e2238;
+        --spotify: #1db954;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        font-family: 'Share Tech Mono', monospace;
+        overflow: hidden;
+        color: var(--white);
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1000;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 2px,
+          rgba(0, 0, 0, 0.07) 2px,
+          rgba(0, 0, 0, 0.07) 4px
+        );
+      }
+      body::after {
+        content: '';
+        position: fixed;
+        inset: -50%;
+        width: 200%;
+        height: 200%;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 999;
+        opacity: 0.28;
+        animation: grain 0.35s steps(1) infinite;
+      }
+      @keyframes grain {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        10% {
+          transform: translate(-2%, -2%);
+        }
+        20% {
+          transform: translate(2%, 2%);
+        }
+        30% {
+          transform: translate(-1%, 1%);
+        }
+        40% {
+          transform: translate(1%, -1%);
+        }
+        50% {
+          transform: translate(-2%, 1%);
+        }
+        60% {
+          transform: translate(2%, -2%);
+        }
+        70% {
+          transform: translate(0, 2%);
+        }
+        80% {
+          transform: translate(-1%, 0);
+        }
+        90% {
+          transform: translate(1%, 1%);
+        }
+      }
 
-.glow-orb{position:fixed;width:700px;height:700px;border-radius:50%;
-  background:radial-gradient(circle,rgba(0,255,136,0.05) 0%,transparent 65%);
-  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;transition:background .6s}
-.flash-overlay{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:998;transition:opacity .04s}
-.flash-overlay.flash{opacity:0.09}
+      .glow-orb {
+        position: fixed;
+        width: 700px;
+        height: 700px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(0, 255, 136, 0.05) 0%,
+          transparent 65%
+        );
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        transition: background 0.6s;
+      }
+      .flash-overlay {
+        position: fixed;
+        inset: 0;
+        background: #fff;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 998;
+        transition: opacity 0.04s;
+      }
+      .flash-overlay.flash {
+        opacity: 0.09;
+      }
 
-/* ── LAYOUT ── */
-.scene{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:12px 12px 0}
+      /* ── LAYOUT ── */
+      .scene {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 12px 0;
+      }
 
-/* ── TERMINAL ── */
-.terminal{width:100%;max-width:920px;flex:1;min-height:0;background:var(--term-bg);
-  border:1px solid var(--term-border);border-radius:10px 10px 0 0;display:flex;flex-direction:column;
-  box-shadow:0 0 0 1px #ffffff05,0 30px 90px rgba(0,0,0,0.95);overflow:hidden}
+      /* ── TERMINAL ── */
+      .terminal {
+        width: 100%;
+        max-width: 920px;
+        flex: 1;
+        min-height: 0;
+        background: var(--term-bg);
+        border: 1px solid var(--term-border);
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        flex-direction: column;
+        box-shadow:
+          0 0 0 1px #ffffff05,
+          0 30px 90px rgba(0, 0, 0, 0.95);
+        overflow: hidden;
+      }
 
-.titlebar{background:#0e1020;border-bottom:1px solid var(--term-border);padding:10px 16px;
-  display:flex;align-items:center;gap:10px;flex-shrink:0}
-.dots{display:flex;gap:7px}
-.dot{width:12px;height:12px;border-radius:50%}
-.dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
-.titlebar-text{flex:1;text-align:center;font-size:11px;color:var(--muted);letter-spacing:.1em}
-.titlebar-text em{color:var(--green);font-style:normal}
+      .titlebar {
+        background: #0e1020;
+        border-bottom: 1px solid var(--term-border);
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+      .dot-r {
+        background: #ff5f57;
+      }
+      .dot-y {
+        background: #febc2e;
+      }
+      .dot-g {
+        background: #28c840;
+      }
+      .titlebar-text {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+      }
+      .titlebar-text em {
+        color: var(--green);
+        font-style: normal;
+      }
 
-.terminal-body{flex:1;min-height:0;overflow:hidden;padding:16px 24px 12px;display:flex;flex-direction:column}
+      .terminal-body {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        padding: 16px 24px 12px;
+        display: flex;
+        flex-direction: column;
+      }
 
-.hdr{font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px solid #14172a;padding-bottom:10px;margin-bottom:12px;flex-shrink:0}
-.hdr .cmd{color:var(--green)}.hdr .val{color:var(--cyan)}
-.track-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);letter-spacing:.07em;display:block;margin:2px 0}
+      .hdr {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.7;
+        border-bottom: 1px solid #14172a;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+      }
+      .hdr .cmd {
+        color: var(--green);
+      }
+      .hdr .val {
+        color: var(--cyan);
+      }
+      .track-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 28px;
+        color: var(--white);
+        letter-spacing: 0.07em;
+        display: block;
+        margin: 2px 0;
+      }
 
-/* ── CONTENT ROW ── */
-.content-row{flex:1;min-height:0;display:flex;gap:16px;overflow:hidden}
+      /* ── CONTENT ROW ── */
+      .content-row {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        gap: 16px;
+        overflow: hidden;
+      }
 
-/* Lyrics — 3-row display */
-.lyrics-col{flex:1;min-width:0;position:relative;overflow:hidden}
-.section-label{position:absolute;top:0;left:0;font-size:10px;color:var(--amber);
-  letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .35s;z-index:2}
-.section-label.show{opacity:1}
+      /* Lyrics — 3-row display */
+      .lyrics-col {
+        flex: 1;
+        min-width: 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .section-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: 10px;
+        color: var(--amber);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        opacity: 0;
+        transition: opacity 0.35s;
+        z-index: 2;
+      }
+      .section-label.show {
+        opacity: 1;
+      }
 
-/* 3-row lyric stage */
-.lyric-stage{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;
-  justify-content:center;
-  gap:10px;
-  padding:28px 0 24px;
-}
+      /* 3-row lyric stage */
+      .lyric-stage {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 12px;
+        padding: 30px 0 26px;
+      }
 
-/* shared row base */
-.lyric-row{
-  font-family:'DM Sans',sans-serif;
-  line-height:1.25;
-  max-width:100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  transition:opacity .35s ease, transform .4s cubic-bezier(.22,1,.36,1), color .3s ease;
-}
+      /* shared row base */
+      .lyric-row {
+        font-family: 'DM Sans', sans-serif;
+        line-height: 1.25;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition:
+          opacity 0.35s ease,
+          transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+          color 0.3s ease;
+      }
 
-/* PREV row — above, faded italic */
-  .lyric-row-prev{
-    font-size:clamp(11px,1.5vw,16px);
-    font-weight:400;
-    font-style:italic;
-    color:rgba(0,255,136,0.8);
-    opacity:0;
-    transform:translateY(6px);
-  }
-  .lyric-row-prev.has-text{opacity:.7;transform:translateY(0);}
+      /* PREV row — above, faded italic */
+      .lyric-row-prev {
+        font-size: clamp(17px, 2.5vw, 26px);
+        font-weight: 400;
+        font-style: italic;
+        color: #7b82a8;
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      .lyric-row-prev.has-text {
+        opacity: 0.75;
+        transform: translateY(0);
+      }
 
-/* CURRENT row — big, bright, bold */
-.lyric-row-current{
-  font-size:clamp(20px,3.2vw,38px);
-  font-weight:700;
-  color:var(--white);
-  opacity:0;
-  transform:translateY(20px) skewX(-1.5deg);
-  letter-spacing:-.01em;
-  text-shadow:0 0 40px rgba(0,255,136,0.15);
-}
-.lyric-row-current.has-text{
-  opacity:1;
-  transform:translateY(0) skewX(0);
-  transition:opacity .22s ease, transform .4s cubic-bezier(.22,1,.36,1);
-}
+      /* CURRENT row — big, bright, bold */
+      .lyric-row-current {
+        font-size: clamp(20px, 3vw, 32px);
+        font-weight: 700;
+        color: var(--white);
+        opacity: 0;
+        transform: translateY(20px) skewX(-1.5deg);
+        letter-spacing: -0.01em;
+        text-shadow: 0 0 40px rgba(0, 255, 136, 0.15);
+      }
+      .lyric-row-current.has-text {
+        opacity: 1;
+        transform: translateY(0) skewX(0);
+        transition:
+          opacity 0.22s ease,
+          transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      }
 
-/* NEXT row — below, muted preview */
-  .lyric-row-next{
-    font-size:clamp(11px,1.5vw,16px);
-    font-weight:500;
-    color:rgba(0,255,136,0.65);
-    opacity:0;
-    transform:translateY(-4px);
-  }
-  .lyric-row-next.has-text{opacity:.6;transform:translateY(0);}
+      /* NEXT row — below, visible preview */
+      .lyric-row-next {
+        font-size: clamp(17px, 2.5vw, 26px);
+        font-weight: 400;
+        color: #7b82a8;
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      .lyric-row-next.has-text {
+        opacity: 0.65;
+        transform: translateY(0);
+      }
 
-/* swap-out animation for current line leaving */
-@keyframes lyricExit{
-  to{opacity:0;transform:translateY(-22px) skewX(1.5deg);}
-}
-.lyric-row-current.exiting{
-  animation:lyricExit .22s ease forwards;
-}
+      /* swap-out animation for current line leaving */
+      @keyframes lyricExit {
+        to {
+          opacity: 0;
+          transform: translateY(-22px) skewX(1.5deg);
+        }
+      }
+      .lyric-row-current.exiting {
+        animation: lyricExit 0.22s ease forwards;
+      }
 
-.idle-msg{position:absolute;inset:0;display:flex;flex-direction:column;
-  justify-content:center;align-items:flex-start;gap:8px;color:var(--muted);font-size:11px}
-.idle-big{font-family:'Bebas Neue',sans-serif;font-size:48px;color:#181b2c;letter-spacing:.08em}
-.cursor-blink{display:inline-block;width:9px;height:16px;background:var(--green);
-  animation:blink 1s step-end infinite;vertical-align:middle;margin-left:3px}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.timestamp{position:absolute;bottom:0;right:0;font-size:10px;color:var(--muted);letter-spacing:.05em}
-.timestamp .cur{color:var(--green)}
+      .idle-msg {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .idle-big {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 48px;
+        color: #181b2c;
+        letter-spacing: 0.08em;
+      }
+      .cursor-blink {
+        display: inline-block;
+        width: 9px;
+        height: 16px;
+        background: var(--green);
+        animation: blink 1s step-end infinite;
+        vertical-align: middle;
+        margin-left: 3px;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+      .timestamp {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+      }
+      .timestamp .cur {
+        color: var(--green);
+      }
 
-/* dev credit */
-.dev-credit{
-  position:absolute;bottom:0;left:0;
-  font-size:9px;color:var(--muted2);letter-spacing:.07em;
-  font-family:'Share Tech Mono',monospace;
-}
-.dev-credit span{color:var(--muted)}
+      /* dev credit */
+      .dev-credit {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        font-size: 9px;
+        color: var(--muted2);
+        letter-spacing: 0.07em;
+        font-family: 'Share Tech Mono', monospace;
+      }
+      .dev-credit span {
+        color: var(--muted);
+      }
 
-/* ── RIGHT PANEL ── */
-.right-col{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+      /* ── RIGHT PANEL ── */
+      /* right-wrapper: desktop = vertical stack (video + lyrics list), mobile = split */
+      .right-wrapper {
+        width: 240px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .right-col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
 
-/* Spotify embed */
-.spotify-panel{background:#0d0f1c;border:1px solid var(--term-border);border-radius:8px;overflow:hidden;flex-shrink:0}
-.panel-title{padding:7px 10px;font-size:10px;color:var(--muted);letter-spacing:.08em;
-  border-bottom:1px solid var(--term-border);display:flex;align-items:center;gap:6px}
-.panel-title svg{flex-shrink:0}
+      /* Spotify embed */
+      .spotify-panel {
+        background: #0d0f1c;
+        border: 1px solid var(--term-border);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .panel-title {
+        padding: 7px 10px;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        border-bottom: 1px solid var(--term-border);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .panel-title svg {
+        flex-shrink: 0;
+      }
+      #yt-player-container {
+        min-height: 150px;
+      }
 
-/* ── LYRICS LIST PANEL ── */
-.lyrics-list-panel{
-  background:#0d0f1c;border:1px solid var(--term-border);border-radius:8px;
-  flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;
-  position:relative;
-}
-.lyrics-list-title{
-  padding:7px 10px;font-size:10px;color:var(--muted);letter-spacing:.1em;
-  border-bottom:1px solid var(--term-border);flex-shrink:0;display:flex;align-items:center;gap:6px;
-  position:relative;z-index:3;background:#0d0f1c;
-}
-.lyrics-list-title em{color:var(--green);font-style:normal}
+      /* ── LYRICS LIST PANEL ── */
+      .lyrics-list-panel {
+        background: #0d0f1c;
+        border: 1px solid var(--term-border);
+        border-radius: 8px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .lyrics-list-title {
+        padding: 7px 10px;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+        border-bottom: 1px solid var(--term-border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+        z-index: 3;
+        background: #0d0f1c;
+      }
+      .lyrics-list-title em {
+        color: var(--green);
+        font-style: normal;
+      }
 
-/* Real scrollable container */
-.lyrics-list-scroll{
-  flex:1;min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  position:relative;
-  scroll-behavior:smooth;
-  /* custom thin scrollbar */
-  scrollbar-width:thin;
-  scrollbar-color:var(--muted2) transparent;
-}
-.lyrics-list-scroll::-webkit-scrollbar{width:3px}
-.lyrics-list-scroll::-webkit-scrollbar-track{background:transparent}
-.lyrics-list-scroll::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px}
-.lyrics-list-scroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+      /* Real scrollable container */
+      .lyrics-list-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
+        scroll-behavior: smooth;
+        /* custom thin scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: var(--muted2) transparent;
+      }
+      .lyrics-list-scroll::-webkit-scrollbar {
+        width: 3px;
+      }
+      .lyrics-list-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .lyrics-list-scroll::-webkit-scrollbar-thumb {
+        background: var(--muted2);
+        border-radius: 2px;
+      }
+      .lyrics-list-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--muted);
+      }
 
-/* top/bottom fade masks — sit above the scroll area, pointer-events:none */
-.lyrics-list-panel::before,
-.lyrics-list-panel::after{
-  content:'';position:absolute;left:0;right:0;height:40px;pointer-events:none;z-index:2;
-}
-.lyrics-list-panel::before{
-  top:28px; /* below title bar */
-  background:linear-gradient(to bottom,#0d0f1c 30%,transparent);
-}
-.lyrics-list-panel::after{
-  bottom:0;
-  background:linear-gradient(to top,#0d0f1c 30%,transparent);
-}
+      /* top/bottom fade masks — sit above the scroll area, pointer-events:none */
+      .lyrics-list-panel::before,
+      .lyrics-list-panel::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 40px;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .lyrics-list-panel::before {
+        top: 28px; /* below title bar */
+        background: linear-gradient(to bottom, #0d0f1c 30%, transparent);
+      }
+      .lyrics-list-panel::after {
+        bottom: 0;
+        background: linear-gradient(to top, #0d0f1c 30%, transparent);
+      }
 
-/* inner padding so first/last items can center */
-.lyrics-list-inner{
-  display:flex;flex-direction:column;
-  padding:50px 0 50px; /* top/bottom room so active line can scroll to center */
-}
+      /* inner padding so first/last items can center */
+      .lyrics-list-inner {
+        display: flex;
+        flex-direction: column;
+        padding: 50px 0 50px; /* top/bottom room so active line can scroll to center */
+      }
 
-/* Each row */
-.ll-row{
-  padding:6px 14px;
-  font-family:'DM Sans',sans-serif;
-  font-size:12px;
-  font-weight:400;
-  color:var(--muted);
-  line-height:1.55;
-  letter-spacing:.01em;
-  transition:
-    color .3s ease,
-    opacity .3s ease,
-    font-weight .25s ease,
-    background .2s ease,
-    padding-left .25s ease;
-  opacity:.38;
-  cursor:pointer;
-  border-left:2px solid transparent;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.ll-row:hover{
-  opacity:.75;
-  color:var(--white);
-  background:rgba(255,255,255,0.03);
-  padding-left:18px;
-}
+      /* Each row */
+      .ll-row {
+        padding: 6px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--muted);
+        line-height: 1.55;
+        letter-spacing: 0.01em;
+        transition:
+          color 0.3s ease,
+          opacity 0.3s ease,
+          font-weight 0.25s ease,
+          background 0.2s ease,
+          padding-left 0.25s ease;
+        opacity: 0.38;
+        cursor: pointer;
+        border-left: 2px solid transparent;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ll-row:hover {
+        opacity: 0.75;
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.03);
+        padding-left: 18px;
+      }
 
-/* active = currently playing line */
-.ll-row.ll-active{
-  color:var(--green);
-  font-weight:700;
-  font-size:13px;
-  opacity:1;
-  border-left:2px solid var(--green);
-  padding-left:16px;
-  background:rgba(0,255,136,0.04);
-  text-shadow:0 0 16px rgba(0,255,136,0.3);
-}
+      /* active = currently playing line */
+      .ll-row.ll-active {
+        color: var(--green);
+        font-weight: 700;
+        font-size: 13px;
+        opacity: 1;
+        border-left: 2px solid var(--green);
+        padding-left: 16px;
+        background: rgba(0, 255, 136, 0.04);
+        text-shadow: 0 0 16px rgba(0, 255, 136, 0.3);
+      }
 
-/* ±2 neighbours */
-.ll-row.ll-near{
-  color:var(--white);
-  opacity:.62;
-  font-weight:500;
-}
+      /* ±2 neighbours */
+      .ll-row.ll-near {
+        color: var(--white);
+        opacity: 0.62;
+        font-weight: 500;
+      }
 
-/* section header dividers */
-.ll-row.ll-section{
-  font-family:'Share Tech Mono',monospace;
-  font-size:9px;
-  color:var(--amber);
-  opacity:.55;
-  letter-spacing:.14em;
-  padding:10px 14px 3px;
-  cursor:default;
-  border-left:2px solid transparent;
-  white-space:nowrap;
-}
-.ll-row.ll-section:hover{
-  background:transparent;padding-left:14px;opacity:.55;
-}
-.ll-row.ll-section.ll-active,
-.ll-row.ll-section.ll-near{
-  color:var(--amber);opacity:.9;font-size:9px;font-weight:400;
-  text-shadow:none;border-left-color:transparent;background:transparent;
-}
+      /* section header dividers */
+      .ll-row.ll-section {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 9px;
+        color: var(--amber);
+        opacity: 0.55;
+        letter-spacing: 0.14em;
+        padding: 10px 14px 3px;
+        cursor: default;
+        border-left: 2px solid transparent;
+        white-space: nowrap;
+      }
+      .ll-row.ll-section:hover {
+        background: transparent;
+        padding-left: 14px;
+        opacity: 0.55;
+      }
+      .ll-row.ll-section.ll-active,
+      .ll-row.ll-section.ll-near {
+        color: var(--amber);
+        opacity: 0.9;
+        font-size: 9px;
+        font-weight: 400;
+        text-shadow: none;
+        border-left-color: transparent;
+        background: transparent;
+      }
 
-/* pop-in animation on active */
-@keyframes llPop{
-  0%  {opacity:.5;transform:translateX(-3px)}
-  60% {transform:translateX(1px)}
-  100%{opacity:1;transform:translateX(0)}
-}
-.ll-row.ll-active{animation:llPop .3s cubic-bezier(.22,1,.36,1) both}
+      /* pop-in animation on active */
+      @keyframes llPop {
+        0% {
+          opacity: 0.5;
+          transform: translateX(-3px);
+        }
+        60% {
+          transform: translateX(1px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .ll-row.ll-active {
+        animation: llPop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
 
-/* ── PLAYER DOCK ── */
-.player-dock{width:100%;max-width:920px;background:#0b0d18;
-  border:1px solid var(--term-border);border-top:none;border-radius:0 0 10px 10px;
-  padding-bottom:12px;flex-shrink:0;box-shadow:0 20px 60px rgba(0,0,0,0.9)}
+      /* ── PLAYER DOCK ── */
+      .player-dock {
+        width: 100%;
+        max-width: 920px;
+        background: #0b0d18;
+        border: 1px solid var(--term-border);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        padding-bottom: 12px;
+        flex-shrink: 0;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      }
 
-/* Seek bar */
-.seek-wrap{position:relative;height:30px;display:flex;align-items:center;
-  padding:0 16px;cursor:pointer;user-select:none}
-.seek-track{flex:1;height:4px;background:var(--muted2);border-radius:2px;position:relative;transition:height .15s}
-.seek-wrap:hover .seek-track{height:6px}
-.seek-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));
-  border-radius:2px;width:0%;pointer-events:none;box-shadow:0 0 10px rgba(0,255,136,0.4);
-  position:relative;transition:width .1s linear}
-.seek-thumb{position:absolute;right:-6px;top:50%;transform:translateY(-50%);
-  width:13px;height:13px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 10px var(--green);opacity:0;transition:opacity .15s;pointer-events:none}
-.seek-wrap:hover .seek-thumb{opacity:1}
-.seek-markers{position:absolute;top:0;bottom:0;left:16px;right:16px;pointer-events:none}
-.s-mark{position:absolute;top:50%;transform:translate(-50%,-50%);
-  width:2px;height:10px;background:rgba(255,170,0,0.35);border-radius:1px}
-.s-mark-lbl{position:absolute;top:0;transform:translate(-50%,-100%);margin-top:-3px;
-  font-size:8px;color:rgba(255,170,0,0.55);letter-spacing:.06em;
-  white-space:nowrap;opacity:0;transition:opacity .15s}
-.seek-wrap:hover .s-mark-lbl{opacity:1}
-.seek-tip{position:absolute;top:4px;transform:translateX(-50%);
-  background:#1a1d2e;border:1px solid var(--term-border);
-  font-size:10px;color:var(--cyan);padding:2px 7px;border-radius:3px;
-  pointer-events:none;opacity:0;white-space:nowrap;transition:opacity .1s}
-.seek-wrap:hover .seek-tip{opacity:1}
+      /* Seek bar */
+      .seek-wrap {
+        position: relative;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .seek-track {
+        flex: 1;
+        height: 4px;
+        background: var(--muted2);
+        border-radius: 2px;
+        position: relative;
+        transition: height 0.15s;
+      }
+      .seek-wrap:hover .seek-track {
+        height: 6px;
+      }
+      .seek-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--green), var(--cyan));
+        border-radius: 2px;
+        width: 0%;
+        pointer-events: none;
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+        position: relative;
+        transition: width 0.1s linear;
+      }
+      .seek-thumb {
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 10px var(--green);
+        opacity: 0;
+        transition: opacity 0.15s;
+        pointer-events: none;
+      }
+      .seek-wrap:hover .seek-thumb {
+        opacity: 1;
+      }
+      .seek-markers {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 16px;
+        right: 16px;
+        pointer-events: none;
+      }
+      .s-mark {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 10px;
+        background: rgba(255, 170, 0, 0.35);
+        border-radius: 1px;
+      }
+      .s-mark-lbl {
+        position: absolute;
+        top: 0;
+        transform: translate(-50%, -100%);
+        margin-top: -3px;
+        font-size: 8px;
+        color: rgba(255, 170, 0, 0.55);
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .seek-wrap:hover .s-mark-lbl {
+        opacity: 1;
+      }
+      .seek-tip {
+        position: absolute;
+        top: 4px;
+        transform: translateX(-50%);
+        background: #1a1d2e;
+        border: 1px solid var(--term-border);
+        font-size: 10px;
+        color: var(--cyan);
+        padding: 2px 7px;
+        border-radius: 3px;
+        pointer-events: none;
+        opacity: 0;
+        white-space: nowrap;
+        transition: opacity 0.1s;
+      }
+      .seek-wrap:hover .seek-tip {
+        opacity: 1;
+      }
 
-/* Controls */
-.controls{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 0;gap:8px;flex-wrap:wrap}
-.ctrl-left{display:flex;align-items:center;gap:10px}
-.ctrl-mid{display:flex;align-items:center;gap:10px}
-.ctrl-right{display:flex;align-items:center;gap:10px}
-.play-btn{background:none;border:1px solid var(--term-border);color:var(--green);
-  font-family:'Share Tech Mono',monospace;font-size:11px;padding:5px 14px;
-  border-radius:4px;cursor:pointer;letter-spacing:.08em;transition:all .2s;white-space:nowrap}
-.play-btn:hover{background:var(--green-dim);border-color:var(--green);box-shadow:0 0 14px rgba(0,255,136,0.12)}
-.sync-btn{background:none;border:1px solid rgba(255,170,0,0.3);color:var(--amber);
-  font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;
-  border-radius:4px;cursor:pointer;letter-spacing:.06em;transition:all .2s;white-space:nowrap}
-.sync-btn:hover{background:rgba(255,170,0,0.07);border-color:var(--amber)}
-.time-lbl{font-size:11px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
-.time-lbl .cur{color:var(--green)}
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 6px var(--green);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.status-txt{font-size:10px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
-.waveform{display:flex;align-items:center;gap:2px;height:18px}
-.wave-bar{width:2px;background:var(--green);border-radius:1px;height:4px;opacity:.35;transition:height .08s,opacity .08s}
-.vol-wrap{display:flex;align-items:center;gap:5px}
-.vol-icon{font-size:11px;color:var(--muted)}
-.vol-slider{-webkit-appearance:none;appearance:none;width:55px;height:3px;background:var(--muted2);border-radius:2px;outline:none;cursor:pointer}
-.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--spotify);cursor:pointer}
-.kb-hint{font-size:9px;color:var(--muted2);letter-spacing:.04em;display:flex;gap:8px}
-.kb-hint kbd{background:#13162a;border:1px solid var(--muted2);border-radius:2px;padding:1px 4px;color:var(--muted);font-family:inherit}
+      /* Controls */
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 16px 0;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .ctrl-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ctrl-mid {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ctrl-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .play-btn {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--green);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 11px;
+        padding: 5px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        letter-spacing: 0.08em;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .play-btn:hover {
+        background: var(--green-dim);
+        border-color: var(--green);
+        box-shadow: 0 0 14px rgba(0, 255, 136, 0.12);
+      }
+      .sync-btn {
+        background: none;
+        border: 1px solid rgba(255, 170, 0, 0.3);
+        color: var(--amber);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 10px;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .sync-btn:hover {
+        background: rgba(255, 170, 0, 0.07);
+        border-color: var(--amber);
+      }
+      .time-lbl {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .time-lbl .cur {
+        color: var(--green);
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 6px var(--green);
+        animation: pulse 2s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+      .status-txt {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+      .waveform {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 18px;
+      }
+      .wave-bar {
+        width: 2px;
+        background: var(--green);
+        border-radius: 1px;
+        height: 4px;
+        opacity: 0.35;
+        transition:
+          height 0.08s,
+          opacity 0.08s;
+      }
+      .vol-wrap {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .vol-icon {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .vol-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 55px;
+        height: 3px;
+        background: var(--muted2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+      .vol-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--spotify);
+        cursor: pointer;
+      }
+      .kb-hint {
+        font-size: 9px;
+        color: var(--muted2);
+        letter-spacing: 0.04em;
+        display: flex;
+        gap: 8px;
+      }
+      .kb-hint kbd {
+        background: #13162a;
+        border: 1px solid var(--muted2);
+        border-radius: 2px;
+        padding: 1px 4px;
+        color: var(--muted);
+        font-family: inherit;
+      }
 
-/* ── CONFIG PANEL OVERLAY ── */
-.config-overlay{
-  position:fixed;inset:0;z-index:2000;
-  background:rgba(5,6,10,0.92);
-  backdrop-filter:blur(8px);
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;
-  transition:opacity .3s ease;
-}
-.config-overlay.open{opacity:1;pointer-events:all;}
+      /* ── CONFIG PANEL OVERLAY ── */
+      .config-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        background: rgba(5, 6, 10, 0.92);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .config-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
 
-.config-panel{
-  width:100%;max-width:620px;
-  background:#0b0d1a;
-  border:1px solid var(--term-border);
-  border-radius:12px;
-  box-shadow:0 0 0 1px rgba(0,255,136,0.04), 0 40px 100px rgba(0,0,0,0.95);
-  overflow:hidden;
-  transform:translateY(24px) scale(.97);
-  transition:transform .35s cubic-bezier(.22,1,.36,1);
-  max-height:92vh;
-  display:flex;flex-direction:column;
-}
-.config-overlay.open .config-panel{transform:translateY(0) scale(1);}
+      .config-panel {
+        width: 100%;
+        max-width: 620px;
+        background: #0b0d1a;
+        border: 1px solid var(--term-border);
+        border-radius: 12px;
+        box-shadow:
+          0 0 0 1px rgba(0, 255, 136, 0.04),
+          0 40px 100px rgba(0, 0, 0, 0.95);
+        overflow: hidden;
+        transform: translateY(24px) scale(0.97);
+        transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        max-height: 92vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .config-overlay.open .config-panel {
+        transform: translateY(0) scale(1);
+      }
 
-.config-titlebar{
-  background:#0e1020;border-bottom:1px solid var(--term-border);
-  padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
-}
-.config-titlebar .dots{display:flex;gap:7px;}
-.config-title{flex:1;text-align:center;font-size:11px;color:var(--muted);letter-spacing:.1em;}
-.config-title em{color:var(--green);font-style:normal;}
-.config-close{
-  background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;
-  padding:2px 6px;border-radius:3px;transition:color .15s,background .15s;font-family:inherit;
-}
-.config-close:hover{color:var(--white);background:rgba(255,255,255,0.06);}
+      .config-titlebar {
+        background: #0e1020;
+        border-bottom: 1px solid var(--term-border);
+        padding: 11px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .config-titlebar .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .config-title {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+      }
+      .config-title em {
+        color: var(--green);
+        font-style: normal;
+      }
+      .config-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 3px;
+        transition:
+          color 0.15s,
+          background 0.15s;
+        font-family: inherit;
+      }
+      .config-close:hover {
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.06);
+      }
 
-.config-body{
-  padding:20px 22px 22px;
-  overflow-y:auto;
-  flex:1;min-height:0;
-  scrollbar-width:thin;scrollbar-color:var(--muted2) transparent;
-}
-.config-body::-webkit-scrollbar{width:3px}
-.config-body::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px;}
+      .config-body {
+        padding: 20px 22px 22px;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+        scrollbar-width: thin;
+        scrollbar-color: var(--muted2) transparent;
+      }
+      .config-body::-webkit-scrollbar {
+        width: 3px;
+      }
+      .config-body::-webkit-scrollbar-thumb {
+        background: var(--muted2);
+        border-radius: 2px;
+      }
 
-/* field groups */
-.cfg-row{display:flex;gap:12px;margin-bottom:14px;}
-.cfg-row.col{flex-direction:column;}
-.cfg-field{flex:1;display:flex;flex-direction:column;gap:5px;}
-.cfg-label{
-  font-size:9px;color:var(--amber);letter-spacing:.14em;text-transform:uppercase;
-}
-.cfg-input{
-  background:#0d0f1c;
-  border:1px solid var(--term-border);
-  border-radius:5px;
-  color:var(--white);
-  font-family:'Share Tech Mono',monospace;
-  font-size:12px;
-  padding:8px 10px;
-  outline:none;
-  transition:border-color .2s,box-shadow .2s;
-  width:100%;
-}
-.cfg-input:focus{
-  border-color:rgba(0,255,136,0.45);
-  box-shadow:0 0 0 3px rgba(0,255,136,0.06);
-}
-.cfg-input::placeholder{color:var(--muted2);}
-.cfg-textarea{
-  resize:vertical;
-  min-height:180px;
-  line-height:1.7;
-  font-size:11px;
-}
-.cfg-hint{font-size:9px;color:var(--muted2);line-height:1.6;margin-top:2px;}
-.cfg-hint code{
-  background:#13162a;padding:1px 5px;border-radius:2px;
-  color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;
-}
+      /* Library overlay (reuses config panel chrome) */
+      .library-panel {
+        width: min(740px, 94vw);
+        max-height: 88vh;
+      }
+      .library-body {
+        padding: 16px 18px 20px;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .library-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .track-swipe {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+      }
+      .track-actions {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 84px;
+        background: #ff3b30;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+      }
+      .delete-btn {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        color: #fff;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      .track-item {
+        border: 1px solid var(--term-border);
+        background: #0f1224;
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        z-index: 2;
+        transform: translateX(0);
+        transition:
+          transform 0.18s ease,
+          border-color 0.2s,
+          box-shadow 0.2s,
+          background 0.2s;
+      }
+      .track-swipe.swiped .track-item {
+        transform: translateX(-84px);
+      }
+      .track-swipe:not(.swiped) .track-item:hover {
+        border-color: var(--green);
+        box-shadow: 0 0 14px rgba(0, 255, 136, 0.2);
+        transform: translateY(-1px);
+      }
+      .track-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+      }
+      .track-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        letter-spacing: 0.04em;
+        color: var(--white);
+      }
+      .track-artist {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 420px;
+      }
+      .track-load {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--green);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 6px;
+      }
+      .track-actions-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .track-more {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--muted);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 14px;
+        line-height: 1;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .track-more:hover {
+        color: var(--white);
+        border-color: var(--muted);
+      }
+      .library-status {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+      }
 
-/* apply button */
-.cfg-apply{
-  width:100%;
-  background:linear-gradient(90deg,rgba(0,255,136,0.12),rgba(0,229,255,0.08));
-  border:1px solid rgba(0,255,136,0.35);
-  color:var(--green);
-  font-family:'Share Tech Mono',monospace;
-  font-size:12px;
-  letter-spacing:.1em;
-  padding:11px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-top:6px;
-  transition:all .2s;
-}
-.cfg-apply:hover{
-  background:linear-gradient(90deg,rgba(0,255,136,0.2),rgba(0,229,255,0.12));
-  border-color:rgba(0,255,136,0.6);
-  box-shadow:0 0 20px rgba(0,255,136,0.1);
-}
-.cfg-error{
-  font-size:10px;color:#ff6b6b;margin-top:8px;
-  min-height:14px;letter-spacing:.04em;
-}
+      /* Password overlay */
+      .pass-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2100;
+        background: rgba(5, 6, 10, 0.78);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+      .pass-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .pass-panel {
+        width: min(360px, 90vw);
+        background: #0b0d1a;
+        border: 1px solid var(--term-border);
+        border-radius: 14px;
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.04),
+          0 40px 90px rgba(0, 0, 0, 0.9);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .pass-title {
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .pass-input {
+        background: #121526;
+        border: 1px solid var(--term-border);
+        color: var(--white);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 12px;
+        outline: none;
+      }
+      .pass-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .pass-cancel,
+      .pass-confirm {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--white);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 11px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .pass-confirm {
+        border-color: #ff3b30;
+        color: #ff9b96;
+      }
+      .pass-error {
+        font-size: 10px;
+        color: #ff6b6b;
+        min-height: 12px;
+      }
 
-/* config trigger btn in titlebar */
-.cfg-trigger{
-  background:none;border:1px solid var(--muted2);color:var(--muted);
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  padding:3px 8px;border-radius:3px;cursor:pointer;
-  letter-spacing:.08em;transition:all .2s;white-space:nowrap;
-}
-.cfg-trigger:hover{border-color:var(--green);color:var(--green);}
+      /* field groups */
+      .cfg-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .cfg-row.col {
+        flex-direction: column;
+      }
+      .cfg-field {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .cfg-label {
+        font-size: 9px;
+        color: var(--amber);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .cfg-input {
+        background: #0d0f1c;
+        border: 1px solid var(--term-border);
+        border-radius: 5px;
+        color: var(--white);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 12px;
+        padding: 8px 10px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        width: 100%;
+      }
+      .cfg-input:focus {
+        border-color: rgba(0, 255, 136, 0.45);
+        box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.06);
+      }
+      .cfg-input::placeholder {
+        color: var(--muted2);
+      }
+      .cfg-textarea {
+        resize: vertical;
+        min-height: 180px;
+        line-height: 1.7;
+        font-size: 11px;
+      }
+      .cfg-hint {
+        font-size: 9px;
+        color: var(--muted2);
+        line-height: 1.6;
+        margin-top: 2px;
+      }
+      .cfg-hint code {
+        background: #13162a;
+        padding: 1px 5px;
+        border-radius: 2px;
+        color: var(--cyan);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 9px;
+      }
 
-/* Sync flash */
-@keyframes syncFlash{0%{background:rgba(255,170,0,0.15)}100%{background:transparent}}
-.sync-flash{animation:syncFlash .4s ease-out}
+      /* apply button */
+      .cfg-apply {
+        width: 100%;
+        background: linear-gradient(
+          90deg,
+          rgba(0, 255, 136, 0.12),
+          rgba(0, 229, 255, 0.08)
+        );
+        border: 1px solid rgba(0, 255, 136, 0.35);
+        color: var(--green);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        padding: 11px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 6px;
+        transition: all 0.2s;
+      }
+      .cfg-apply:hover {
+        background: linear-gradient(
+          90deg,
+          rgba(0, 255, 136, 0.2),
+          rgba(0, 229, 255, 0.12)
+        );
+        border-color: rgba(0, 255, 136, 0.6);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+      }
+      .cfg-error {
+        font-size: 10px;
+        color: #ff6b6b;
+        margin-top: 8px;
+        min-height: 14px;
+        letter-spacing: 0.04em;
+      }
+      .cfg-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .cfg-actions .cfg-apply {
+        width: auto;
+      }
+      .cfg-save {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--cyan);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 11px;
+        padding: 9px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .cfg-save:hover {
+        border-color: var(--cyan);
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+      }
+      .cfg-status {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+      }
 
-/* ══════════════════════════════════════════════════════════
+      /* config trigger btn in titlebar */
+      .cfg-trigger {
+        background: none;
+        border: 1px solid var(--muted2);
+        color: var(--muted);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 9px;
+        padding: 3px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        letter-spacing: 0.08em;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .cfg-trigger:hover {
+        border-color: var(--green);
+        color: var(--green);
+      }
+      .cfg-trigger.alt {
+        color: var(--cyan);
+      }
+      .cfg-trigger.alt:hover {
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      /* Sync flash */
+      @keyframes syncFlash {
+        0% {
+          background: rgba(255, 170, 0, 0.15);
+        }
+        100% {
+          background: transparent;
+        }
+      }
+      .sync-flash {
+        animation: syncFlash 0.4s ease-out;
+      }
+
+      /* ══════════════════════════════════════════════════════════
    RESPONSIVE — iPad (≤900px), Mobile (≤640px), Phone (≤480px)
    ══════════════════════════════════════════════════════════ */
 
-/* ── iPad portrait & small tablets (≤900px) ── */
-@media (max-width:900px){
-  .scene{padding:8px 8px 0}
-  .right-col{width:200px}
-  .terminal-body{padding:12px 16px 10px}
-  .track-title{font-size:22px}
-  .hdr{margin-bottom:8px;padding-bottom:8px}
-  .lyric-row-current{font-size:clamp(18px,4vw,30px)}
-  .lyric-row-prev,.lyric-row-next{font-size:clamp(11px,2vw,14px)}
-  .controls{padding:4px 12px 0;gap:6px}
-  .kb-hint{display:none} /* hide keyboard hint on touch devices */
-}
-
-/* ── Mobile landscape + large phones (≤640px) ── */
-@media (max-width:640px){
-  html,body{overflow:hidden}
-  .scene{padding:6px 6px 0}
-
-  /* stack terminal content vertically */
-  .content-row{
-    flex-direction:column;
-    gap:8px;
-    overflow:hidden;
-  }
-
-  /* right col goes ABOVE lyrics on mobile: YT video + lyrics list side by side */
-  .right-col{
-    width:100%;
-    flex-shrink:0;
-    flex-direction:row;
-    height:130px;
-    gap:8px;
-    overflow:hidden;
-  }
-
-  /* YT video panel: fixed width on mobile */
-  .spotify-panel{
-    width:180px;
-    flex-shrink:0;
-  }
-
-  /* lyrics list fills remaining space */
-  .lyrics-list-panel{
-    flex:1;
-    min-width:0;
-  }
-
-  /* lyrics col takes remaining space */
-  .lyrics-col{flex:1;min-height:0}
-
-  /* shrink header */
-  .hdr{margin-bottom:6px;padding-bottom:6px}
-  .hdr .val{display:none} /* hide command line on small screens */
-  .track-title{font-size:20px;margin:1px 0}
-
-  /* lyric sizes */
-  .lyric-row-current{
-    font-size:clamp(20px,6vw,28px);
-    white-space:normal;
-    line-height:1.2;
-  }
-  .lyric-row-prev,.lyric-row-next{
-    font-size:clamp(11px,3vw,13px);
-    white-space:normal;
-  }
-  .lyric-stage{gap:8px;padding:20px 0 16px}
-
-  /* titlebar */
-  .titlebar{padding:8px 10px;gap:6px}
-  .dots{gap:5px}
-  .dot{width:10px;height:10px}
-  .titlebar-text{font-size:10px}
-
-  /* terminal body padding */
-  .terminal-body{padding:10px 12px 8px}
-
-  /* player dock controls — stack into 2 rows */
-  .controls{
-    flex-wrap:wrap;
-    padding:2px 10px 0;
-    gap:4px;
-    row-gap:6px;
-  }
-  .ctrl-left{gap:6px}
-  .ctrl-mid{gap:6px;flex-wrap:wrap}
-  .ctrl-right{display:none} /* hide kb hints */
-  .waveform{display:none}
-
-  /* bigger touch targets */
-  .play-btn,.sync-btn{
-    padding:7px 14px;
-    font-size:11px;
-    min-height:36px;
-  }
-  .cfg-trigger{padding:5px 10px;font-size:10px;min-height:30px}
-
-  /* seek bar taller for touch */
-  .seek-wrap{height:36px}
-  .seek-track{height:5px}
-
-  /* dev credit + timestamp smaller */
-  .dev-credit{font-size:8px}
-  .timestamp{font-size:9px}
-
-  /* section label */
-  .section-label{font-size:9px}
-
-  /* config panel */
-  .config-panel{
-    margin:0 8px;
-    max-height:95vh;
-    border-radius:10px;
-  }
-  .cfg-row{flex-direction:column;gap:10px}
-  .cfg-textarea{min-height:140px}
-  .config-body{padding:16px 16px 18px}
-}
-
-/* ── Phone portrait (≤480px) ── */
-@media (max-width:480px){
-  .scene{padding:4px 4px 0}
-
-  /* right col: stack vertically — video on top, lyrics list below */
-  .right-col{
-    flex-direction:column;
-    height:200px;
-  }
-  .spotify-panel{
-    width:100%;
-    flex-shrink:0;
-    height:90px;
-  }
-  /* hide YT video title bar on very small screens to save space */
-  .spotify-panel .panel-title{padding:4px 8px;font-size:9px}
-  #yt-player-container{height:calc(90px - 26px)}
-
-  .lyrics-list-panel{flex:1;min-height:0}
-
-  /* bigger current lyric */
-  .lyric-row-current{
-    font-size:clamp(18px,7vw,26px);
-    white-space:normal;
-    line-height:1.15;
-    max-height:58px;
-  }
-  .lyric-row-prev,.lyric-row-next{
-    font-size:11px;
-    white-space:normal;
-  }
-
-  /* hide prev row on very small screens — too cramped */
-  .lyric-row-prev{display:none}
-  .lyric-stage{gap:6px;padding:16px 0 12px;max-height:80px}
-
-  /* header — minimal */
-  .track-title{font-size:18px}
-  .hdr{margin-bottom:4px;padding-bottom:4px;line-height:1.4}
-
-  /* titlebar compact */
-  .titlebar-text{font-size:9px;letter-spacing:.05em}
-  .titlebar{padding:7px 8px}
-
-  /* controls — minimal 1 row */
-  .ctrl-left{display:none} /* hide status on tiny screens */
-  .controls{justify-content:center;padding:2px 8px 0}
-  .ctrl-mid{justify-content:center;gap:8px}
-  .play-btn,.sync-btn{padding:8px 16px;font-size:11px}
-
-  /* idle message */
-  .idle-big{font-size:36px}
-  .idle-msg{font-size:10px;gap:6px}
-
-  /* terminal body */
-  .terminal-body{padding:8px 10px 6px}
-}
-
-/* ── Touch: always show seek thumb ── */
-@media (hover:none){
-  .seek-thumb{opacity:1!important}
-  .seek-track{height:5px}
-  .seek-wrap{height:36px}
-  .s-mark-lbl{opacity:.5}
-}
-</style>
-</head>
-<body>
-<div class="flash-overlay" id="flashOverlay"></div>
-<div class="glow-orb" id="glowOrb"></div>
-
-<div class="scene">
-  <div class="terminal">
-    <div class="titlebar">
-      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
-      <div class="titlebar-text"><em>lyrics</em> — <span id="titlebarSongName">flashing_lights.js — Kanye West ft. Dwele</span></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button class="cfg-trigger" onclick="openConfig()">⚙ EDIT</button>
-        <div style="font-size:9px;color:var(--muted2);letter-spacing:.06em;white-space:nowrap">by <span style="color:var(--muted)">Thoeung Sereymongkol</span></div>
-      </div>
-    </div>
-
-    <div class="terminal-body">
-      <div class="hdr">
-        <span class="cmd">$</span> <span class="val">node flashing_lights.js --player=youtube --sync=auto</span><br>
-        <span class="track-title" id="hdrTrackTitle">FLASHING LIGHTS</span>
-        <span style="color:var(--muted)" id="hdrArtist">Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007) &nbsp;·&nbsp; 3:57</span>
-      </div>
-
-      <div class="content-row">
-        <!-- LYRICS -->
-        <div class="lyrics-col">
-          <div class="section-label" id="sectionLabel"></div>
-          <div class="lyric-stage" id="lyricStage">
-            <div class="idle-msg" id="idleMsg">
-              <div class="idle-big">READY</div>
-              <div>Press <span style="color:var(--green)">▶</span> on the video →<span class="cursor-blink"></span></div>
-              <div style="font-size:9px;color:var(--muted2);margin-top:4px">lyrics auto-sync to YouTube time</div>
-            </div>
-            <div class="lyric-row lyric-row-prev"  id="rowPrev"></div>
-            <div class="lyric-row lyric-row-current" id="rowCurrent"></div>
-            <div class="lyric-row lyric-row-next"  id="rowNext"></div>
-          </div>
-          <div class="timestamp"><span class="cur" id="timeDisplay">0:00</span> / 3:57</div>
-          <div class="dev-credit">dev: <span>Thoeung Sereymongkol</span></div>
-        </div>
-
-        <!-- RIGHT PANEL -->
-        <div class="right-col">
-          <!-- YouTube Player -->
-          <div class="spotify-panel">
-            <div class="panel-title">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="#ff4444"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.25 3.5-6.25 3.5z"/></svg>
-              <span style="color:#ff4444">YouTube</span>
-              <span style="color:var(--muted)" id="ytStatusLabel">— loading...</span>
-            </div>
-            <div id="yt-player-container" style="width:100%;aspect-ratio:16/9;background:#000;display:block"></div>
-          </div>
-
-          <!-- Lyrics list panel -->
-          <div class="lyrics-list-panel">
-            <div class="lyrics-list-title">
-              <em>▸ LYRICS</em>
-              <span style="color:var(--muted2)">— full track</span>
-            </div>
-            <div class="lyrics-list-scroll" id="llScroll">
-              <div class="lyrics-list-inner" id="llInner"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PLAYER DOCK -->
-  <div class="player-dock">
-    <div class="seek-wrap" id="seekWrap">
-      <div class="seek-track" id="seekTrack">
-        <div class="seek-fill" id="seekFill"><div class="seek-thumb"></div></div>
-      </div>
-      <div class="seek-markers" id="seekMarkers"></div>
-      <div class="seek-tip" id="seekTip">0:00</div>
-    </div>
-    <div class="controls">
-      <div class="ctrl-left">
-        <div class="status-dot"></div>
-        <span class="status-txt" id="statusText">IDLE</span>
-        <div class="waveform" id="waveformEl"></div>
-      </div>
-      <div class="ctrl-mid">
-        <button class="play-btn" id="playBtn" onclick="togglePlay()">▶ LYRICS</button>
-        <button class="sync-btn" id="syncBtn" onclick="syncNow()" title="Press when song starts to sync lyrics">⟳ SYNC NOW</button>
-        <span class="time-lbl"><span class="cur" id="timeDock">0:00</span> / 3:57</span>
-      </div>
-      <div class="ctrl-right">
-        <div class="kb-hint">
-          <span><kbd>Space</kbd> play/pause</span>
-          <span><kbd>S</kbd> sync</span>
-          <span><kbd>←</kbd><kbd>→</kbd> ±5s</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ CONFIG PANEL ══════════════════════════════════════ -->
-<div class="config-overlay" id="configOverlay">
-  <div class="config-panel">
-    <div class="config-titlebar">
-      <div class="dots">
-        <div class="dot dot-r" style="cursor:pointer" onclick="closeConfig()"></div>
-        <div class="dot dot-y"></div><div class="dot dot-g"></div>
-      </div>
-      <div class="config-title"><em>⚙</em> configure — lyrics player</div>
-      <button class="config-close" onclick="closeConfig()">✕</button>
-    </div>
-    <div class="config-body">
-      <div class="cfg-row">
-        <div class="cfg-field">
-          <div class="cfg-label">Track Title</div>
-          <input class="cfg-input" id="cfgTitle" placeholder="e.g. Flashing Lights" />
-        </div>
-        <div class="cfg-field">
-          <div class="cfg-label">Artist / Singers</div>
-          <input class="cfg-input" id="cfgArtist" placeholder="e.g. Kanye West ft. Dwele" />
-        </div>
-      </div>
-      <div class="cfg-row">
-        <div class="cfg-field">
-          <div class="cfg-label">YouTube URL</div>
-          <input class="cfg-input" id="cfgYtUrl" placeholder="https://youtu.be/ZAz3rnLGthg" />
-          <div class="cfg-hint">Paste any YouTube URL — full link or short youtu.be link.</div>
-        </div>
-      </div>
-      <div class="cfg-row col">
-        <div class="cfg-field">
-          <div class="cfg-label">Lyrics with timestamps</div>
-          <textarea class="cfg-input cfg-textarea" id="cfgLyrics" placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[00:42.62] She don't believe in shootin' stars&#10;[#CHORUS]&#10;[01:23.66] As I recall..."></textarea>
-          <div class="cfg-hint">
-            Each lyric line: <code>[mm:ss.cs] lyric text</code> or <code>[ss.cs] lyric text</code><br>
-            Section header: start a line with <code>[#SECTION NAME]</code> e.g. <code>[#CHORUS]</code><br>
-            Lines without a valid timestamp are ignored.
-          </div>
-        </div>
-      </div>
-      <div class="cfg-error" id="cfgError"></div>
-      <button class="cfg-apply" onclick="applyConfig()">▶ APPLY &amp; LOAD</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ═══════════════════════════════════════════════════════════
-//  FULL LYRICS — exact LRC timestamps from official track
-//  Matched to YouTube: https://youtu.be/ZAz3rnLGthg
-// ═══════════════════════════════════════════════════════════
-// All timestamps sourced from official LRC file [length: 03:57]
-// Matched line-by-line to YouTube: https://youtu.be/ZAz3rnLGthg
-const lyrics = [
-  // ── INTRO — Dwele ─────────────────────────────
-  {t:0.00,  text:"",                                               section:"INTRO — DWELE"},
-  {t:22.62, text:"Flashing lights",                                section:""},
-  {t:27.92, text:"Flashing lights",                                section:""},
-  {t:33.17, text:"Flashing lights",                                section:""},
-  {t:38.49, text:"Flashing lights",                                section:""},
-
-  // ── VERSE 1 — Kanye West ──────────────────────
-  {t:42.62, text:"She don't believe in shootin' stars",            section:"VERSE 1 — KANYE WEST"},
-  {t:45.35, text:"But she believe in shoes and cars",              section:""},
-  {t:48.15, text:"Wood floors in the new apartment",               section:""},
-  {t:50.78, text:"Couture from the store's departments",           section:""},
-  {t:53.44, text:"You more like love to start shit",               section:""},
-  {t:56.12, text:"I'm more of the trips to Florida",               section:""},
-  {t:58.46, text:"Ordered the hors d'oeuvres, views of the water", section:""},
-  {t:61.05, text:"Straight from a page of your favorite author",   section:""},
-  {t:64.61, text:"And the weather so breezy",                      section:""},
-  {t:66.49, text:"Man, why can't life always be this easy?",       section:""},
-  {t:69.10, text:"She in the mirror, dancin' so sleazy",           section:""},
-  {t:71.83, text:"I get a call like, \"Where are you, Yeezy?\"",   section:""},
-  {t:74.56, text:"And try to hit you with the ol-wu-wopte",        section:""},
-  {t:77.05, text:"Till I got flashed by the paparazzi",            section:""},
-  {t:80.28, text:"Damn, these niggas got me",                      section:""},
-  {t:82.42, text:"I hate these niggas more than a Nazi",           section:""},
-
-  // ── CHORUS 1 — Dwele ──────────────────────────
-  {t:83.66, text:"As I recall, I know you love to show off",       section:"CHORUS — DWELE"},
-  {t:88.78, text:"But I never thought that you would take it this far", section:""},
-  {t:94.17, text:"What do I know?",                                section:""},
-  {t:96.87, text:"Flashing lights",                                section:""},
-  {t:99.51, text:"What do I know?",                                section:""},
-  {t:102.21,text:"Flashing lights (Know)",                         section:""},
-
-  // ── VERSE 2 — Kanye West ──────────────────────
-  {t:107.36,text:"I know it's been a while, sweetheart",           section:"VERSE 2 — KANYE WEST"},
-  {t:109.21,text:"We hardly talk, I was doin' my thing",           section:""},
-  {t:112.65,text:"I know it was foul, baby",                       section:""},
-  {t:114.50,text:"Ay, babe, lately you've been all on my brain",   section:""},
-  {t:117.65,text:"And if somebody woulda told me a month ago",     section:""},
-  {t:120.08,text:"Frontin', though, yo, I wouldn't wanna know",    section:""},
-  {t:123.10,text:"If somebody woulda told me a year ago",          section:""},
-  {t:125.41,text:"It'll go get this difficult",                    section:""},
-  {t:127.71,text:"Feelin' like Katrina with no FEMA",              section:""},
-  {t:130.88,text:"Like Martin with no Gina",                       section:""},
-  {t:133.52,text:"Like a flight with no Visa",                     section:""},
-  {t:135.38,text:"First class with the seat back, I still see ya", section:""},
-  {t:138.31,text:"In my past, you on the other side of the glass", section:""},
-  {t:141.50,text:"Of my memory's museum",                          section:""},
-  {t:143.53,text:"I'm just sayin', hey, Mona Lisa",                section:""},
-  {t:145.78,text:"Come home, you know you can't roam without Caesar", section:""},
-
-  // ── CHORUS 2 — Dwele ──────────────────────────
-  {t:147.25,text:"As I recall, I know you love to show off",       section:"CHORUS — DWELE"},
-  {t:152.42,text:"But I never thought that you would take it this far", section:""},
-  {t:157.76,text:"What do I know?",                                section:""},
-  {t:160.53,text:"Flashing lights",                                section:""},
-  {t:163.19,text:"What do I know?",                                section:""},
-  {t:165.79,text:"Flashing lights (Know)",                         section:""},
-
-  // ── OUTRO — Dwele & Kanye ─────────────────────
-  {t:168.51,text:"As you recall, you know I love to show off",     section:"OUTRO — DWELE & KANYE"},
-  {t:173.60,text:"But you never thought that I would take it this far", section:""},
-  {t:178.96,text:"What do you know?",                              section:""},
-  {t:181.74,text:"Flashing lights",                                section:""},
-  {t:184.32,text:"What do you know?",                              section:""},
-  {t:187.04,text:"Flashing lights (Know)",                         section:""},
-
-  // ── OUTRO INSTRUMENTAL ────────────────────────
-  {t:191.70,text:"♪",                                              section:"OUTRO INSTRUMENTAL"},
-  {t:202.96,text:"Flashing lights",                                section:""},
-  {t:208.29,text:"Flashing lights",                                section:""},
-  {t:215.00,text:"",                                               section:""},
-];
-
-const sections = [
-  {t:22.62,  label:"INTRO"},
-  {t:42.62,  label:"VERSE 1"},
-  {t:83.66,  label:"CHORUS"},
-  {t:107.36, label:"VERSE 2"},
-  {t:147.25, label:"CHORUS"},
-  {t:168.51, label:"OUTRO"},
-];
-
-const TOTAL    = 237; // 3:57 — overridden dynamically via window._dynamicTotal
-let   YT_ID_current = 'ZAz3rnLGthg';
-function getTotal(){ return window._dynamicTotal || TOTAL; }
-
-// ─── State ────────────────────────────────────────────────
-let ytPlayer    = null;
-let ytReady     = false;
-let playing     = false;
-let raf         = null;
-let waveTimer   = null;
-let currentIdx  = -1;
-
-const glowMap={
-  'CHORUS':'rgba(0,229,255,0.08)','VERSE':'rgba(0,255,136,0.07)',
-  'HOOK':'rgba(255,220,100,0.05)','OUTRO':'rgba(140,90,255,0.06)',
-  'INTRO':'rgba(200,200,255,0.04)','':'rgba(0,255,136,0.04)'
-};
-const flashRx=/flash|lights|Katrina|Mona|Caesar|Gina|FEMA|Visa|Nazi|paparazzi/i;
-let isDragging  = false;
-let dragWasPlay = false;
-
-// ─── DOM ──────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const seekFill    = $('seekFill');
-const seekTrack   = $('seekTrack');
-const seekWrap    = $('seekWrap');
-const seekTip     = $('seekTip');
-const seekMarkers = $('seekMarkers');
-const timeDisplay = $('timeDisplay');
-const timeDock    = $('timeDock');
-const lyricDisp   = $('lyricStage');   // kept for compat
-const lyricPrev   = {textContent:'',classList:{add:()=>{},remove:()=>{}}};// stub — no longer used
-const sectionLbl  = $('sectionLabel');
-const idleMsg     = $('idleMsg');
-const playBtn     = $('playBtn');
-const statusText  = $('statusText');
-const flashOver   = $('flashOverlay');
-const glowOrb     = $('glowOrb');
-const waveformEl  = $('waveformEl');
-const ytLabel     = $('ytStatusLabel');
-
-// ─── Waveform ─────────────────────────────────────────────
-for(let i=0;i<20;i++){
-  const b=document.createElement('div');b.className='wave-bar';waveformEl.appendChild(b);
-}
-function startWave(){
-  if(waveTimer)return;
-  const tick=()=>{
-    if(!playing){waveTimer=null;return;}
-    waveformEl.querySelectorAll('.wave-bar').forEach(b=>{
-      b.style.height=(3+Math.random()*13)+'px';
-      b.style.opacity=.25+Math.random()*.75;
-    });
-    waveTimer=setTimeout(tick,75);
-  };
-  waveTimer=setTimeout(tick,75);
-}
-function freezeWave(){
-  clearTimeout(waveTimer);waveTimer=null;
-  waveformEl.querySelectorAll('.wave-bar').forEach(b=>{b.style.height='4px';b.style.opacity='.2';});
-}
-
-// ─── Section markers ──────────────────────────────────────
-sections.forEach(s=>{
-  const pct=(s.t/getTotal())*100;
-  const m=document.createElement('div');m.className='s-mark';m.style.left=pct+'%';
-  const l=document.createElement('div');l.className='s-mark-lbl';l.textContent=s.label;l.style.left=pct+'%';
-  seekMarkers.appendChild(m);seekMarkers.appendChild(l);
-});
-
-// ─── Seek bar ─────────────────────────────────────────────
-function getPct(clientX){
-  const r=seekTrack.getBoundingClientRect();
-  return Math.max(0,Math.min(1,(clientX-r.left)/r.width));
-}
-
-seekWrap.addEventListener('mousemove',e=>{
-  const pct=getPct(e.clientX);
-  seekTip.textContent=fmt(pct*getTotal());
-  const wr=seekWrap.getBoundingClientRect(),tr=seekTrack.getBoundingClientRect();
-  seekTip.style.left=(tr.left-wr.left+pct*tr.width)+'px';
-  if(isDragging){
-    seekFill.style.width=(pct*100)+'%';
-    const tf=fmt(pct*getTotal());timeDisplay.textContent=tf;timeDock.textContent=tf;
-  }
-});
-seekWrap.addEventListener('mousedown',e=>{
-  isDragging=true;dragWasPlay=playing;
-  if(playing){pauseAll();}
-  seekFill.style.width=(getPct(e.clientX)*100)+'%';
-});
-document.addEventListener('mouseup',e=>{
-  if(!isDragging)return;isDragging=false;
-  seekTo(getPct(e.clientX)*getTotal(),dragWasPlay);
-});
-seekWrap.addEventListener('touchstart',e=>{
-  isDragging=true;dragWasPlay=playing;
-  if(playing){pauseAll();}
-},{passive:true});
-seekWrap.addEventListener('touchmove',e=>{
-  if(!isDragging)return;
-  const pct=getPct(e.touches[0].clientX);
-  seekFill.style.width=(pct*100)+'%';
-  const tf=fmt(pct*getTotal());timeDisplay.textContent=tf;timeDock.textContent=tf;
-},{passive:true});
-seekWrap.addEventListener('touchend',e=>{
-  if(!isDragging)return;isDragging=false;
-  seekTo(getPct(e.changedTouches[0].clientX)*getTotal(),dragWasPlay);
-});
-
-// ─── Helpers ──────────────────────────────────────────────
-function fmt(s){const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,'0')}`}
-function triggerFlash(){flashOver.classList.add('flash');setTimeout(()=>flashOver.classList.remove('flash'),65);}
-// Track last good time + wall-clock stamp for smooth interpolation
-// between ytPlayer.getCurrentTime() calls (Safari can lag or throw)
-let _lastGoodTime = 0;
-let _lastGoodStamp = 0;
-
-function safeGetTime(){
-  if(!ytReady) return 0;
-  try{
-    const t = ytPlayer.getCurrentTime();
-    if(typeof t === 'number' && isFinite(t)){
-      _lastGoodTime  = t;
-      _lastGoodStamp = performance.now();
-      return t;
-    }
-  }catch(err){}
-  // Fallback: interpolate from last known good time
-  const elapsed = (performance.now() - _lastGoodStamp) / 1000;
-  return _lastGoodTime + (playing ? Math.min(elapsed, 1) : 0);
-}
-
-// ─── Core play/pause/seek ─────────────────────────────────
-let _pendingPlay = false; // queued play intent while YT still loading (Safari fix)
-
-function pauseAll(){
-  playing=false;
-  _pendingPlay=false;
-  if(raf){cancelAnimationFrame(raf);raf=null;}
-  freezeWave();
-  try{ if(ytPlayer) ytPlayer.pauseVideo(); }catch(err){}
-  playBtn.textContent='▶ PLAY';
-  statusText.textContent='PAUSED';
-}
-
-function playAll(){
-  playing=true;
-  startWave();
-  try{ if(ytPlayer) ytPlayer.playVideo(); }catch(err){}
-  playBtn.textContent='⏸ PAUSE';
-  statusText.textContent='PLAYING';
-  if(!raf) raf=requestAnimationFrame(loop);
-}
-
-function seekTo(t,resume){
-  const c=Math.max(0,Math.min(getTotal(),t));
-  currentIdx=-1; lastLoopTime=-1;
-  _lastGoodTime=c; _lastGoodStamp=performance.now();
-  rowPrev.textContent=''; rowPrev.classList.remove('has-text');
-  rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
-  rowNext.textContent=''; rowNext.classList.remove('has-text');
-  seekFill.style.width=(c/getTotal()*100)+'%';
-  timeDisplay.textContent=fmt(c);timeDock.textContent=fmt(c);
-  if(c<1&&idleMsg) idleMsg.style.display='flex';
-  try{ if(ytReady && ytPlayer) ytPlayer.seekTo(c,true); }catch(err){}
-  if(resume) playAll();
-  else {
-    playing=false;
-    playBtn.textContent='▶ PLAY';
-    statusText.textContent='PAUSED';
-  }
-  let idx=0;
-  for(let i=0;i<lyrics.length;i++){if(lyrics[i].t<=c)idx=i;else break;}
-  userScrolling=false;
-  updateLyricsList(idx,true);
-}
-
-function togglePlay(){
-  if(!ytReady){
-    // Queue play — will fire in onReady (Safari: this click IS the gesture)
-    _pendingPlay = !_pendingPlay;
-    statusText.textContent = _pendingPlay ? 'WILL PLAY ▶' : 'CANCELLED';
-    playBtn.textContent    = _pendingPlay ? '⏸ PAUSE'    : '▶ PLAY';
-    return;
-  }
-  if(!playing) playAll();
-  else pauseAll();
-}
-
-// ─── Main render loop — driven entirely by ytPlayer.getCurrentTime() ─────
-// lastLoopTime tracks previous frame's YT time to detect seeks/jumps
-let lastLoopTime = -1;
-
-function loop(){
-  if(!playing){raf=null;return;}
-
-  const t = safeGetTime();
-  const total = getTotal();
-
-  // Detect a seek/jump (time moved backwards or jumped >2s forward unexpectedly)
-  const delta = t - lastLoopTime;
-  if(lastLoopTime >= 0 && (delta < -0.3 || delta > 2.5)){
-    // YT time jumped — force re-scan from scratch
-    currentIdx = -1;
-    rowPrev.textContent=''; rowPrev.classList.remove('has-text');
-    rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
-    rowNext.textContent=''; rowNext.classList.remove('has-text');
-  }
-  lastLoopTime = t;
-
-  // Update seek bar + time display
-  seekFill.style.width=(t/total*100)+'%';
-  const tf=fmt(t);
-  timeDisplay.textContent=tf;
-  timeDock.textContent=tf;
-
-  // Find which lyric index matches current time
-  let idx=-1;
-  for(let i=0;i<lyrics.length;i++){
-    if(lyrics[i].t<=t) idx=i;
-    else break;
-  }
-
-  // Trigger lyric change only when index actually changes
-  if(idx !== currentIdx && idx >= 0){
-    currentIdx = idx;
-    showLyric(idx);
-  }
-
-  if(t >= total){ onEnd(); return; }
-  raf = requestAnimationFrame(loop);
-}
-
-function onEnd(){
-  playing=false; raf=null; freezeWave();
-  clearInterval(_ytPollInterval); _ytPollInterval=null;
-  playBtn.textContent='↺ RESTART';
-  statusText.textContent='FINISHED';
-}
-
-function syncNow(){
-  currentIdx=-1; lastLoopTime=-1;
-  _lastGoodTime=safeGetTime(); _lastGoodStamp=performance.now();
-  rowPrev.textContent=''; rowPrev.classList.remove('has-text');
-  rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
-  rowNext.textContent=''; rowNext.classList.remove('has-text');
-  if(idleMsg) idleMsg.style.display='none';
-  if(!playing) playAll();
-  const sb=$('syncBtn');
-  sb.classList.add('sync-flash');
-  setTimeout(()=>sb.classList.remove('sync-flash'),400);
-  statusText.textContent='SYNCED ✓';
-}
-
-function setVol(v){if(ytReady)ytPlayer.setVolume(parseInt(v));}
-
-// ─── 3-row lyric display ──────────────────────────────────
-const rowPrev    = $('rowPrev');
-const rowCurrent = $('rowCurrent');
-const rowNext    = $('rowNext');
-
-function getLineText(i){
-  if(i < 0 || i >= lyrics.length) return '';
-  // skip empty/instrumental lines for prev/next hints
-  return lyrics[i].text || '';
-}
-
-function showLyric(i){
-  const e = lyrics[i]; if(!e) return;
-  if(idleMsg) idleMsg.style.display = 'none';
-
-  // section label
-  if(e.section){ sectionLbl.textContent='▸ '+e.section; sectionLbl.classList.add('show'); }
-  else sectionLbl.classList.remove('show');
-
-  // animate current out
-  rowCurrent.classList.add('exiting');
-
-  setTimeout(()=>{
-    // prev = what was just current
-    const prevText = rowCurrent.textContent;
-    rowCurrent.classList.remove('exiting','has-text');
-
-    // set prev row
-    if(prevText){
-      rowPrev.textContent = prevText;
-      rowPrev.classList.add('has-text');
-    } else {
-      rowPrev.textContent = '';
-      rowPrev.classList.remove('has-text');
-    }
-
-    // set current row
-    rowCurrent.textContent = e.text || '';
-    if(e.text){
-      requestAnimationFrame(()=>requestAnimationFrame(()=>rowCurrent.classList.add('has-text')));
-    }
-
-    // set next row — find next non-empty lyric
-    let nextText = '';
-    for(let n = i+1; n < lyrics.length; n++){
-      if(lyrics[n].text){ nextText = lyrics[n].text; break; }
-    }
-    rowNext.textContent = nextText;
-    if(nextText) rowNext.classList.add('has-text');
-    else rowNext.classList.remove('has-text');
-
-    // flash effect
-    if(flashRx.test(e.text||'')) triggerFlash();
-  }, 180);
-
-  // glow
-  const key = Object.keys(glowMap).find(k=>k&&(e.section||'').includes(k))||'';
-  glowOrb.style.background = `radial-gradient(circle,${glowMap[key]} 0%,transparent 68%)`;
-
-  // update lyrics list panel
-  updateLyricsList(i, false);
-}
-
-// ─── Lyrics list panel ────────────────────────────────────
-const llInner  = $('llInner');
-const llScroll = $('llScroll');
-const llRows   = [];
-const lyricIdxToRow = {};
-
-function buildLyricsList(){
-  let lastSection='';
-  lyrics.forEach((entry,i)=>{
-    if(entry.section && entry.section!==lastSection){
-      const h=document.createElement('div');
-      h.className='ll-row ll-section';
-      h.textContent='▸ '+entry.section;
-      llInner.appendChild(h);
-      llRows.push({el:h,lyricIdx:-1,t:entry.t});
-      lastSection=entry.section;
-    }
-    const r=document.createElement('div');
-    r.className='ll-row';
-    r.textContent=entry.text||'·';
-    if(!entry.text){r.style.opacity='0.1';r.style.cursor='default';}
-    else{
-      r.title='Jump to '+fmt(entry.t);
-      r.addEventListener('click',()=>{userScrolling=false;seekTo(entry.t,playing);});
-    }
-    llInner.appendChild(r);
-    const ri=llRows.length;
-    lyricIdxToRow[i]=ri;
-    llRows.push({el:r,lyricIdx:i,t:entry.t});
-  });
-}
-buildLyricsList();
-
-let llActiveRow=-1;
-let userScrolling=false;
-let userScrollTimer=null;
-
-llScroll.addEventListener('wheel',()=>pauseAutoScroll(),{passive:true});
-llScroll.addEventListener('touchmove',()=>pauseAutoScroll(),{passive:true});
-llScroll.addEventListener('mousedown',()=>pauseAutoScroll());
-
-function pauseAutoScroll(){
-  userScrolling=true;clearTimeout(userScrollTimer);
-  userScrollTimer=setTimeout(()=>{userScrolling=false;},3000);
-}
-
-function scrollToActive(ri,instant){
-  if(userScrolling)return;
-  const row=llRows[ri];if(!row)return;
-  const containerH=llScroll.clientHeight;
-  const target=row.el.offsetTop - containerH/2 + row.el.clientHeight/2;
-  if(instant) llScroll.scrollTop=Math.max(0,target);
-  else llScroll.scrollTo({top:Math.max(0,target),behavior:'smooth'});
-}
-
-function updateLyricsList(lyricIdx,instant){
-  const ri=lyricIdxToRow[lyricIdx];if(ri===undefined)return;
-  if(llActiveRow>=0){
-    llRows[llActiveRow].el.classList.remove('ll-active');
-    [-2,-1,1,2].forEach(o=>{const n=llActiveRow+o;if(n>=0&&n<llRows.length)llRows[n].el.classList.remove('ll-near');});
-  }
-  llRows[ri].el.classList.add('ll-active');
-  [-2,-1,1,2].forEach(o=>{const n=ri+o;if(n>=0&&n<llRows.length)llRows[n].el.classList.add('ll-near');});
-  llActiveRow=ri;
-  scrollToActive(ri,instant);
-}
-
-// ─── Keyboard ─────────────────────────────────────────────
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT')return;
-  if(e.code==='Space'){e.preventDefault();togglePlay();}
-  if(e.code==='KeyS'){e.preventDefault();syncNow();}
-  if(e.code==='ArrowRight'){e.preventDefault();if(ytReady)seekTo(Math.min(safeGetTime()+5,getTotal()),playing);}
-  if(e.code==='ArrowLeft') {e.preventDefault();if(ytReady)seekTo(Math.max(safeGetTime()-5,0),playing);}
-});
-
-// ─── YouTube IFrame API ───────────────────────────────────
-let _ytPollInterval = null;
-
-function _startYTTimePoll(){
-  if(_ytPollInterval) return;
-  _ytPollInterval = setInterval(()=>{
-    if(!ytPlayer || !ytReady) return;
-    try{
-      const t = ytPlayer.getCurrentTime();
-      if(typeof t === 'number' && isFinite(t) && t > 0){
-        _lastGoodTime  = t;
-        _lastGoodStamp = performance.now();
+      /* ── iPad portrait & small tablets (≤900px) ── */
+      @media (max-width: 900px) {
+        .scene {
+          padding: 8px 8px 0;
+        }
+        .right-wrapper {
+          width: 200px;
+        }
+        .terminal-body {
+          padding: 12px 16px 10px;
+        }
+        .track-title {
+          font-size: 22px;
+        }
+        .hdr {
+          margin-bottom: 8px;
+          padding-bottom: 8px;
+        }
+        .lyric-row-current,
+        .lyric-row-prev,
+        .lyric-row-next {
+          font-size: clamp(13px, 2.4vw, 20px);
+        }
+        .controls {
+          padding: 4px 12px 0;
+          gap: 6px;
+        }
+        .kb-hint {
+          display: none;
+        } /* hide keyboard hint on touch devices */
       }
-    }catch(err){}
-  }, 500);
-}
 
-window.onYouTubeIframeAPIReady = function(){
-  const proto = location.protocol;
-  const safeOrigin = (proto==='https:'||proto==='http:') ? location.origin : '';
-
-  ytPlayer = new YT.Player('yt-player-container', {
-    videoId: YT_ID_current,
-    width:   '100%',
-    height:  '100%',
-    playerVars:{
-      autoplay:       0,
-      rel:            0,
-      modestbranding: 1,
-      iv_load_policy: 3,
-      playsinline:    1,
-      fs:             1,
-      cc_load_policy: 0,
-      ...(safeOrigin ? {origin: safeOrigin} : {})
-    },
-    events:{
-      onReady(e){
-        ytReady = true;
-
-        // Style the generated iframe correctly
-        const ifr = document.querySelector('#yt-player-container iframe');
-        if(ifr){
-          ifr.style.cssText = 'width:100%;height:100%;border:none;display:block';
-          ifr.setAttribute('allow','accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture');
-          ifr.setAttribute('playsinline','');
-          ifr.setAttribute('webkit-playsinline','');
+      /* ── Mobile landscape + large phones (≤640px) ── */
+      @media (max-width: 640px) {
+        html,
+        body {
+          height: 100%;
+          height: 100dvh;
+          overflow: hidden;
         }
 
-        try{ ytPlayer.setVolume(parseInt($('volSlider').value)); }catch(err){}
-
-        // Start background time polling (Safari-safe)
-        _startYTTimePoll();
-
-        ytLabel.textContent = '— ready ✓';
-        ytLabel.style.color = 'var(--green)';
-        statusText.textContent = 'YT READY';
-
-        // Fire any queued play intent (user tapped ▶ before ready)
-        if(_pendingPlay){
-          _pendingPlay = false;
-          playAll();
+        /* Override scene completely — use grid for bulletproof layout */
+        .scene {
+          position: fixed;
+          inset: 0;
+          padding: 6px 6px 0;
+          display: grid;
+          grid-template-rows: 1fr auto;
+          align-items: stretch;
+          justify-items: stretch;
         }
-      },
 
-      onStateChange(e){
-        const S = YT.PlayerState;
-        if(e.data === S.PLAYING){
-          lastLoopTime = -1;
-          _startYTTimePoll();
-          if(!playing){
-            playing = true;
-            playBtn.textContent = '⏸ PAUSE';
-            statusText.textContent = 'PLAYING';
-            startWave();
-            if(idleMsg) idleMsg.style.display='none';
+        .player-dock {
+          width: 100%;
+          max-width: none;
+        }
+
+        .terminal {
+          width: 100%;
+          max-width: none;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          border-radius: 10px 10px 0 0;
+        }
+
+        .titlebar {
+          flex-shrink: 0;
+          padding: 8px 10px;
+          gap: 6px;
+        }
+        .dots {
+          gap: 5px;
+        }
+        .dot {
+          width: 10px;
+          height: 10px;
+        }
+        .titlebar-text {
+          font-size: 10px;
+        }
+        .cfg-trigger {
+          padding: 5px 10px;
+          font-size: 10px;
+          min-height: 30px;
+        }
+
+        .terminal-body {
+          flex: 1 1 0;
+          min-height: 0;
+          padding: 8px 10px 6px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .hdr {
+          flex-shrink: 0;
+          margin-bottom: 4px;
+          padding-bottom: 5px;
+        }
+        .hdr .val {
+          display: none;
+        }
+        .track-title {
+          font-size: 18px;
+          margin: 1px 0;
+        }
+
+        .content-row {
+          flex: 1 1 0;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          overflow: hidden;
+        }
+
+        /* 1) lyrics box */
+        .lyrics-col {
+          flex: 0 0 185px;
+          min-height: 0;
+          overflow: hidden;
+        }
+        .lyric-stage {
+          gap: 8px;
+          padding: 8px 0 6px;
+        }
+        .lyric-row-current,
+        .lyric-row-prev,
+        .lyric-row-next {
+          font-size: clamp(19px, 5.4vw, 28px);
+          white-space: normal;
+          line-height: 1.35;
+        }
+        .dev-credit {
+          font-size: 8px;
+        }
+        .timestamp {
+          font-size: 9px;
+        }
+        .section-label {
+          font-size: 9px;
+        }
+
+        /* 2) video row — taller so thumbnail is visible */
+        .right-wrapper {
+          flex: 1 1 0;
+          min-height: 0;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .right-col {
+          flex: 0 0 165px;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .spotify-panel {
+          flex: 1 1 0;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .panel-title {
+          flex-shrink: 0;
+        }
+        #yt-player-container {
+          flex: 1 1 0;
+          min-height: 0;
+          width: 100%;
+          aspect-ratio: 16 / 10 !important;
+          min-height: 155px;
+        }
+
+        /* 3) lyrics list — eats ALL remaining space */
+        .lyrics-list-panel {
+          flex: 1 1 0 !important;
+          min-height: 0 !important;
+          width: 100%;
+          display: flex !important;
+          flex-direction: column !important;
+          overflow: hidden;
+        }
+        .lyrics-list-title {
+          flex-shrink: 0;
+        }
+        .lyrics-list-scroll {
+          flex: 1 1 0 !important;
+          min-height: 0 !important;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        /* controls */
+        .controls {
+          flex-wrap: wrap;
+          padding: 2px 10px 0;
+          gap: 4px;
+          row-gap: 6px;
+        }
+        .ctrl-left {
+          gap: 6px;
+        }
+        .ctrl-mid {
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .ctrl-right {
+          display: none;
+        }
+        .waveform {
+          display: none;
+        }
+        .play-btn,
+        .sync-btn {
+          padding: 7px 14px;
+          font-size: 11px;
+          min-height: 36px;
+        }
+        .seek-wrap {
+          height: 36px;
+        }
+        .seek-track {
+          height: 5px;
+        }
+        .kb-hint {
+          display: none;
+        }
+        .config-panel {
+          margin: 0 8px;
+          max-height: 95vh;
+          border-radius: 10px;
+        }
+        .cfg-row {
+          flex-direction: column;
+          gap: 10px;
+        }
+        .cfg-textarea {
+          min-height: 140px;
+        }
+        .config-body {
+          padding: 16px 16px 18px;
+        }
+      }
+
+      /* ── Phone portrait (≤480px) ── */
+      @media (max-width: 480px) {
+        .scene {
+          padding: 4px 4px 0;
+        }
+        .lyrics-col {
+          flex: 0 0 165px;
+        }
+        .right-wrapper {
+          flex: 1 1 0;
+          min-height: 0;
+        }
+        .right-col {
+          flex: 0 0 150px;
+          min-height: 0;
+        }
+        #yt-player-container {
+          min-height: 140px;
+        }
+        .lyrics-list-panel {
+          flex: 1 1 0 !important;
+          min-height: 0 !important;
+        }
+        .lyric-row-current,
+        .lyric-row-prev,
+        .lyric-row-next {
+          font-size: clamp(15px, 4.8vw, 21px);
+          line-height: 1.3;
+        }
+        .lyric-row-prev {
+          display: block;
+        }
+        .lyric-stage {
+          gap: 5px;
+          padding: 6px 0 4px;
+        }
+        .spotify-panel .panel-title {
+          padding: 4px 8px;
+          font-size: 9px;
+        }
+        .track-title {
+          font-size: 17px;
+        }
+        .hdr {
+          margin-bottom: 3px;
+          padding-bottom: 4px;
+          line-height: 1.4;
+        }
+        .titlebar-text {
+          font-size: 9px;
+          letter-spacing: 0.05em;
+        }
+        .titlebar {
+          padding: 6px 8px;
+        }
+        .ctrl-left {
+          display: none;
+        }
+        .controls {
+          justify-content: center;
+          padding: 2px 8px 0;
+        }
+        .ctrl-mid {
+          justify-content: center;
+          gap: 8px;
+        }
+        .play-btn,
+        .sync-btn {
+          padding: 8px 16px;
+          font-size: 11px;
+        }
+        .idle-big {
+          font-size: 32px;
+        }
+        .idle-msg {
+          font-size: 10px;
+          gap: 6px;
+        }
+        .terminal-body {
+          padding: 7px 9px 5px;
+        }
+      }
+
+      /* ── Touch: always show seek thumb ── */
+      @media (hover: none) {
+        .seek-thumb {
+          opacity: 1 !important;
+        }
+        .seek-track {
+          height: 5px;
+        }
+        .seek-wrap {
+          height: 36px;
+        }
+        .s-mark-lbl {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flash-overlay" id="flashOverlay"></div>
+    <div class="glow-orb" id="glowOrb"></div>
+
+    <div class="scene">
+      <div class="terminal">
+        <div class="titlebar">
+          <div class="dots">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+          </div>
+          <div class="titlebar-text">
+            <em>lyrics</em> —
+            <span id="titlebarSongName"
+              >flashing_lights.js — Kanye West ft. Dwele</span
+            >
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <button class="cfg-trigger" onclick="openConfig()">⚙ EDIT</button>
+            <button class="cfg-trigger alt" onclick="openLibrary()">
+              ♪ SELECT
+            </button>
+            <div
+              style="
+                font-size: 9px;
+                color: var(--muted2);
+                letter-spacing: 0.06em;
+                white-space: nowrap;
+              "
+            >
+              by <span style="color: var(--muted)">Thoeung Sereymongkol</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="terminal-body">
+          <div class="hdr">
+            <span class="cmd">$</span>
+            <span class="val"
+              >node flashing_lights.js --player=youtube --sync=auto</span
+            ><br />
+            <span class="track-title" id="hdrTrackTitle">FLASHING LIGHTS</span>
+            <span style="color: var(--muted)" id="hdrArtist"
+              >Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007)
+              &nbsp;·&nbsp; 3:57</span
+            >
+          </div>
+
+          <div class="content-row">
+            <!-- LYRICS -->
+            <div class="lyrics-col">
+              <div class="section-label" id="sectionLabel"></div>
+              <div class="lyric-stage" id="lyricStage">
+                <div class="idle-msg" id="idleMsg">
+                  <div class="idle-big">READY</div>
+                  <div>
+                    Press <span style="color: var(--green)">▶</span> on the
+                    video →<span class="cursor-blink"></span>
+                  </div>
+                  <div
+                    style="
+                      font-size: 9px;
+                      color: var(--muted2);
+                      margin-top: 4px;
+                    "
+                  >
+                    lyrics auto-sync to YouTube time
+                  </div>
+                </div>
+                <div class="lyric-row lyric-row-prev" id="rowPrev"></div>
+                <div class="lyric-row lyric-row-current" id="rowCurrent"></div>
+                <div class="lyric-row lyric-row-next" id="rowNext"></div>
+              </div>
+              <div class="timestamp">
+                <span class="cur" id="timeDisplay">0:00</span> / 3:57
+              </div>
+              <div class="dev-credit">
+                dev: <span>Thoeung Sereymongkol</span>
+              </div>
+            </div>
+
+            <!-- RIGHT WRAPPER: video + lyrics list stacked vertically on desktop -->
+            <div class="right-wrapper">
+              <div class="right-col">
+                <!-- YouTube Player -->
+                <div class="spotify-panel">
+                  <div class="panel-title">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="#ff4444"
+                    >
+                      <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.25 3.5-6.25 3.5z"
+                      />
+                    </svg>
+                    <span style="color: #ff4444">YouTube</span>
+                    <span style="color: var(--muted)" id="ytStatusLabel"
+                      >— loading...</span
+                    >
+                  </div>
+                  <div
+                    id="yt-player-container"
+                    style="
+                      width: 100%;
+                      aspect-ratio: 16/9;
+                      background: #000;
+                      display: block;
+                    "
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Lyrics list panel — fills remaining height in wrapper -->
+              <div class="lyrics-list-panel">
+                <div class="lyrics-list-title">
+                  <em>▸ LYRICS</em>
+                  <span style="color: var(--muted2)">— full track</span>
+                </div>
+                <div class="lyrics-list-scroll" id="llScroll">
+                  <div class="lyrics-list-inner" id="llInner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLAYER DOCK -->
+      <div class="player-dock">
+        <div class="seek-wrap" id="seekWrap">
+          <div class="seek-track" id="seekTrack">
+            <div class="seek-fill" id="seekFill">
+              <div class="seek-thumb"></div>
+            </div>
+          </div>
+          <div class="seek-markers" id="seekMarkers"></div>
+          <div class="seek-tip" id="seekTip">0:00</div>
+        </div>
+        <div class="controls">
+          <div class="ctrl-left">
+            <div class="status-dot"></div>
+            <span class="status-txt" id="statusText">IDLE</span>
+            <div class="waveform" id="waveformEl"></div>
+          </div>
+          <div class="ctrl-mid">
+            <button class="play-btn" id="playBtn" onclick="togglePlay()">
+              ▶ LYRICS
+            </button>
+            <button
+              class="sync-btn"
+              id="syncBtn"
+              onclick="syncNow()"
+              title="Press when song starts to sync lyrics"
+            >
+              ⟳ SYNC NOW
+            </button>
+            <span class="time-lbl"
+              ><span class="cur" id="timeDock">0:00</span> / 3:57</span
+            >
+          </div>
+          <div class="ctrl-right">
+            <div class="kb-hint">
+              <span><kbd>Space</kbd> play/pause</span>
+              <span><kbd>S</kbd> sync</span>
+              <span><kbd>←</kbd><kbd>→</kbd> ±5s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIG PANEL ══════════════════════════════════════ -->
+    <div class="config-overlay" id="configOverlay">
+      <div class="config-panel">
+        <div class="config-titlebar">
+          <div class="dots">
+            <div
+              class="dot dot-r"
+              style="cursor: pointer"
+              onclick="closeConfig()"
+            ></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+          </div>
+          <div class="config-title"><em>⚙</em> configure — lyrics player</div>
+          <button class="config-close" onclick="closeConfig()">✕</button>
+        </div>
+        <div class="config-body">
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-label">Track Title</div>
+              <input
+                class="cfg-input"
+                id="cfgTitle"
+                placeholder="e.g. Flashing Lights"
+              />
+            </div>
+            <div class="cfg-field">
+              <div class="cfg-label">Artist / Singers</div>
+              <input
+                class="cfg-input"
+                id="cfgArtist"
+                placeholder="e.g. Kanye West ft. Dwele"
+              />
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-label">YouTube URL</div>
+              <input
+                class="cfg-input"
+                id="cfgYtUrl"
+                placeholder="https://youtu.be/ZAz3rnLGthg"
+              />
+              <div class="cfg-hint">
+                Paste any YouTube URL — full link or short youtu.be link.
+              </div>
+            </div>
+          </div>
+          <div class="cfg-row col">
+            <div class="cfg-field">
+              <div class="cfg-label">Lyrics with timestamps</div>
+              <textarea
+                class="cfg-input cfg-textarea"
+                id="cfgLyrics"
+                placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[00:42.62] She don't believe in shootin' stars&#10;[#CHORUS]&#10;[01:23.66] As I recall..."
+              ></textarea>
+              <div class="cfg-hint">
+                Each lyric line: <code>[mm:ss.cs] lyric text</code> or
+                <code>[ss.cs] lyric text</code><br />
+                Section header: start a line with
+                <code>[#SECTION NAME]</code> e.g. <code>[#CHORUS]</code><br />
+                Lines without a valid timestamp are ignored.
+              </div>
+            </div>
+          </div>
+          <div class="cfg-error" id="cfgError"></div>
+          <div class="cfg-actions">
+            <button class="cfg-apply" onclick="applyConfig()">
+              ▶ APPLY &amp; LOAD
+            </button>
+            <button class="cfg-save" onclick="saveTrackToLibrary()">
+              ⬤ SAVE TO LIBRARY
+            </button>
+            <div class="cfg-status" id="cfgStatus"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARY PANEL ═══════════════════════════════════════════════════ -->
+    <div class="config-overlay" id="libraryOverlay">
+      <div class="config-panel library-panel">
+        <div class="config-titlebar">
+          <div class="dots">
+            <div
+              class="dot dot-r"
+              style="cursor: pointer"
+              onclick="closeLibrary()"
+            ></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+          </div>
+          <div class="config-title"><em>♪</em> select music — library</div>
+          <button class="config-close" onclick="closeLibrary()">✕</button>
+        </div>
+        <div class="library-body">
+          <div class="library-status" id="libraryStatus">Loading…</div>
+          <div class="library-list" id="libraryList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pass-overlay" id="passOverlay">
+      <div class="pass-panel">
+        <div class="pass-title">Confirm Delete</div>
+        <input
+          class="pass-input"
+          id="passInput"
+          type="password"
+          placeholder="Enter password"
+        />
+        <div class="pass-error" id="passError"></div>
+        <div class="pass-actions">
+          <button class="pass-cancel" id="passCancel">Cancel</button>
+          <button class="pass-confirm" id="passConfirm">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════
+      //  FULL LYRICS — exact LRC timestamps from official track
+      //  Matched to YouTube: https://youtu.be/ZAz3rnLGthg
+      // ═══════════════════════════════════════════════════════════
+      // All timestamps sourced from official LRC file [length: 03:57]
+      // Matched line-by-line to YouTube: https://youtu.be/ZAz3rnLGthg
+      const lyrics = [
+        // ── INTRO — Dwele ─────────────────────────────
+        { t: 0.0, text: '', section: 'INTRO — DWELE' },
+        { t: 22.62, text: 'Flashing lights', section: '' },
+        { t: 27.92, text: 'Flashing lights', section: '' },
+        { t: 33.17, text: 'Flashing lights', section: '' },
+        { t: 38.49, text: 'Flashing lights', section: '' },
+
+        // ── VERSE 1 — Kanye West ──────────────────────
+        {
+          t: 42.62,
+          text: "She don't believe in shootin' stars",
+          section: 'VERSE 1 — KANYE WEST',
+        },
+        { t: 45.35, text: 'But she believe in shoes and cars', section: '' },
+        { t: 48.15, text: 'Wood floors in the new apartment', section: '' },
+        { t: 50.78, text: "Couture from the store's departments", section: '' },
+        { t: 53.44, text: 'You more like love to start shit', section: '' },
+        { t: 56.12, text: "I'm more of the trips to Florida", section: '' },
+        {
+          t: 58.46,
+          text: "Ordered the hors d'oeuvres, views of the water",
+          section: '',
+        },
+        {
+          t: 61.05,
+          text: 'Straight from a page of your favorite author',
+          section: '',
+        },
+        { t: 64.61, text: 'And the weather so breezy', section: '' },
+        {
+          t: 66.49,
+          text: "Man, why can't life always be this easy?",
+          section: '',
+        },
+        { t: 69.1, text: "She in the mirror, dancin' so sleazy", section: '' },
+        {
+          t: 71.83,
+          text: 'I get a call like, "Where are you, Yeezy?"',
+          section: '',
+        },
+        {
+          t: 74.56,
+          text: 'And try to hit you with the ol-wu-wopte',
+          section: '',
+        },
+        { t: 77.05, text: 'Till I got flashed by the paparazzi', section: '' },
+        { t: 80.28, text: 'Damn, these niggas got me', section: '' },
+        { t: 82.42, text: 'I hate these niggas more than a Nazi', section: '' },
+
+        // ── CHORUS 1 — Dwele ──────────────────────────
+        {
+          t: 83.66,
+          text: 'As I recall, I know you love to show off',
+          section: 'CHORUS — DWELE',
+        },
+        {
+          t: 88.78,
+          text: 'But I never thought that you would take it this far',
+          section: '',
+        },
+        { t: 94.17, text: 'What do I know?', section: '' },
+        { t: 96.87, text: 'Flashing lights', section: '' },
+        { t: 99.51, text: 'What do I know?', section: '' },
+        { t: 102.21, text: 'Flashing lights (Know)', section: '' },
+
+        // ── VERSE 2 — Kanye West ──────────────────────
+        {
+          t: 107.36,
+          text: "I know it's been a while, sweetheart",
+          section: 'VERSE 2 — KANYE WEST',
+        },
+        {
+          t: 109.21,
+          text: "We hardly talk, I was doin' my thing",
+          section: '',
+        },
+        { t: 112.65, text: 'I know it was foul, baby', section: '' },
+        {
+          t: 114.5,
+          text: "Ay, babe, lately you've been all on my brain",
+          section: '',
+        },
+        {
+          t: 117.65,
+          text: 'And if somebody woulda told me a month ago',
+          section: '',
+        },
+        {
+          t: 120.08,
+          text: "Frontin', though, yo, I wouldn't wanna know",
+          section: '',
+        },
+        {
+          t: 123.1,
+          text: 'If somebody woulda told me a year ago',
+          section: '',
+        },
+        { t: 125.41, text: "It'll go get this difficult", section: '' },
+        { t: 127.71, text: "Feelin' like Katrina with no FEMA", section: '' },
+        { t: 130.88, text: 'Like Martin with no Gina', section: '' },
+        { t: 133.52, text: 'Like a flight with no Visa', section: '' },
+        {
+          t: 135.38,
+          text: 'First class with the seat back, I still see ya',
+          section: '',
+        },
+        {
+          t: 138.31,
+          text: 'In my past, you on the other side of the glass',
+          section: '',
+        },
+        { t: 141.5, text: "Of my memory's museum", section: '' },
+        { t: 143.53, text: "I'm just sayin', hey, Mona Lisa", section: '' },
+        {
+          t: 145.78,
+          text: "Come home, you know you can't roam without Caesar",
+          section: '',
+        },
+
+        // ── CHORUS 2 — Dwele ──────────────────────────
+        {
+          t: 147.25,
+          text: 'As I recall, I know you love to show off',
+          section: 'CHORUS — DWELE',
+        },
+        {
+          t: 152.42,
+          text: 'But I never thought that you would take it this far',
+          section: '',
+        },
+        { t: 157.76, text: 'What do I know?', section: '' },
+        { t: 160.53, text: 'Flashing lights', section: '' },
+        { t: 163.19, text: 'What do I know?', section: '' },
+        { t: 165.79, text: 'Flashing lights (Know)', section: '' },
+
+        // ── OUTRO — Dwele & Kanye ─────────────────────
+        {
+          t: 168.51,
+          text: 'As you recall, you know I love to show off',
+          section: 'OUTRO — DWELE & KANYE',
+        },
+        {
+          t: 173.6,
+          text: 'But you never thought that I would take it this far',
+          section: '',
+        },
+        { t: 178.96, text: 'What do you know?', section: '' },
+        { t: 181.74, text: 'Flashing lights', section: '' },
+        { t: 184.32, text: 'What do you know?', section: '' },
+        { t: 187.04, text: 'Flashing lights (Know)', section: '' },
+
+        // ── OUTRO INSTRUMENTAL ────────────────────────
+        { t: 191.7, text: '♪', section: 'OUTRO INSTRUMENTAL' },
+        { t: 202.96, text: 'Flashing lights', section: '' },
+        { t: 208.29, text: 'Flashing lights', section: '' },
+        { t: 215.0, text: '', section: '' },
+      ];
+
+      const sections = [
+        { t: 22.62, label: 'INTRO' },
+        { t: 42.62, label: 'VERSE 1' },
+        { t: 83.66, label: 'CHORUS' },
+        { t: 107.36, label: 'VERSE 2' },
+        { t: 147.25, label: 'CHORUS' },
+        { t: 168.51, label: 'OUTRO' },
+      ];
+
+      const TOTAL = 237; // 3:57 — overridden dynamically via window._dynamicTotal
+      let YT_ID_current = 'ZAz3rnLGthg';
+      function getTotal() {
+        return window._dynamicTotal || TOTAL;
+      }
+
+      // ─── State ────────────────────────────────────────────────
+      let ytPlayer = null;
+      let ytReady = false;
+      let playing = false;
+      let raf = null;
+      let waveTimer = null;
+      let currentIdx = -1;
+
+      const glowMap = {
+        CHORUS: 'rgba(0,229,255,0.08)',
+        VERSE: 'rgba(0,255,136,0.07)',
+        HOOK: 'rgba(255,220,100,0.05)',
+        OUTRO: 'rgba(140,90,255,0.06)',
+        INTRO: 'rgba(200,200,255,0.04)',
+        '': 'rgba(0,255,136,0.04)',
+      };
+      const flashRx =
+        /flash|lights|Katrina|Mona|Caesar|Gina|FEMA|Visa|Nazi|paparazzi/i;
+      let isDragging = false;
+      let dragWasPlay = false;
+
+      // ─── DOM ──────────────────────────────────────────────────
+      const $ = (id) => document.getElementById(id);
+      const seekFill = $('seekFill');
+      const seekTrack = $('seekTrack');
+      const seekWrap = $('seekWrap');
+      const seekTip = $('seekTip');
+      const seekMarkers = $('seekMarkers');
+      const timeDisplay = $('timeDisplay');
+      const timeDock = $('timeDock');
+      const lyricDisp = $('lyricStage'); // kept for compat
+      const lyricPrev = {
+        textContent: '',
+        classList: { add: () => {}, remove: () => {} },
+      }; // stub — no longer used
+      const sectionLbl = $('sectionLabel');
+      const idleMsg = $('idleMsg');
+      const playBtn = $('playBtn');
+      const statusText = $('statusText');
+      const flashOver = $('flashOverlay');
+      const glowOrb = $('glowOrb');
+      const waveformEl = $('waveformEl');
+      const ytLabel = $('ytStatusLabel');
+      const cfgStatus = $('cfgStatus');
+      const libraryOverlay = $('libraryOverlay');
+      const libraryList = $('libraryList');
+      const libraryStatus = $('libraryStatus');
+      const passOverlay = $('passOverlay');
+      const passInput = $('passInput');
+      const passError = $('passError');
+      const passCancel = $('passCancel');
+      const passConfirm = $('passConfirm');
+      let pendingDeleteId = null;
+
+      libraryList.addEventListener('click', (e) => {
+        const inItem = e.target.closest('.track-item');
+        const inActions = e.target.closest('.track-actions');
+        if (!inItem && !inActions) closeAllSwipes();
+      });
+
+      // Supabase (REST)
+      const SUPABASE_URL = 'https://uhfukcpnuakhxgzjdqyg.supabase.co';
+      const SUPABASE_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoZnVrY3BudWFraHhnempkcXlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyOTc0NjcsImV4cCI6MjA4ODg3MzQ2N30.4xlY4uR8oBVQjKcho68WjL6rXXYyLIwEFzGPdC7BlAs';
+      const TRACKS_TABLE = 'tracks';
+
+      function sbFetch(path, options = {}) {
+        const headers = {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          ...(options.headers || {}),
+        };
+        return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+          ...options,
+          headers,
+        });
+      }
+
+      // ─── Waveform ─────────────────────────────────────────────
+      for (let i = 0; i < 20; i++) {
+        const b = document.createElement('div');
+        b.className = 'wave-bar';
+        waveformEl.appendChild(b);
+      }
+      function startWave() {
+        if (waveTimer) return;
+        const tick = () => {
+          if (!playing) {
+            waveTimer = null;
+            return;
           }
-          if(!raf) raf = requestAnimationFrame(loop);
-        }
-        if(e.data === S.PAUSED){
-          if(playing) pauseAll();
-        }
-        if(e.data === S.BUFFERING){
-          statusText.textContent = 'BUFFERING...';
-        }
-        if(e.data === S.ENDED) onEnd();
-      },
-
-      onError(e){
-        const msgs={2:'bad id',5:'HTML5 err',100:'not found',101:'blocked',150:'blocked'};
-        ytLabel.textContent = '— '+(msgs[e.data]||'err '+e.data);
-        ytLabel.style.color = 'var(--amber)';
-        statusText.textContent = 'YT ERROR';
+          waveformEl.querySelectorAll('.wave-bar').forEach((b) => {
+            b.style.height = 3 + Math.random() * 13 + 'px';
+            b.style.opacity = 0.25 + Math.random() * 0.75;
+          });
+          waveTimer = setTimeout(tick, 75);
+        };
+        waveTimer = setTimeout(tick, 75);
       }
-    }
-  });
-};
-
-// ─── CONFIG PANEL ────────────────────────────────────────
-function openConfig(){
-  const overlay = $('configOverlay');
-  // pre-fill with current values
-  $('cfgTitle').value  = document.title.split('—')[0].trim();
-  $('cfgArtist').value = $('hdrArtist') ? $('hdrArtist').textContent : '';
-  $('cfgYtUrl').value  = 'https://youtu.be/' + YT_ID_current;
-  $('cfgLyrics').value = lyrics
-    .filter(l => l.text || l.section)
-    .map(l => {
-      const lines = [];
-      if(l.section) lines.push('[#' + l.section + ']');
-      if(l.text !== undefined){
-        const m = Math.floor(l.t / 60);
-        const s = (l.t % 60).toFixed(2).padStart(5,'0');
-        lines.push(`[${String(m).padStart(2,'0')}:${s}] ${l.text}`);
+      function freezeWave() {
+        clearTimeout(waveTimer);
+        waveTimer = null;
+        waveformEl.querySelectorAll('.wave-bar').forEach((b) => {
+          b.style.height = '4px';
+          b.style.opacity = '.2';
+        });
       }
-      return lines.join('\n');
-    }).join('\n');
-  $('cfgError').textContent = '';
-  overlay.classList.add('open');
-  setTimeout(()=>$('cfgTitle').focus(), 350);
-}
 
-function closeConfig(){
-  $('configOverlay').classList.remove('open');
-}
+      // ─── Section markers ──────────────────────────────────────
+      sections.forEach((s) => {
+        const pct = (s.t / getTotal()) * 100;
+        const m = document.createElement('div');
+        m.className = 's-mark';
+        m.style.left = pct + '%';
+        const l = document.createElement('div');
+        l.className = 's-mark-lbl';
+        l.textContent = s.label;
+        l.style.left = pct + '%';
+        seekMarkers.appendChild(m);
+        seekMarkers.appendChild(l);
+      });
 
-// Close on backdrop click
-$('configOverlay').addEventListener('click', e => {
-  if(e.target === $('configOverlay')) closeConfig();
-});
+      // ─── Seek bar ─────────────────────────────────────────────
+      function getPct(clientX) {
+        const r = seekTrack.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+      }
 
-// Escape key closes config
-document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && $('configOverlay').classList.contains('open')) closeConfig();
-});
+      seekWrap.addEventListener('mousemove', (e) => {
+        const pct = getPct(e.clientX);
+        seekTip.textContent = fmt(pct * getTotal());
+        const wr = seekWrap.getBoundingClientRect(),
+          tr = seekTrack.getBoundingClientRect();
+        seekTip.style.left = tr.left - wr.left + pct * tr.width + 'px';
+        if (isDragging) {
+          seekFill.style.width = pct * 100 + '%';
+          const tf = fmt(pct * getTotal());
+          timeDisplay.textContent = tf;
+          timeDock.textContent = tf;
+        }
+      });
+      seekWrap.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragWasPlay = playing;
+        if (playing) {
+          pauseAll();
+        }
+        seekFill.style.width = getPct(e.clientX) * 100 + '%';
+      });
+      document.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        seekTo(getPct(e.clientX) * getTotal(), dragWasPlay);
+      });
+      seekWrap.addEventListener(
+        'touchstart',
+        (e) => {
+          isDragging = true;
+          dragWasPlay = playing;
+          if (playing) {
+            pauseAll();
+          }
+        },
+        { passive: true },
+      );
+      seekWrap.addEventListener(
+        'touchmove',
+        (e) => {
+          if (!isDragging) return;
+          const pct = getPct(e.touches[0].clientX);
+          seekFill.style.width = pct * 100 + '%';
+          const tf = fmt(pct * getTotal());
+          timeDisplay.textContent = tf;
+          timeDock.textContent = tf;
+        },
+        { passive: true },
+      );
+      seekWrap.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        seekTo(getPct(e.changedTouches[0].clientX) * getTotal(), dragWasPlay);
+      });
 
-function extractYTId(url){
-  url = url.trim();
-  // youtu.be/ID
-  let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if(m) return m[1];
-  // youtube.com/watch?v=ID
-  m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if(m) return m[1];
-  // embed/ID
-  m = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
-  if(m) return m[1];
-  // raw 11-char ID
-  if(/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
-  return null;
-}
+      // ─── Helpers ──────────────────────────────────────────────
+      function fmt(s) {
+        const m = Math.floor(s / 60);
+        return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+      }
+      function triggerFlash() {
+        flashOver.classList.add('flash');
+        setTimeout(() => flashOver.classList.remove('flash'), 65);
+      }
+      // Track last good time + wall-clock stamp for smooth interpolation
+      // between ytPlayer.getCurrentTime() calls (Safari can lag or throw)
+      let _lastGoodTime = 0;
+      let _lastGoodStamp = 0;
 
-function parseLyrics(raw){
-  const lines = raw.split('\n');
-  const result = [];
-  let pendingSection = '';
+      function safeGetTime() {
+        if (!ytReady) return 0;
+        try {
+          const t = ytPlayer.getCurrentTime();
+          if (typeof t === 'number' && isFinite(t)) {
+            _lastGoodTime = t;
+            _lastGoodStamp = performance.now();
+            return t;
+          }
+        } catch (err) {}
+        // Fallback: interpolate from last known good time
+        const elapsed = (performance.now() - _lastGoodStamp) / 1000;
+        return _lastGoodTime + (playing ? Math.min(elapsed, 1) : 0);
+      }
 
-  for(const line of lines){
-    const trimmed = line.trim();
-    if(!trimmed) continue;
+      // ─── Core play/pause/seek ─────────────────────────────────
+      let _pendingPlay = false; // queued play intent while YT still loading (Safari fix)
 
-    // Section header: [#NAME] or [# NAME]
-    const secMatch = trimmed.match(/^\[#\s*(.+?)\]$/);
-    if(secMatch){ pendingSection = secMatch[1].trim(); continue; }
+      function pauseAll() {
+        playing = false;
+        _pendingPlay = false;
+        if (raf) {
+          cancelAnimationFrame(raf);
+          raf = null;
+        }
+        freezeWave();
+        try {
+          if (ytPlayer) ytPlayer.pauseVideo();
+        } catch (err) {}
+        playBtn.textContent = '▶ PLAY';
+        statusText.textContent = 'PAUSED';
+      }
 
-    // Timestamp line: [mm:ss.cs] text  OR  [ss.cs] text
-    const tsMatch = trimmed.match(/^\[(\d{1,2}):(\d{2}(?:\.\d+)?)\]\s*(.*)/);
-    if(tsMatch){
-      const t = parseFloat(tsMatch[1]) * 60 + parseFloat(tsMatch[2]);
-      const text = tsMatch[3].trim();
-      result.push({ t, text, section: pendingSection });
-      pendingSection = ''; // section label consumed by first lyric line
-      continue;
-    }
+      function playAll() {
+        playing = true;
+        startWave();
+        try {
+          if (ytPlayer) ytPlayer.playVideo();
+        } catch (err) {}
+        playBtn.textContent = '⏸ PAUSE';
+        statusText.textContent = 'PLAYING';
+        if (!raf) raf = requestAnimationFrame(loop);
+      }
 
-    // Simple [ss.cs] text (no minutes)
-    const tsMatch2 = trimmed.match(/^\[(\d+(?:\.\d+)?)\]\s*(.*)/);
-    if(tsMatch2){
-      const t = parseFloat(tsMatch2[1]);
-      const text = tsMatch2[2].trim();
-      result.push({ t, text, section: pendingSection });
-      pendingSection = '';
-    }
-  }
+      function seekTo(t, resume) {
+        const c = Math.max(0, Math.min(getTotal(), t));
+        currentIdx = -1;
+        lastLoopTime = -1;
+        _lastGoodTime = c;
+        _lastGoodStamp = performance.now();
+        rowPrev.textContent = '';
+        rowPrev.classList.remove('has-text');
+        rowCurrent.textContent = '';
+        rowCurrent.classList.remove('has-text', 'exiting');
+        rowNext.textContent = '';
+        rowNext.classList.remove('has-text');
+        seekFill.style.width = (c / getTotal()) * 100 + '%';
+        timeDisplay.textContent = fmt(c);
+        timeDock.textContent = fmt(c);
+        if (c < 1 && idleMsg) idleMsg.style.display = 'flex';
+        try {
+          if (ytReady && ytPlayer) ytPlayer.seekTo(c, true);
+        } catch (err) {}
+        if (resume) playAll();
+        else {
+          playing = false;
+          playBtn.textContent = '▶ PLAY';
+          statusText.textContent = 'PAUSED';
+        }
+        let idx = 0;
+        for (let i = 0; i < lyrics.length; i++) {
+          if (lyrics[i].t <= c) idx = i;
+          else break;
+        }
+        userScrolling = false;
+        updateLyricsList(idx, true);
+      }
 
-  // Sort by time ascending
-  result.sort((a,b) => a.t - b.t);
-  return result;
-}
+      function togglePlay() {
+        if (!ytReady) {
+          // Queue play — will fire in onReady (Safari: this click IS the gesture)
+          _pendingPlay = !_pendingPlay;
+          statusText.textContent = _pendingPlay ? 'WILL PLAY ▶' : 'CANCELLED';
+          playBtn.textContent = _pendingPlay ? '⏸ PAUSE' : '▶ PLAY';
+          return;
+        }
+        if (!playing) playAll();
+        else pauseAll();
+      }
 
-function applyConfig(){
-  const errEl = $('cfgError');
-  errEl.textContent = '';
+      // ─── Main render loop — driven entirely by ytPlayer.getCurrentTime() ─────
+      // lastLoopTime tracks previous frame's YT time to detect seeks/jumps
+      let lastLoopTime = -1;
 
-  const title  = $('cfgTitle').value.trim();
-  const artist = $('cfgArtist').value.trim();
-  const ytUrl  = $('cfgYtUrl').value.trim();
-  const raw    = $('cfgLyrics').value.trim();
+      function loop() {
+        if (!playing) {
+          raf = null;
+          return;
+        }
 
-  // Validate
-  if(!title)  { errEl.textContent = '⚠ Track title is required.'; return; }
-  if(!ytUrl)  { errEl.textContent = '⚠ YouTube URL is required.'; return; }
-  if(!raw)    { errEl.textContent = '⚠ Lyrics are required.'; return; }
+        const t = safeGetTime();
+        const total = getTotal();
 
-  const newYtId = extractYTId(ytUrl);
-  if(!newYtId){ errEl.textContent = '⚠ Could not parse YouTube video ID from that URL.'; return; }
+        // Detect a seek/jump (time moved backwards or jumped >2s forward unexpectedly)
+        const delta = t - lastLoopTime;
+        if (lastLoopTime >= 0 && (delta < -0.3 || delta > 2.5)) {
+          // YT time jumped — force re-scan from scratch
+          currentIdx = -1;
+          rowPrev.textContent = '';
+          rowPrev.classList.remove('has-text');
+          rowCurrent.textContent = '';
+          rowCurrent.classList.remove('has-text', 'exiting');
+          rowNext.textContent = '';
+          rowNext.classList.remove('has-text');
+        }
+        lastLoopTime = t;
 
-  const newLyrics = parseLyrics(raw);
-  if(newLyrics.length === 0){ errEl.textContent = '⚠ No valid timestamped lines found. Use format: [mm:ss.cs] lyric'; return; }
+        // Update seek bar + time display
+        seekFill.style.width = (t / total) * 100 + '%';
+        const tf = fmt(t);
+        timeDisplay.textContent = tf;
+        timeDock.textContent = tf;
 
-  // Apply — update UI
-  document.title = title + (artist ? ' — ' + artist : '');
-  $('hdrTrackTitle').textContent = title.toUpperCase();
-  $('hdrArtist').textContent     = artist || '';
-  $('titlebarSongName').textContent = (title + (artist ? ' ft. ' + artist : '')).toLowerCase();
+        // Find which lyric index matches current time
+        let idx = -1;
+        for (let i = 0; i < lyrics.length; i++) {
+          if (lyrics[i].t <= t) idx = i;
+          else break;
+        }
 
-  // Update global lyrics + sections
-  lyrics.length = 0;
-  newLyrics.forEach(l => lyrics.push(l));
+        // Trigger lyric change only when index actually changes
+        if (idx !== currentIdx && idx >= 0) {
+          currentIdx = idx;
+          showLyric(idx);
+        }
 
-  // Rebuild sections from lyrics
-  sections.length = 0;
-  const seenSections = new Set();
-  lyrics.forEach(l => {
-    if(l.section && !seenSections.has(l.section)){
-      seenSections.add(l.section);
-      const shortLabel = l.section.split(/[—\-–]/)[0].trim().substring(0,12);
-      sections.push({t: l.t, label: shortLabel});
-    }
-  });
+        if (t >= total) {
+          onEnd();
+          return;
+        }
+        raf = requestAnimationFrame(loop);
+      }
 
-  // Update total duration
-  const lastT = lyrics[lyrics.length - 1].t;
-  // can't reassign const, update seekbar markers only via sections
-  const newTotal = Math.ceil(lastT + 30);
-  // patch total dynamically
-  window._dynamicTotal = newTotal;
+      function onEnd() {
+        playing = false;
+        raf = null;
+        freezeWave();
+        clearInterval(_ytPollInterval);
+        _ytPollInterval = null;
+        playBtn.textContent = '↺ RESTART';
+        statusText.textContent = 'FINISHED';
+      }
 
-  // Rebuild seek markers
-  seekMarkers.innerHTML = '';
-  sections.forEach(s => {
-    const pct = (s.t / newTotal) * 100;
-    const mk = document.createElement('div'); mk.className='s-mark'; mk.style.left=pct+'%';
-    const lb = document.createElement('div'); lb.className='s-mark-lbl'; lb.textContent=s.label; lb.style.left=pct+'%';
-    seekMarkers.appendChild(mk); seekMarkers.appendChild(lb);
-  });
+      function syncNow() {
+        currentIdx = -1;
+        lastLoopTime = -1;
+        _lastGoodTime = safeGetTime();
+        _lastGoodStamp = performance.now();
+        rowPrev.textContent = '';
+        rowPrev.classList.remove('has-text');
+        rowCurrent.textContent = '';
+        rowCurrent.classList.remove('has-text', 'exiting');
+        rowNext.textContent = '';
+        rowNext.classList.remove('has-text');
+        if (idleMsg) idleMsg.style.display = 'none';
+        if (!playing) playAll();
+        const sb = $('syncBtn');
+        sb.classList.add('sync-flash');
+        setTimeout(() => sb.classList.remove('sync-flash'), 400);
+        statusText.textContent = 'SYNCED ✓';
+      }
 
-  // Rebuild lyrics list
-  llInner.innerHTML = '';
-  llRows.length = 0;
-  Object.keys(lyricIdxToRow).forEach(k => delete lyricIdxToRow[k]);
-  buildLyricsList();
+      function setVol(v) {
+        if (ytReady) ytPlayer.setVolume(parseInt(v));
+      }
 
-  // Reload YouTube player — destroy and recreate for Safari compatibility
-  pauseAll();
-  ytReady = false;
-  _lastGoodTime = 0; _lastGoodStamp = 0;
-  clearInterval(_ytPollInterval); _ytPollInterval = null;
-  try{ ytPlayer.destroy(); }catch(err){}
-  // Recreate container div (destroy removes it)
-  const container = $('yt-player-container');
-  container.innerHTML = '';
-  YT_ID_current = newYtId;
-  // Re-fire onYouTubeIframeAPIReady to rebuild player
-  if(window.YT && window.YT.Player){
-    window.onYouTubeIframeAPIReady();
-  }
+      // ─── 3-row lyric display ──────────────────────────────────
+      const rowPrev = $('rowPrev');
+      const rowCurrent = $('rowCurrent');
+      const rowNext = $('rowNext');
 
-  // Reset player state
-  pauseAll();
-  currentIdx = -1;
-  rowPrev.textContent=''; rowPrev.classList.remove('has-text');
-  rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
-  rowNext.textContent=''; rowNext.classList.remove('has-text');
-  sectionLbl.classList.remove('show');
-  seekFill.style.width = '0%';
-  timeDisplay.textContent = '0:00';
-  timeDock.textContent = '0:00';
-  if(idleMsg) idleMsg.style.display = 'flex';
-  statusText.textContent = 'LOADED';
+      function getLineText(i) {
+        if (i < 0 || i >= lyrics.length) return '';
+        // skip empty/instrumental lines for prev/next hints
+        return lyrics[i].text || '';
+      }
 
-  closeConfig();
-}
+      function showLyric(i) {
+        const e = lyrics[i];
+        if (!e) return;
+        if (idleMsg) idleMsg.style.display = 'none';
 
-// Load YT API
-(function(){
-  const s=document.createElement('script');
-  s.src='https://www.youtube.com/iframe_api';
-  document.head.appendChild(s);
-})();
-</script>
-</body>
+        // section label
+        if (e.section) {
+          sectionLbl.textContent = '▸ ' + e.section;
+          sectionLbl.classList.add('show');
+        } else sectionLbl.classList.remove('show');
+
+        // animate current out
+        rowCurrent.classList.add('exiting');
+
+        setTimeout(() => {
+          // prev = what was just current
+          const prevText = rowCurrent.textContent;
+          rowCurrent.classList.remove('exiting', 'has-text');
+
+          // set prev row
+          if (prevText) {
+            rowPrev.textContent = prevText;
+            rowPrev.classList.add('has-text');
+          } else {
+            rowPrev.textContent = '';
+            rowPrev.classList.remove('has-text');
+          }
+
+          // set current row
+          rowCurrent.textContent = e.text || '';
+          if (e.text) {
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => rowCurrent.classList.add('has-text')),
+            );
+          }
+
+          // set next row — find next non-empty lyric
+          let nextText = '';
+          for (let n = i + 1; n < lyrics.length; n++) {
+            if (lyrics[n].text) {
+              nextText = lyrics[n].text;
+              break;
+            }
+          }
+          rowNext.textContent = nextText;
+          if (nextText) rowNext.classList.add('has-text');
+          else rowNext.classList.remove('has-text');
+
+          // flash effect
+          if (flashRx.test(e.text || '')) triggerFlash();
+        }, 180);
+
+        // glow
+        const key =
+          Object.keys(glowMap).find(
+            (k) => k && (e.section || '').includes(k),
+          ) || '';
+        glowOrb.style.background = `radial-gradient(circle,${glowMap[key]} 0%,transparent 68%)`;
+
+        // update lyrics list panel
+        updateLyricsList(i, false);
+      }
+
+      // ─── Lyrics list panel ────────────────────────────────────
+      const llInner = $('llInner');
+      const llScroll = $('llScroll');
+      const llRows = [];
+      const lyricIdxToRow = {};
+
+      function buildLyricsList() {
+        let lastSection = '';
+        lyrics.forEach((entry, i) => {
+          if (entry.section && entry.section !== lastSection) {
+            const h = document.createElement('div');
+            h.className = 'll-row ll-section';
+            h.textContent = '▸ ' + entry.section;
+            llInner.appendChild(h);
+            llRows.push({ el: h, lyricIdx: -1, t: entry.t });
+            lastSection = entry.section;
+          }
+          const r = document.createElement('div');
+          r.className = 'll-row';
+          r.textContent = entry.text || '·';
+          if (!entry.text) {
+            r.style.opacity = '0.1';
+            r.style.cursor = 'default';
+          } else {
+            r.title = 'Jump to ' + fmt(entry.t);
+            r.addEventListener('click', () => {
+              userScrolling = false;
+              seekTo(entry.t, playing);
+            });
+          }
+          llInner.appendChild(r);
+          const ri = llRows.length;
+          lyricIdxToRow[i] = ri;
+          llRows.push({ el: r, lyricIdx: i, t: entry.t });
+        });
+      }
+      buildLyricsList();
+
+      let llActiveRow = -1;
+      let userScrolling = false;
+      let userScrollTimer = null;
+
+      llScroll.addEventListener('wheel', () => pauseAutoScroll(), {
+        passive: true,
+      });
+      llScroll.addEventListener('touchmove', () => pauseAutoScroll(), {
+        passive: true,
+      });
+      llScroll.addEventListener('mousedown', () => pauseAutoScroll());
+
+      function pauseAutoScroll() {
+        userScrolling = true;
+        clearTimeout(userScrollTimer);
+        userScrollTimer = setTimeout(() => {
+          userScrolling = false;
+        }, 3000);
+      }
+
+      function scrollToActive(ri, instant) {
+        if (userScrolling) return;
+        const row = llRows[ri];
+        if (!row) return;
+        const containerH = llScroll.clientHeight;
+        const target =
+          row.el.offsetTop - containerH / 2 + row.el.clientHeight / 2;
+        if (instant) llScroll.scrollTop = Math.max(0, target);
+        else
+          llScroll.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+      }
+
+      function updateLyricsList(lyricIdx, instant) {
+        const ri = lyricIdxToRow[lyricIdx];
+        if (ri === undefined) return;
+        if (llActiveRow >= 0) {
+          llRows[llActiveRow].el.classList.remove('ll-active');
+          [-2, -1, 1, 2].forEach((o) => {
+            const n = llActiveRow + o;
+            if (n >= 0 && n < llRows.length)
+              llRows[n].el.classList.remove('ll-near');
+          });
+        }
+        llRows[ri].el.classList.add('ll-active');
+        [-2, -1, 1, 2].forEach((o) => {
+          const n = ri + o;
+          if (n >= 0 && n < llRows.length)
+            llRows[n].el.classList.add('ll-near');
+        });
+        llActiveRow = ri;
+        scrollToActive(ri, instant);
+      }
+
+      // ─── Keyboard ─────────────────────────────────────────────
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          togglePlay();
+        }
+        if (e.code === 'KeyS') {
+          e.preventDefault();
+          syncNow();
+        }
+        if (e.code === 'ArrowRight') {
+          e.preventDefault();
+          if (ytReady) seekTo(Math.min(safeGetTime() + 5, getTotal()), playing);
+        }
+        if (e.code === 'ArrowLeft') {
+          e.preventDefault();
+          if (ytReady) seekTo(Math.max(safeGetTime() - 5, 0), playing);
+        }
+      });
+
+      // ─── YouTube IFrame API ───────────────────────────────────
+      let _ytPollInterval = null;
+
+      function _startYTTimePoll() {
+        if (_ytPollInterval) return;
+        _ytPollInterval = setInterval(() => {
+          if (!ytPlayer || !ytReady) return;
+          try {
+            const t = ytPlayer.getCurrentTime();
+            if (typeof t === 'number' && isFinite(t) && t > 0) {
+              _lastGoodTime = t;
+              _lastGoodStamp = performance.now();
+            }
+          } catch (err) {}
+        }, 500);
+      }
+
+      window.onYouTubeIframeAPIReady = function () {
+        const proto = location.protocol;
+        const safeOrigin =
+          proto === 'https:' || proto === 'http:' ? location.origin : '';
+
+        ytPlayer = new YT.Player('yt-player-container', {
+          videoId: YT_ID_current,
+          width: '100%',
+          height: '100%',
+          playerVars: {
+            autoplay: 0,
+            rel: 0,
+            modestbranding: 1,
+            iv_load_policy: 3,
+            playsinline: 1,
+            fs: 1,
+            cc_load_policy: 0,
+            ...(safeOrigin ? { origin: safeOrigin } : {}),
+          },
+          events: {
+            onReady(e) {
+              ytReady = true;
+
+              // Style the generated iframe correctly
+              const ifr = document.querySelector('#yt-player-container iframe');
+              if (ifr) {
+                ifr.style.cssText =
+                  'width:100%;height:100%;border:none;display:block';
+                ifr.setAttribute(
+                  'allow',
+                  'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture',
+                );
+                ifr.setAttribute('playsinline', '');
+                ifr.setAttribute('webkit-playsinline', '');
+              }
+
+              try {
+                ytPlayer.setVolume(parseInt($('volSlider').value));
+              } catch (err) {}
+
+              // Start background time polling (Safari-safe)
+              _startYTTimePoll();
+
+              ytLabel.textContent = '— ready ✓';
+              ytLabel.style.color = 'var(--green)';
+              statusText.textContent = 'YT READY';
+
+              // Fire any queued play intent (user tapped ▶ before ready)
+              if (_pendingPlay) {
+                _pendingPlay = false;
+                playAll();
+              }
+            },
+
+            onStateChange(e) {
+              const S = YT.PlayerState;
+              if (e.data === S.PLAYING) {
+                lastLoopTime = -1;
+                _startYTTimePoll();
+                if (!playing) {
+                  playing = true;
+                  playBtn.textContent = '⏸ PAUSE';
+                  statusText.textContent = 'PLAYING';
+                  startWave();
+                  if (idleMsg) idleMsg.style.display = 'none';
+                }
+                if (!raf) raf = requestAnimationFrame(loop);
+              }
+              if (e.data === S.PAUSED) {
+                if (playing) pauseAll();
+              }
+              if (e.data === S.BUFFERING) {
+                statusText.textContent = 'BUFFERING...';
+              }
+              if (e.data === S.ENDED) onEnd();
+            },
+
+            onError(e) {
+              const msgs = {
+                2: 'bad id',
+                5: 'HTML5 err',
+                100: 'not found',
+                101: 'blocked',
+                150: 'blocked',
+              };
+              ytLabel.textContent = '— ' + (msgs[e.data] || 'err ' + e.data);
+              ytLabel.style.color = 'var(--amber)';
+              statusText.textContent = 'YT ERROR';
+            },
+          },
+        });
+      };
+
+      // ─── CONFIG PANEL ────────────────────────────────────────
+      function openConfig() {
+        const overlay = $('configOverlay');
+        // pre-fill with current values
+        $('cfgTitle').value = document.title.split('—')[0].trim();
+        $('cfgArtist').value = $('hdrArtist') ? $('hdrArtist').textContent : '';
+        $('cfgYtUrl').value = 'https://youtu.be/' + YT_ID_current;
+        $('cfgLyrics').value = lyrics
+          .filter((l) => l.text || l.section)
+          .map((l) => {
+            const lines = [];
+            if (l.section) lines.push('[#' + l.section + ']');
+            if (l.text !== undefined) {
+              const m = Math.floor(l.t / 60);
+              const s = (l.t % 60).toFixed(2).padStart(5, '0');
+              lines.push(`[${String(m).padStart(2, '0')}:${s}] ${l.text}`);
+            }
+            return lines.join('\n');
+          })
+          .join('\n');
+        $('cfgError').textContent = '';
+        setStatus(cfgStatus, '');
+        overlay.classList.add('open');
+        setTimeout(() => $('cfgTitle').focus(), 350);
+      }
+
+      function closeConfig() {
+        $('configOverlay').classList.remove('open');
+      }
+
+      // Close on backdrop click
+      $('configOverlay').addEventListener('click', (e) => {
+        if (e.target === $('configOverlay')) closeConfig();
+      });
+      $('libraryOverlay').addEventListener('click', (e) => {
+        if (e.target === $('libraryOverlay')) closeLibrary();
+      });
+      $('passOverlay').addEventListener('click', (e) => {
+        if (e.target === $('passOverlay')) closePass();
+      });
+
+      // Escape key closes config
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if ($('configOverlay').classList.contains('open')) closeConfig();
+        if ($('libraryOverlay').classList.contains('open')) closeLibrary();
+        if ($('passOverlay').classList.contains('open')) closePass();
+      });
+
+      function extractYTId(url) {
+        url = url.trim();
+        // youtu.be/ID
+        let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+        if (m) return m[1];
+        // youtube.com/watch?v=ID
+        m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+        if (m) return m[1];
+        // embed/ID
+        m = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+        if (m) return m[1];
+        // raw 11-char ID
+        if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+        return null;
+      }
+
+      function parseLyrics(raw) {
+        const lines = raw.split('\n');
+        const result = [];
+        let pendingSection = '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          // Section header: [#NAME] or [# NAME]
+          const secMatch = trimmed.match(/^\[#\s*(.+?)\]$/);
+          if (secMatch) {
+            pendingSection = secMatch[1].trim();
+            continue;
+          }
+
+          // Timestamp line: [mm:ss.cs] text  OR  [ss.cs] text
+          const tsMatch = trimmed.match(
+            /^\[(\d{1,2}):(\d{2}(?:\.\d+)?)\]\s*(.*)/,
+          );
+          if (tsMatch) {
+            const t = parseFloat(tsMatch[1]) * 60 + parseFloat(tsMatch[2]);
+            const text = tsMatch[3].trim();
+            result.push({ t, text, section: pendingSection });
+            pendingSection = ''; // section label consumed by first lyric line
+            continue;
+          }
+
+          // Simple [ss.cs] text (no minutes)
+          const tsMatch2 = trimmed.match(/^\[(\d+(?:\.\d+)?)\]\s*(.*)/);
+          if (tsMatch2) {
+            const t = parseFloat(tsMatch2[1]);
+            const text = tsMatch2[2].trim();
+            result.push({ t, text, section: pendingSection });
+            pendingSection = '';
+          }
+        }
+
+        // Sort by time ascending
+        result.sort((a, b) => a.t - b.t);
+        return result;
+      }
+
+      function setStatus(el, msg, color) {
+        if (!el) return;
+        el.textContent = msg || '';
+        el.style.color = color || 'var(--muted)';
+      }
+
+      function applyTrackData({ title, artist, ytId, lyricsRaw }) {
+        const newLyrics = parseLyrics(lyricsRaw);
+        if (newLyrics.length === 0) return false;
+
+        document.title = title + (artist ? ' — ' + artist : '');
+        $('hdrTrackTitle').textContent = title.toUpperCase();
+        $('hdrArtist').textContent = artist || '';
+        $('titlebarSongName').textContent = (
+          title + (artist ? ' ft. ' + artist : '')
+        ).toLowerCase();
+
+        // Update global lyrics + sections
+        lyrics.length = 0;
+        newLyrics.forEach((l) => lyrics.push(l));
+
+        // Rebuild sections from lyrics
+        sections.length = 0;
+        const seenSections = new Set();
+        lyrics.forEach((l) => {
+          if (l.section && !seenSections.has(l.section)) {
+            seenSections.add(l.section);
+            const shortLabel = l.section
+              .split(/[—\-–]/)[0]
+              .trim()
+              .substring(0, 12);
+            sections.push({ t: l.t, label: shortLabel });
+          }
+        });
+
+        // Update total duration
+        const lastT = lyrics[lyrics.length - 1].t;
+        const newTotal = Math.ceil(lastT + 30);
+        window._dynamicTotal = newTotal;
+
+        // Rebuild seek markers
+        seekMarkers.innerHTML = '';
+        sections.forEach((s) => {
+          const pct = (s.t / newTotal) * 100;
+          const mk = document.createElement('div');
+          mk.className = 's-mark';
+          mk.style.left = pct + '%';
+          const lb = document.createElement('div');
+          lb.className = 's-mark-lbl';
+          lb.textContent = s.label;
+          lb.style.left = pct + '%';
+          seekMarkers.appendChild(mk);
+          seekMarkers.appendChild(lb);
+        });
+
+        // Rebuild lyrics list
+        llInner.innerHTML = '';
+        llRows.length = 0;
+        Object.keys(lyricIdxToRow).forEach((k) => delete lyricIdxToRow[k]);
+        buildLyricsList();
+
+        // Reload YouTube player — destroy and recreate for Safari compatibility
+        pauseAll();
+        ytReady = false;
+        _lastGoodTime = 0;
+        _lastGoodStamp = 0;
+        clearInterval(_ytPollInterval);
+        _ytPollInterval = null;
+        try {
+          ytPlayer.destroy();
+        } catch (err) {}
+        const container = $('yt-player-container');
+        container.innerHTML = '';
+        YT_ID_current = ytId;
+        if (window.YT && window.YT.Player) {
+          window.onYouTubeIframeAPIReady();
+        }
+
+        // Reset player state
+        pauseAll();
+        currentIdx = -1;
+        rowPrev.textContent = '';
+        rowPrev.classList.remove('has-text');
+        rowCurrent.textContent = '';
+        rowCurrent.classList.remove('has-text', 'exiting');
+        rowNext.textContent = '';
+        rowNext.classList.remove('has-text');
+        sectionLbl.classList.remove('show');
+        seekFill.style.width = '0%';
+        timeDisplay.textContent = '0:00';
+        timeDock.textContent = '0:00';
+        if (idleMsg) idleMsg.style.display = 'flex';
+        statusText.textContent = 'LOADED';
+        return true;
+      }
+
+      async function saveTrackToLibrary() {
+        const errEl = $('cfgError');
+        errEl.textContent = '';
+        setStatus(cfgStatus, 'Saving...', 'var(--cyan)');
+
+        const title = $('cfgTitle').value.trim().replace(/\s+/g, ' ');
+        const artist = $('cfgArtist').value.trim().replace(/\s+/g, ' ');
+        const ytUrl = $('cfgYtUrl').value.trim();
+        const raw = $('cfgLyrics').value.trim();
+
+        if (!title) {
+          errEl.textContent = '⚠ Track title is required.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+        if (!ytUrl) {
+          errEl.textContent = '⚠ YouTube URL is required.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+        if (!raw) {
+          errEl.textContent = '⚠ Lyrics are required.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+
+        const ytId = extractYTId(ytUrl);
+        if (!ytId) {
+          errEl.textContent =
+            '⚠ Could not parse YouTube video ID from that URL.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+
+        const titleKey = title.toLowerCase();
+        const artistKey = artist.toLowerCase();
+        const payload = {
+          title,
+          artist,
+          title_key: titleKey,
+          artist_key: artistKey,
+          yt_id: ytId,
+          lyrics: raw,
+        };
+
+        try {
+          const qTitle = encodeURIComponent(titleKey);
+          const qArtist = encodeURIComponent(artistKey);
+          const findResp = await sbFetch(
+            `${TRACKS_TABLE}?select=id&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&limit=1`,
+            { method: 'GET' },
+          );
+          if (!findResp.ok) {
+            const t = await findResp.text();
+            errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+            setStatus(cfgStatus, t ? t.slice(0, 120) : 'Save failed', '#ff6b6b');
+            return;
+          }
+          const found = await findResp.json();
+          if (found.length) {
+            const patchResp = await sbFetch(
+              `${TRACKS_TABLE}?title_key=eq.${qTitle}&artist_key=eq.${qArtist}`,
+              {
+                method: 'PATCH',
+                headers: { Prefer: 'return=representation' },
+                body: JSON.stringify(payload),
+              },
+            );
+            if (!patchResp.ok) {
+              const t = await patchResp.text();
+              errEl.textContent =
+                '⚠ Update failed. Check Supabase table/RLS.';
+              setStatus(
+                cfgStatus,
+                t ? t.slice(0, 120) : 'Update failed',
+                '#ff6b6b',
+              );
+              return;
+            }
+            // Delete duplicates beyond the most recent one
+            try {
+              const listResp = await sbFetch(
+                `${TRACKS_TABLE}?select=id&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
+                { method: 'GET' },
+              );
+              if (listResp.ok) {
+                const rows = await listResp.json();
+                if (rows.length > 1) {
+                  const keepId = rows[0].id;
+                  const delIds = rows
+                    .slice(1)
+                    .map((r) => r.id)
+                    .filter(Boolean);
+                  if (delIds.length) {
+                    const idList = delIds.join(',');
+                    await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
+                      method: 'DELETE',
+                    });
+                  }
+                  // ensure the kept row is the latest payload
+                  await sbFetch(`${TRACKS_TABLE}?id=eq.${keepId}`, {
+                    method: 'PATCH',
+                    headers: { Prefer: 'return=representation' },
+                    body: JSON.stringify(payload),
+                  });
+                }
+              }
+            } catch (err) {}
+            setStatus(cfgStatus, 'Updated ✓', 'var(--green)');
+          } else {
+            const resp = await sbFetch(`${TRACKS_TABLE}`, {
+              method: 'POST',
+              headers: { Prefer: 'return=representation' },
+              body: JSON.stringify([payload]),
+            });
+            if (!resp.ok) {
+              const t = await resp.text();
+              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+              setStatus(
+                cfgStatus,
+                t ? t.slice(0, 120) : 'Save failed',
+                '#ff6b6b',
+              );
+              return;
+            }
+            setStatus(cfgStatus, 'Saved ✓', 'var(--green)');
+          }
+        } catch (err) {
+          errEl.textContent = '⚠ Save failed. Network or Supabase error.';
+          setStatus(cfgStatus, 'Save failed', '#ff6b6b');
+        }
+      }
+
+      async function openLibrary() {
+        libraryOverlay.classList.add('open');
+        libraryList.innerHTML = '';
+        libraryStatus.textContent = 'Loading…';
+        closeAllSwipes();
+
+        try {
+          const resp = await sbFetch(
+            `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&order=created_at.desc`,
+            { method: 'GET' },
+          );
+          if (!resp.ok) {
+            const t = await resp.text();
+            libraryStatus.textContent =
+              'Failed to load library. Check Supabase table/RLS.';
+            if (t) libraryStatus.textContent += ' ' + t.slice(0, 120);
+            return;
+          }
+          const data = await resp.json();
+          if (!data.length) {
+            libraryStatus.textContent = 'No saved tracks yet.';
+            return;
+          }
+          libraryStatus.textContent = `Saved tracks: ${data.length}`;
+          data.forEach((track) => {
+            const swipe = document.createElement('div');
+            swipe.className = 'track-swipe';
+            swipe.setAttribute('data-track-id', track.id);
+
+            const actions = document.createElement('div');
+            actions.className = 'track-actions';
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.textContent = 'Delete';
+            actions.appendChild(delBtn);
+
+            const item = document.createElement('div');
+            item.className = 'track-item';
+
+            const meta = document.createElement('div');
+            meta.className = 'track-meta';
+            const t = document.createElement('div');
+            t.className = 'track-title';
+            t.textContent = (track.title || 'Untitled').toUpperCase();
+            const a = document.createElement('div');
+            a.className = 'track-artist';
+            a.textContent = track.artist || 'Unknown artist';
+
+            const btn = document.createElement('button');
+            btn.className = 'track-load';
+            btn.textContent = 'LOAD';
+
+            const more = document.createElement('button');
+            more.className = 'track-more';
+            more.textContent = '⋯';
+            const right = document.createElement('div');
+            right.className = 'track-actions-right';
+            right.appendChild(btn);
+            right.appendChild(more);
+
+            meta.appendChild(t);
+            meta.appendChild(a);
+            item.appendChild(meta);
+            item.appendChild(right);
+            swipe.appendChild(actions);
+            swipe.appendChild(item);
+
+            const loadTrack = () => {
+              const ok = applyTrackData({
+                title: track.title || 'Untitled',
+                artist: track.artist || '',
+                ytId: track.yt_id,
+                lyricsRaw: track.lyrics || '',
+              });
+              if (ok) {
+                $('cfgTitle').value = track.title || '';
+                $('cfgArtist').value = track.artist || '';
+                $('cfgYtUrl').value = `https://youtu.be/${track.yt_id}`;
+                $('cfgLyrics').value = track.lyrics || '';
+                setStatus(cfgStatus, '');
+                closeLibrary();
+              } else {
+                libraryStatus.textContent =
+                  'This track has invalid lyrics format.';
+              }
+            };
+
+            item.addEventListener('click', () => {
+              if (swipe.classList.contains('swiped')) {
+                swipe.classList.remove('swiped');
+                return;
+              }
+              loadTrack();
+            });
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              loadTrack();
+            });
+            more.addEventListener('click', (e) => {
+              e.stopPropagation();
+              closeAllSwipes();
+              swipe.classList.toggle('swiped');
+            });
+            delBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openPass(track.id);
+            });
+
+            // Swipe handling
+            let startX = 0;
+            let startY = 0;
+            let dragging = false;
+            item.addEventListener(
+              'touchstart',
+              (e) => {
+                if (!e.touches || e.touches.length !== 1) return;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                dragging = true;
+              },
+              { passive: true },
+            );
+            item.addEventListener(
+              'touchmove',
+              (e) => {
+                if (!dragging || !e.touches || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                if (Math.abs(dy) > Math.abs(dx)) return;
+                if (dx < -10) {
+                  swipe.classList.remove('swiped');
+                }
+                if (dx > 35) {
+                  closeAllSwipes();
+                  swipe.classList.add('swiped');
+                }
+              },
+              { passive: true },
+            );
+            item.addEventListener('touchend', () => {
+              dragging = false;
+            });
+            item.addEventListener('touchcancel', () => {
+              dragging = false;
+            });
+
+            libraryList.appendChild(swipe);
+          });
+        } catch (err) {
+          libraryStatus.textContent =
+            'Failed to load library. Network or Supabase error.';
+        }
+      }
+
+      function closeAllSwipes() {
+        const swipes = document.querySelectorAll('.track-swipe.swiped');
+        swipes.forEach((el) => el.classList.remove('swiped'));
+      }
+
+      function openPass(id) {
+        pendingDeleteId = id;
+        passError.textContent = '';
+        passInput.value = '';
+        passOverlay.classList.add('open');
+        setTimeout(() => passInput.focus(), 50);
+      }
+
+      function closePass() {
+        pendingDeleteId = null;
+        passOverlay.classList.remove('open');
+      }
+
+      async function confirmDelete() {
+        if (!pendingDeleteId) return;
+        if (passInput.value !== '007') {
+          passError.textContent = 'Wrong password.';
+          return;
+        }
+        try {
+          const resp = await sbFetch(
+            `${TRACKS_TABLE}?id=eq.${pendingDeleteId}`,
+            { method: 'DELETE' },
+          );
+          if (!resp.ok) {
+            const t = await resp.text();
+            passError.textContent = t
+              ? t.slice(0, 120)
+              : 'Delete failed.';
+            return;
+          }
+          const row = libraryList.querySelector(
+            `[data-track-id="${pendingDeleteId}"]`,
+          );
+          if (row) row.remove();
+          const count = libraryList.querySelectorAll('.track-swipe').length;
+          libraryStatus.textContent =
+            count > 0 ? `Saved tracks: ${count}` : 'No saved tracks yet.';
+          closePass();
+        } catch (err) {
+          passError.textContent = 'Delete failed.';
+        }
+      }
+
+      function closeLibrary() {
+        libraryOverlay.classList.remove('open');
+      }
+
+      passCancel.addEventListener('click', () => closePass());
+      passConfirm.addEventListener('click', () => confirmDelete());
+      passInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') confirmDelete();
+      });
+
+      function applyConfig() {
+        const errEl = $('cfgError');
+        errEl.textContent = '';
+        setStatus(cfgStatus, '');
+
+        const title = $('cfgTitle').value.trim();
+        const artist = $('cfgArtist').value.trim();
+        const ytUrl = $('cfgYtUrl').value.trim();
+        const raw = $('cfgLyrics').value.trim();
+
+        // Validate
+        if (!title) {
+          errEl.textContent = '⚠ Track title is required.';
+          return;
+        }
+        if (!ytUrl) {
+          errEl.textContent = '⚠ YouTube URL is required.';
+          return;
+        }
+        if (!raw) {
+          errEl.textContent = '⚠ Lyrics are required.';
+          return;
+        }
+
+        const newYtId = extractYTId(ytUrl);
+        if (!newYtId) {
+          errEl.textContent =
+            '⚠ Could not parse YouTube video ID from that URL.';
+          return;
+        }
+
+        const ok = applyTrackData({
+          title,
+          artist,
+          ytId: newYtId,
+          lyricsRaw: raw,
+        });
+        if (!ok) {
+          errEl.textContent =
+            '⚠ No valid timestamped lines found. Use format: [mm:ss.cs] lyric';
+          return;
+        }
+
+        closeConfig();
+      }
+
+      // Load YT API
+      (function () {
+        const s = document.createElement('script');
+        s.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(s);
+      })();
+    </script>
+  </body>
 </html>
