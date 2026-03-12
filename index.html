@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Flashing Lights — Kanye West</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,700;1,300&display=swap');
@@ -140,11 +140,7 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
   font-size:9px;color:var(--muted2);letter-spacing:.07em;
   font-family:'Share Tech Mono',monospace;
 }
-.dev-credit span{
-  color:var(--green);
-  font-weight:600;
-  text-shadow:0 0 12px rgba(0,255,136,0.3);
-}
+.dev-credit span{color:var(--muted)}
 
 /* ── RIGHT PANEL ── */
 .right-col{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
@@ -459,6 +455,223 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 /* Sync flash */
 @keyframes syncFlash{0%{background:rgba(255,170,0,0.15)}100%{background:transparent}}
 .sync-flash{animation:syncFlash .4s ease-out}
+
+@media (max-width: 1024px) {
+  .scene{padding:8px}
+  .terminal{max-width:none;border-radius:12px}
+  .content-row{flex-direction:column-reverse;gap:12px}
+  .lyrics-col{min-height:0}
+  .right-col{width:100%;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .spotify-panel,.lyrics-list-panel{flex:1;min-width:0}
+  .player-dock{max-width:none;border-radius:0 0 12px 12px}
+  .lyrics-list-panel{border-radius:8px}
+  .dev-credit,.timestamp{font-size:9px}
+}
+
+@media (max-width: 600px) {
+  :root{font-size:14px}
+  .scene{padding:6px}
+  .titlebar{flex-wrap:wrap;gap:6px}
+  .titlebar-text{font-size:9px;letter-spacing:.05em}
+  .content-row{gap:10px}
+  .lyrics-col{padding:0}
+  .lyric-stage{padding:18px 0 12px}
+  .lyric-row-current{font-size:clamp(18px,4vw,28px)}
+  .lyric-row-prev,.lyric-row-next{font-size:12px}
+  .right-col{flex-direction:column}
+  .lyrics-list-panel{order:-1}
+  .player-dock{padding:0;box-shadow:none}
+  .seek-wrap{padding:0 12px}
+  .lyrics-list-panel::before{top:18px}
+  .lyrics-list-panel::after{height:24px}
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — iPad (≤900px), Mobile (≤640px), Phone (≤480px)
+   ══════════════════════════════════════════════════════════ */
+
+/* ── iPad portrait & small tablets (≤900px) ── */
+@media (max-width:900px){
+  .scene{padding:8px 8px 0}
+  .right-col{width:200px}
+  .terminal-body{padding:12px 16px 10px}
+  .track-title{font-size:22px}
+  .hdr{margin-bottom:8px;padding-bottom:8px}
+  .lyric-row-current{font-size:clamp(18px,4vw,30px)}
+  .lyric-row-prev,.lyric-row-next{font-size:clamp(11px,2vw,14px)}
+  .controls{padding:4px 12px 0;gap:6px}
+  .kb-hint{display:none} /* hide keyboard hint on touch devices */
+}
+
+/* ── Mobile landscape + large phones (≤640px) ── */
+@media (max-width:640px){
+  html,body{overflow:hidden}
+  .scene{padding:6px 6px 0}
+
+  /* stack terminal content vertically */
+  .content-row{
+    flex-direction:column;
+    gap:8px;
+    overflow:hidden;
+  }
+
+  /* right col goes ABOVE lyrics on mobile: YT video + lyrics list side by side */
+  .right-col{
+    width:100%;
+    flex-shrink:0;
+    flex-direction:row;
+    height:130px;
+    gap:8px;
+    overflow:hidden;
+  }
+
+  /* YT video panel: fixed width on mobile */
+  .spotify-panel{
+    width:180px;
+    flex-shrink:0;
+  }
+
+  /* lyrics list fills remaining space */
+  .lyrics-list-panel{
+    flex:1;
+    min-width:0;
+  }
+
+  /* lyrics col takes remaining space */
+  .lyrics-col{flex:1;min-height:0}
+
+  /* shrink header */
+  .hdr{margin-bottom:6px;padding-bottom:6px}
+  .hdr .val{display:none} /* hide command line on small screens */
+  .track-title{font-size:20px;margin:1px 0}
+
+  /* lyric sizes */
+  .lyric-row-current{
+    font-size:clamp(20px,6vw,28px);
+    white-space:normal;
+    line-height:1.2;
+  }
+  .lyric-row-prev,.lyric-row-next{
+    font-size:clamp(11px,3vw,13px);
+    white-space:normal;
+  }
+  .lyric-stage{gap:8px;padding:20px 0 16px}
+
+  /* titlebar */
+  .titlebar{padding:8px 10px;gap:6px}
+  .dots{gap:5px}
+  .dot{width:10px;height:10px}
+  .titlebar-text{font-size:10px}
+
+  /* terminal body padding */
+  .terminal-body{padding:10px 12px 8px}
+
+  /* player dock controls — stack into 2 rows */
+  .controls{
+    flex-wrap:wrap;
+    padding:2px 10px 0;
+    gap:4px;
+    row-gap:6px;
+  }
+  .ctrl-left{gap:6px}
+  .ctrl-mid{gap:6px;flex-wrap:wrap}
+  .ctrl-right{display:none} /* hide kb hints */
+  .waveform{display:none}
+
+  /* bigger touch targets */
+  .play-btn,.sync-btn{
+    padding:7px 14px;
+    font-size:11px;
+    min-height:36px;
+  }
+  .cfg-trigger{padding:5px 10px;font-size:10px;min-height:30px}
+
+  /* seek bar taller for touch */
+  .seek-wrap{height:36px}
+  .seek-track{height:5px}
+
+  /* dev credit + timestamp smaller */
+  .dev-credit{font-size:8px}
+  .timestamp{font-size:9px}
+
+  /* section label */
+  .section-label{font-size:9px}
+
+  /* config panel */
+  .config-panel{
+    margin:0 8px;
+    max-height:95vh;
+    border-radius:10px;
+  }
+  .cfg-row{flex-direction:column;gap:10px}
+  .cfg-textarea{min-height:140px}
+  .config-body{padding:16px 16px 18px}
+}
+
+/* ── Phone portrait (≤480px) ── */
+@media (max-width:480px){
+  .scene{padding:4px 4px 0}
+
+  /* right col: stack vertically — video on top, lyrics list below */
+  .right-col{
+    flex-direction:column;
+    height:200px;
+  }
+  .spotify-panel{
+    width:100%;
+    flex-shrink:0;
+    height:90px;
+  }
+  /* hide YT video title bar on very small screens to save space */
+  .spotify-panel .panel-title{padding:4px 8px;font-size:9px}
+  #yt-player-container{height:calc(90px - 26px)}
+
+  .lyrics-list-panel{flex:1;min-height:0}
+
+  /* bigger current lyric */
+  .lyric-row-current{
+    font-size:clamp(18px,7vw,26px);
+    white-space:normal;
+    line-height:1.15;
+  }
+  .lyric-row-prev,.lyric-row-next{
+    font-size:11px;
+    white-space:normal;
+  }
+
+  /* hide prev row on very small screens — too cramped */
+  .lyric-row-prev{display:none}
+  .lyric-stage{gap:6px;padding:16px 0 12px}
+
+  /* header — minimal */
+  .track-title{font-size:18px}
+  .hdr{margin-bottom:4px;padding-bottom:4px;line-height:1.4}
+
+  /* titlebar compact */
+  .titlebar-text{font-size:9px;letter-spacing:.05em}
+  .titlebar{padding:7px 8px}
+
+  /* controls — minimal 1 row */
+  .ctrl-left{display:none} /* hide status on tiny screens */
+  .controls{justify-content:center;padding:2px 8px 0}
+  .ctrl-mid{justify-content:center;gap:8px}
+  .play-btn,.sync-btn{padding:8px 16px;font-size:11px}
+
+  /* idle message */
+  .idle-big{font-size:36px}
+  .idle-msg{font-size:10px;gap:6px}
+
+  /* terminal body */
+  .terminal-body{padding:8px 10px 6px}
+}
+
+/* ── Touch: always show seek thumb ── */
+@media (hover:none){
+  .seek-thumb{opacity:1!important}
+  .seek-track{height:5px}
+  .seek-wrap{height:36px}
+  .s-mark-lbl{opacity:.5}
+}
 </style>
 </head>
 <body>
