@@ -54,25 +54,77 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 /* ── CONTENT ROW ── */
 .content-row{flex:1;min-height:0;display:flex;gap:16px;overflow:hidden}
 
-/* Lyrics */
+/* Lyrics — 3-row display */
 .lyrics-col{flex:1;min-width:0;position:relative;overflow:hidden}
 .section-label{position:absolute;top:0;left:0;font-size:10px;color:var(--amber);
-  letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .35s}
+  letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .35s;z-index:2}
 .section-label.show{opacity:1}
-.lyric-prev{position:absolute;top:20px;left:0;right:0;font-family:'DM Sans',sans-serif;
-  font-size:clamp(11px,1.6vw,15px);font-weight:300;font-style:italic;color:var(--muted);
-  opacity:0;transition:opacity .4s;line-height:1.5}
-.lyric-prev.show{opacity:1}
-.lyric-display{position:absolute;inset:0;display:flex;flex-direction:column;
-  justify-content:center;align-items:flex-start;gap:6px}
-.lyric-line{font-family:'DM Sans',sans-serif;font-size:clamp(18px,3vw,34px);
-  font-weight:700;color:var(--white);line-height:1.25;opacity:0;
-  transform:translateY(18px) skewX(-1.5deg);transition:none;max-width:100%;letter-spacing:-.01em;
-  text-shadow:0 0 35px rgba(0,255,136,0.12)}
-.lyric-line.active{opacity:1;transform:translateY(0) skewX(0);
-  transition:opacity .22s ease,transform .38s cubic-bezier(.22,1,.36,1)}
-.lyric-line.exit{opacity:0;transform:translateY(-16px) skewX(1.5deg);
-  transition:opacity .18s ease,transform .28s ease}
+
+/* 3-row lyric stage */
+.lyric-stage{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  gap:10px;
+  padding:28px 0 24px;
+}
+
+/* shared row base */
+.lyric-row{
+  font-family:'DM Sans',sans-serif;
+  line-height:1.25;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  transition:opacity .35s ease, transform .4s cubic-bezier(.22,1,.36,1), color .3s ease;
+}
+
+/* PREV row — above, faded italic */
+.lyric-row-prev{
+  font-size:clamp(11px,1.5vw,16px);
+  font-weight:300;
+  font-style:italic;
+  color:var(--muted);
+  opacity:0;
+  transform:translateY(6px);
+}
+.lyric-row-prev.has-text{opacity:.55;transform:translateY(0);}
+
+/* CURRENT row — big, bright, bold */
+.lyric-row-current{
+  font-size:clamp(20px,3.2vw,38px);
+  font-weight:700;
+  color:var(--white);
+  opacity:0;
+  transform:translateY(20px) skewX(-1.5deg);
+  letter-spacing:-.01em;
+  text-shadow:0 0 40px rgba(0,255,136,0.15);
+}
+.lyric-row-current.has-text{
+  opacity:1;
+  transform:translateY(0) skewX(0);
+  transition:opacity .22s ease, transform .4s cubic-bezier(.22,1,.36,1);
+}
+
+/* NEXT row — below, muted preview */
+.lyric-row-next{
+  font-size:clamp(11px,1.5vw,16px);
+  font-weight:400;
+  color:var(--muted);
+  opacity:0;
+  transform:translateY(-4px);
+}
+.lyric-row-next.has-text{opacity:.4;transform:translateY(0);}
+
+/* swap-out animation for current line leaving */
+@keyframes lyricExit{
+  to{opacity:0;transform:translateY(-22px) skewX(1.5deg);}
+}
+.lyric-row-current.exiting{
+  animation:lyricExit .22s ease forwards;
+}
+
 .idle-msg{position:absolute;inset:0;display:flex;flex-direction:column;
   justify-content:center;align-items:flex-start;gap:8px;color:var(--muted);font-size:11px}
 .idle-big{font-family:'Bebas Neue',sans-serif;font-size:48px;color:#181b2c;letter-spacing:.08em}
@@ -81,6 +133,14 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .timestamp{position:absolute;bottom:0;right:0;font-size:10px;color:var(--muted);letter-spacing:.05em}
 .timestamp .cur{color:var(--green)}
+
+/* dev credit */
+.dev-credit{
+  position:absolute;bottom:0;left:0;
+  font-size:9px;color:var(--muted2);letter-spacing:.07em;
+  font-family:'Share Tech Mono',monospace;
+}
+.dev-credit span{color:var(--muted)}
 
 /* ── RIGHT PANEL ── */
 .right-col{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
@@ -289,7 +349,7 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
     <div class="titlebar">
       <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
       <div class="titlebar-text"><em>lyrics</em> — flashing_lights.js — Kanye West ft. Dwele</div>
-      <div style="width:52px"></div>
+      <div style="font-size:9px;color:var(--muted2);letter-spacing:.06em;white-space:nowrap">by <span style="color:var(--muted)">Thoeung Sereymongkol</span></div>
     </div>
 
     <div class="terminal-body">
@@ -303,15 +363,18 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
         <!-- LYRICS -->
         <div class="lyrics-col">
           <div class="section-label" id="sectionLabel"></div>
-          <div class="lyric-prev" id="lyricPrev"></div>
-          <div class="lyric-display" id="lyricDisplay">
+          <div class="lyric-stage" id="lyricStage">
             <div class="idle-msg" id="idleMsg">
               <div class="idle-big">READY</div>
               <div>Press <span style="color:var(--green)">▶</span> on the video →<span class="cursor-blink"></span></div>
               <div style="font-size:9px;color:var(--muted2);margin-top:4px">lyrics auto-sync to YouTube time</div>
             </div>
+            <div class="lyric-row lyric-row-prev"  id="rowPrev"></div>
+            <div class="lyric-row lyric-row-current" id="rowCurrent"></div>
+            <div class="lyric-row lyric-row-next"  id="rowNext"></div>
           </div>
           <div class="timestamp"><span class="cur" id="timeDisplay">0:00</span> / 3:57</div>
+          <div class="dev-credit">dev: <span>Thoeung Sereymongkol</span></div>
         </div>
 
         <!-- RIGHT PANEL -->
@@ -473,7 +536,13 @@ let playing     = false;
 let raf         = null;
 let waveTimer   = null;
 let currentIdx  = -1;
-let currentEl   = null;
+
+const glowMap={
+  'CHORUS':'rgba(0,229,255,0.08)','VERSE':'rgba(0,255,136,0.07)',
+  'HOOK':'rgba(255,220,100,0.05)','OUTRO':'rgba(140,90,255,0.06)',
+  'INTRO':'rgba(200,200,255,0.04)','':'rgba(0,255,136,0.04)'
+};
+const flashRx=/flash|lights|Katrina|Mona|Caesar|Gina|FEMA|Visa|Nazi|paparazzi/i;
 let isDragging  = false;
 let dragWasPlay = false;
 
@@ -486,8 +555,8 @@ const seekTip     = $('seekTip');
 const seekMarkers = $('seekMarkers');
 const timeDisplay = $('timeDisplay');
 const timeDock    = $('timeDock');
-const lyricDisp   = $('lyricDisplay');
-const lyricPrev   = $('lyricPrev');
+const lyricDisp   = $('lyricStage');   // kept for compat
+const lyricPrev   = {textContent:'',classList:{add:()=>{},remove:()=>{}}};// stub — no longer used
 const sectionLbl  = $('sectionLabel');
 const idleMsg     = $('idleMsg');
 const playBtn     = $('playBtn');
@@ -596,8 +665,9 @@ function playAll(){
 function seekTo(t,resume){
   const c=Math.max(0,Math.min(TOTAL,t));
   currentIdx=-1;
-  if(currentEl){currentEl.remove();currentEl=null;}
-  lyricPrev.textContent='';lyricPrev.classList.remove('show');
+  rowPrev.textContent=''; rowPrev.classList.remove('has-text');
+  rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
+  rowNext.textContent=''; rowNext.classList.remove('has-text');
   seekFill.style.width=(c/TOTAL*100)+'%';
   timeDisplay.textContent=fmt(c);timeDock.textContent=fmt(c);
   if(c<1&&idleMsg) idleMsg.style.display='flex';
@@ -622,10 +692,10 @@ function togglePlay(){
 }
 
 function syncNow(){
-  // Re-sync: treat current YT time as authoritative, just reset lyric pointer
   currentIdx=-1;
-  if(currentEl){currentEl.remove();currentEl=null;}
-  lyricPrev.textContent='';lyricPrev.classList.remove('show');
+  rowPrev.textContent=''; rowPrev.classList.remove('has-text');
+  rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
+  rowNext.textContent=''; rowNext.classList.remove('has-text');
   if(idleMsg) idleMsg.style.display='none';
   if(!playing) playAll();
   const sb=$('syncBtn');
@@ -655,36 +725,67 @@ function onEnd(){
   playBtn.textContent='↺ RESTART';statusText.textContent='FINISHED';
 }
 
-// ─── Lyric display ────────────────────────────────────────
-const glowMap={
-  'CHORUS':'rgba(0,229,255,0.08)','VERSE':'rgba(0,255,136,0.07)',
-  'HOOK':'rgba(255,220,100,0.05)','OUTRO':'rgba(140,90,255,0.06)',
-  'INTRO':'rgba(200,200,255,0.04)','':'rgba(0,255,136,0.04)'
-};
-const flashRx=/flash|lights|Katrina|Mona|Caesar|Gina|FEMA|Visa|Nazi|paparazzi/i;
+// ─── 3-row lyric display ──────────────────────────────────
+const rowPrev    = $('rowPrev');
+const rowCurrent = $('rowCurrent');
+const rowNext    = $('rowNext');
+
+function getLineText(i){
+  if(i < 0 || i >= lyrics.length) return '';
+  // skip empty/instrumental lines for prev/next hints
+  return lyrics[i].text || '';
+}
 
 function showLyric(i){
-  const e=lyrics[i];if(!e)return;
-  if(idleMsg) idleMsg.style.display='none';
-  if(currentEl){
-    lyricPrev.textContent=currentEl.textContent;
-    currentEl.classList.add('exit');
-    const old=currentEl;setTimeout(()=>old.remove(),320);currentEl=null;
-    lyricPrev.classList.add('show');
-    setTimeout(()=>lyricPrev.classList.remove('show'),2800);
-  }
-  if(e.section){sectionLbl.textContent='▸ '+e.section;sectionLbl.classList.add('show');}
+  const e = lyrics[i]; if(!e) return;
+  if(idleMsg) idleMsg.style.display = 'none';
+
+  // section label
+  if(e.section){ sectionLbl.textContent='▸ '+e.section; sectionLbl.classList.add('show'); }
   else sectionLbl.classList.remove('show');
-  if(e.text){
-    const el=document.createElement('div');el.className='lyric-line';el.textContent=e.text;
-    lyricDisp.appendChild(el);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('active')));
-    currentEl=el;
-    if(flashRx.test(e.text)) triggerFlash();
-  }
-  const key=Object.keys(glowMap).find(k=>k&&(e.section||'').includes(k))||'';
-  glowOrb.style.background=`radial-gradient(circle,${glowMap[key]} 0%,transparent 68%)`;
-  updateLyricsList(i,false);
+
+  // animate current out
+  rowCurrent.classList.add('exiting');
+
+  setTimeout(()=>{
+    // prev = what was just current
+    const prevText = rowCurrent.textContent;
+    rowCurrent.classList.remove('exiting','has-text');
+
+    // set prev row
+    if(prevText){
+      rowPrev.textContent = prevText;
+      rowPrev.classList.add('has-text');
+    } else {
+      rowPrev.textContent = '';
+      rowPrev.classList.remove('has-text');
+    }
+
+    // set current row
+    rowCurrent.textContent = e.text || '';
+    if(e.text){
+      requestAnimationFrame(()=>requestAnimationFrame(()=>rowCurrent.classList.add('has-text')));
+    }
+
+    // set next row — find next non-empty lyric
+    let nextText = '';
+    for(let n = i+1; n < lyrics.length; n++){
+      if(lyrics[n].text){ nextText = lyrics[n].text; break; }
+    }
+    rowNext.textContent = nextText;
+    if(nextText) rowNext.classList.add('has-text');
+    else rowNext.classList.remove('has-text');
+
+    // flash effect
+    if(flashRx.test(e.text||'')) triggerFlash();
+  }, 180);
+
+  // glow
+  const key = Object.keys(glowMap).find(k=>k&&(e.section||'').includes(k))||'';
+  glowOrb.style.background = `radial-gradient(circle,${glowMap[key]} 0%,transparent 68%)`;
+
+  // update lyrics list panel
+  updateLyricsList(i, false);
 }
 
 // ─── Lyrics list panel ────────────────────────────────────
