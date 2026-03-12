@@ -1013,11 +1013,14 @@ function safeGetTime(){
 }
 
 // ─── Core play/pause/seek ─────────────────────────────────
+let _pendingPlay = false; // queued play intent while YT still loading (Safari fix)
+
 function pauseAll(){
   playing=false;
+  _pendingPlay=false;
   if(raf){cancelAnimationFrame(raf);raf=null;}
   freezeWave();
-  if(ytReady) ytPlayer.pauseVideo();
+  try{ if(ytPlayer) ytPlayer.pauseVideo(); }catch(err){}
   playBtn.textContent='▶ PLAY';
   statusText.textContent='PAUSED';
 }
@@ -1025,7 +1028,7 @@ function pauseAll(){
 function playAll(){
   playing=true;
   startWave();
-  if(ytReady) ytPlayer.playVideo();
+  try{ if(ytPlayer) ytPlayer.playVideo(); }catch(err){}
   playBtn.textContent='⏸ PAUSE';
   statusText.textContent='PLAYING';
   if(!raf) raf=requestAnimationFrame(loop);
@@ -1041,7 +1044,7 @@ function seekTo(t,resume){
   seekFill.style.width=(c/getTotal()*100)+'%';
   timeDisplay.textContent=fmt(c);timeDock.textContent=fmt(c);
   if(c<1&&idleMsg) idleMsg.style.display='flex';
-  if(ytReady){ytPlayer.seekTo(c,true);}
+  try{ if(ytReady && ytPlayer) ytPlayer.seekTo(c,true); }catch(err){}
   if(resume) playAll();
   else {
     playing=false;
@@ -1055,7 +1058,13 @@ function seekTo(t,resume){
 }
 
 function togglePlay(){
-  if(!ytReady){statusText.textContent='YT LOADING...';return;}
+  if(!ytReady){
+    // Queue play — will fire in onReady (Safari: this click IS the gesture)
+    _pendingPlay = !_pendingPlay;
+    statusText.textContent = _pendingPlay ? 'WILL PLAY ▶' : 'CANCELLED';
+    playBtn.textContent    = _pendingPlay ? '⏸ PAUSE'    : '▶ PLAY';
+    return;
+  }
   if(!playing) playAll();
   else pauseAll();
 }
@@ -1106,6 +1115,7 @@ function loop(){
 
 function onEnd(){
   playing=false; raf=null; freezeWave();
+  clearInterval(_ytPollInterval); _ytPollInterval=null;
   playBtn.textContent='↺ RESTART';
   statusText.textContent='FINISHED';
 }
@@ -1265,84 +1275,96 @@ document.addEventListener('keydown',e=>{
   if(e.code==='ArrowLeft') {e.preventDefault();if(ytReady)seekTo(Math.max(safeGetTime()-5,0),playing);}
 });
 
-// ─── YouTube IFrame API (Safari-compatible) ──────────────
-// Key Safari fixes:
-//  1. No `origin` param on file:// or localhost — causes block
-//  2. playsinline=1 required for iOS Safari
-//  3. Never call playVideo() from onReady — only from real user gesture
-//  4. After API creates the iframe, patch it with Safari allow attributes
+// ─── YouTube IFrame API ───────────────────────────────────
+let _ytPollInterval = null;
+
+function _startYTTimePoll(){
+  if(_ytPollInterval) return;
+  _ytPollInterval = setInterval(()=>{
+    if(!ytPlayer || !ytReady) return;
+    try{
+      const t = ytPlayer.getCurrentTime();
+      if(typeof t === 'number' && isFinite(t) && t > 0){
+        _lastGoodTime  = t;
+        _lastGoodStamp = performance.now();
+      }
+    }catch(err){}
+  }, 500);
+}
+
 window.onYouTubeIframeAPIReady = function(){
-  const safeOrigin = (location.protocol === 'https:' || location.protocol === 'http:')
-    ? location.origin : '';
+  const proto = location.protocol;
+  const safeOrigin = (proto==='https:'||proto==='http:') ? location.origin : '';
 
   ytPlayer = new YT.Player('yt-player-container', {
     videoId: YT_ID_current,
-    width:  '100%',
-    height: '100%',
+    width:   '100%',
+    height:  '100%',
     playerVars:{
-      autoplay:        0,
-      rel:             0,
-      modestbranding:  1,
-      iv_load_policy:  3,
-      playsinline:     1,   // iOS Safari: play inside element, not fullscreen
-      fs:              1,
-      ...(safeOrigin ? { origin: safeOrigin } : {})
+      autoplay:       0,
+      rel:            0,
+      modestbranding: 1,
+      iv_load_policy: 3,
+      playsinline:    1,
+      fs:             1,
+      cc_load_policy: 0,
+      ...(safeOrigin ? {origin: safeOrigin} : {})
     },
     events:{
       onReady(e){
         ytReady = true;
 
-        // Patch the generated iframe for Safari autoplay policy
-        const iframe = document.querySelector('#yt-player-container iframe');
-        if(iframe){
-          iframe.setAttribute('allow',
-            'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-          iframe.setAttribute('playsinline', '');
-          iframe.setAttribute('webkit-playsinline', '');
-          iframe.style.width  = '100%';
-          iframe.style.height = '100%';
-          iframe.style.border = 'none';
-          iframe.style.display = 'block';
+        // Style the generated iframe correctly
+        const ifr = document.querySelector('#yt-player-container iframe');
+        if(ifr){
+          ifr.style.cssText = 'width:100%;height:100%;border:none;display:block';
+          ifr.setAttribute('allow','accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture');
+          ifr.setAttribute('playsinline','');
+          ifr.setAttribute('webkit-playsinline','');
         }
 
-        // Volume
-        try { ytPlayer.setVolume(parseInt($('volSlider').value)); } catch(err){}
+        try{ ytPlayer.setVolume(parseInt($('volSlider').value)); }catch(err){}
+
+        // Start background time polling (Safari-safe)
+        _startYTTimePoll();
 
         ytLabel.textContent = '— ready ✓';
         ytLabel.style.color = 'var(--green)';
-        statusText.textContent = 'READY — tap ▶ to play';
+        statusText.textContent = 'YT READY';
+
+        // Fire any queued play intent (user tapped ▶ before ready)
+        if(_pendingPlay){
+          _pendingPlay = false;
+          playAll();
+        }
       },
 
       onStateChange(e){
         const S = YT.PlayerState;
-
         if(e.data === S.PLAYING){
           lastLoopTime = -1;
+          _startYTTimePoll();
           if(!playing){
             playing = true;
             playBtn.textContent = '⏸ PAUSE';
             statusText.textContent = 'PLAYING';
             startWave();
-            if(idleMsg) idleMsg.style.display = 'none';
+            if(idleMsg) idleMsg.style.display='none';
           }
           if(!raf) raf = requestAnimationFrame(loop);
         }
-
         if(e.data === S.PAUSED){
           if(playing) pauseAll();
         }
-
         if(e.data === S.BUFFERING){
           statusText.textContent = 'BUFFERING...';
-          // keep loop alive — YT will fire PLAYING again when ready
         }
-
         if(e.data === S.ENDED) onEnd();
       },
 
       onError(e){
-        const msgs = {2:'bad videoId', 5:'HTML5 error', 100:'not found', 101:'embed blocked', 150:'embed blocked'};
-        ytLabel.textContent = '— ' + (msgs[e.data] || 'error ' + e.data);
+        const msgs={2:'bad id',5:'HTML5 err',100:'not found',101:'blocked',150:'blocked'};
+        ytLabel.textContent = '— '+(msgs[e.data]||'err '+e.data);
         ytLabel.style.color = 'var(--amber)';
         statusText.textContent = 'YT ERROR';
       }
@@ -1509,6 +1531,7 @@ function applyConfig(){
   pauseAll();
   ytReady = false;
   _lastGoodTime = 0; _lastGoodStamp = 0;
+  clearInterval(_ytPollInterval); _ytPollInterval = null;
   try{ ytPlayer.destroy(); }catch(err){}
   // Recreate container div (destroy removes it)
   const container = $('yt-player-container');
