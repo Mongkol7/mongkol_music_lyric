@@ -81,15 +81,15 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 }
 
 /* PREV row — above, faded italic */
-.lyric-row-prev{
-  font-size:clamp(11px,1.5vw,16px);
-  font-weight:300;
-  font-style:italic;
-  color:var(--muted);
-  opacity:0;
-  transform:translateY(6px);
-}
-.lyric-row-prev.has-text{opacity:.55;transform:translateY(0);}
+  .lyric-row-prev{
+    font-size:clamp(11px,1.5vw,16px);
+    font-weight:400;
+    font-style:italic;
+    color:rgba(0,255,136,0.8);
+    opacity:0;
+    transform:translateY(6px);
+  }
+  .lyric-row-prev.has-text{opacity:.7;transform:translateY(0);}
 
 /* CURRENT row — big, bright, bold */
 .lyric-row-current{
@@ -108,14 +108,14 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 }
 
 /* NEXT row — below, muted preview */
-.lyric-row-next{
-  font-size:clamp(11px,1.5vw,16px);
-  font-weight:400;
-  color:var(--muted);
-  opacity:0;
-  transform:translateY(-4px);
-}
-.lyric-row-next.has-text{opacity:.4;transform:translateY(0);}
+  .lyric-row-next{
+    font-size:clamp(11px,1.5vw,16px);
+    font-weight:500;
+    color:rgba(0,255,136,0.65);
+    opacity:0;
+    transform:translateY(-4px);
+  }
+  .lyric-row-next.has-text{opacity:.6;transform:translateY(0);}
 
 /* swap-out animation for current line leaving */
 @keyframes lyricExit{
@@ -603,6 +603,7 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
     font-size:clamp(18px,7vw,26px);
     white-space:normal;
     line-height:1.15;
+    max-height:58px;
   }
   .lyric-row-prev,.lyric-row-next{
     font-size:11px;
@@ -611,7 +612,7 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 
   /* hide prev row on very small screens — too cramped */
   .lyric-row-prev{display:none}
-  .lyric-stage{gap:6px;padding:16px 0 12px}
+  .lyric-stage{gap:6px;padding:16px 0 12px;max-height:80px}
 
   /* header — minimal */
   .track-title{font-size:18px}
