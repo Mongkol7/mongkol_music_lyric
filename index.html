@@ -456,36 +456,6 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 @keyframes syncFlash{0%{background:rgba(255,170,0,0.15)}100%{background:transparent}}
 .sync-flash{animation:syncFlash .4s ease-out}
 
-@media (max-width: 1024px) {
-  .scene{padding:8px}
-  .terminal{max-width:none;border-radius:12px}
-  .content-row{flex-direction:column-reverse;gap:12px}
-  .lyrics-col{min-height:0}
-  .right-col{width:100%;flex-direction:row;flex-wrap:wrap;gap:8px}
-  .spotify-panel,.lyrics-list-panel{flex:1;min-width:0}
-  .player-dock{max-width:none;border-radius:0 0 12px 12px}
-  .lyrics-list-panel{border-radius:8px}
-  .dev-credit,.timestamp{font-size:9px}
-}
-
-@media (max-width: 600px) {
-  :root{font-size:14px}
-  .scene{padding:6px}
-  .titlebar{flex-wrap:wrap;gap:6px}
-  .titlebar-text{font-size:9px;letter-spacing:.05em}
-  .content-row{gap:10px}
-  .lyrics-col{padding:0}
-  .lyric-stage{padding:18px 0 12px}
-  .lyric-row-current{font-size:clamp(18px,4vw,28px)}
-  .lyric-row-prev,.lyric-row-next{font-size:12px}
-  .right-col{flex-direction:column}
-  .lyrics-list-panel{order:-1}
-  .player-dock{padding:0;box-shadow:none}
-  .seek-wrap{padding:0 12px}
-  .lyrics-list-panel::before{top:18px}
-  .lyrics-list-panel::after{height:24px}
-}
-
 /* ══════════════════════════════════════════════════════════
    RESPONSIVE — iPad (≤900px), Mobile (≤640px), Phone (≤480px)
    ══════════════════════════════════════════════════════════ */
@@ -1022,9 +992,24 @@ seekWrap.addEventListener('touchend',e=>{
 // ─── Helpers ──────────────────────────────────────────────
 function fmt(s){const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,'0')}`}
 function triggerFlash(){flashOver.classList.add('flash');setTimeout(()=>flashOver.classList.remove('flash'),65);}
+// Track last good time + wall-clock stamp for smooth interpolation
+// between ytPlayer.getCurrentTime() calls (Safari can lag or throw)
+let _lastGoodTime = 0;
+let _lastGoodStamp = 0;
+
 function safeGetTime(){
-  if(ytReady){ try{ return ytPlayer.getCurrentTime(); }catch(e){} }
-  return 0;
+  if(!ytReady) return 0;
+  try{
+    const t = ytPlayer.getCurrentTime();
+    if(typeof t === 'number' && isFinite(t)){
+      _lastGoodTime  = t;
+      _lastGoodStamp = performance.now();
+      return t;
+    }
+  }catch(err){}
+  // Fallback: interpolate from last known good time
+  const elapsed = (performance.now() - _lastGoodStamp) / 1000;
+  return _lastGoodTime + (playing ? Math.min(elapsed, 1) : 0);
 }
 
 // ─── Core play/pause/seek ─────────────────────────────────
@@ -1048,16 +1033,15 @@ function playAll(){
 
 function seekTo(t,resume){
   const c=Math.max(0,Math.min(getTotal(),t));
-  // reset lyric state so loop re-detects correct line
-  currentIdx=-1;
-  lastLoopTime=-1;
+  currentIdx=-1; lastLoopTime=-1;
+  _lastGoodTime=c; _lastGoodStamp=performance.now();
   rowPrev.textContent=''; rowPrev.classList.remove('has-text');
   rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
   rowNext.textContent=''; rowNext.classList.remove('has-text');
   seekFill.style.width=(c/getTotal()*100)+'%';
   timeDisplay.textContent=fmt(c);timeDock.textContent=fmt(c);
   if(c<1&&idleMsg) idleMsg.style.display='flex';
-  if(ytReady){ ytPlayer.seekTo(c,true); }
+  if(ytReady){ytPlayer.seekTo(c,true);}
   if(resume) playAll();
   else {
     playing=false;
@@ -1128,6 +1112,7 @@ function onEnd(){
 
 function syncNow(){
   currentIdx=-1; lastLoopTime=-1;
+  _lastGoodTime=safeGetTime(); _lastGoodStamp=performance.now();
   rowPrev.textContent=''; rowPrev.classList.remove('has-text');
   rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
   rowNext.textContent=''; rowNext.classList.remove('has-text');
@@ -1280,49 +1265,86 @@ document.addEventListener('keydown',e=>{
   if(e.code==='ArrowLeft') {e.preventDefault();if(ytReady)seekTo(Math.max(safeGetTime()-5,0),playing);}
 });
 
-// ─── YouTube IFrame API ───────────────────────────────────
-window.onYouTubeIframeAPIReady=function(){
-  ytPlayer=new YT.Player('yt-player-container',{
+// ─── YouTube IFrame API (Safari-compatible) ──────────────
+// Key Safari fixes:
+//  1. No `origin` param on file:// or localhost — causes block
+//  2. playsinline=1 required for iOS Safari
+//  3. Never call playVideo() from onReady — only from real user gesture
+//  4. After API creates the iframe, patch it with Safari allow attributes
+window.onYouTubeIframeAPIReady = function(){
+  const safeOrigin = (location.protocol === 'https:' || location.protocol === 'http:')
+    ? location.origin : '';
+
+  ytPlayer = new YT.Player('yt-player-container', {
     videoId: YT_ID_current,
+    width:  '100%',
+    height: '100%',
     playerVars:{
-      autoplay:0, rel:0, modestbranding:1, iv_load_policy:3,
-      origin: window.location.origin
+      autoplay:        0,
+      rel:             0,
+      modestbranding:  1,
+      iv_load_policy:  3,
+      playsinline:     1,   // iOS Safari: play inside element, not fullscreen
+      fs:              1,
+      ...(safeOrigin ? { origin: safeOrigin } : {})
     },
     events:{
       onReady(e){
-        ytReady=true;
-        ytPlayer.setVolume(parseInt(document.getElementById('volSlider').value));
-        ytLabel.textContent='— ready ✓';
-        ytLabel.style.color='var(--green)';
-        statusText.textContent='YT READY';
+        ytReady = true;
+
+        // Patch the generated iframe for Safari autoplay policy
+        const iframe = document.querySelector('#yt-player-container iframe');
+        if(iframe){
+          iframe.setAttribute('allow',
+            'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+          iframe.setAttribute('playsinline', '');
+          iframe.setAttribute('webkit-playsinline', '');
+          iframe.style.width  = '100%';
+          iframe.style.height = '100%';
+          iframe.style.border = 'none';
+          iframe.style.display = 'block';
+        }
+
+        // Volume
+        try { ytPlayer.setVolume(parseInt($('volSlider').value)); } catch(err){}
+
+        ytLabel.textContent = '— ready ✓';
+        ytLabel.style.color = 'var(--green)';
+        statusText.textContent = 'READY — tap ▶ to play';
       },
+
       onStateChange(e){
         const S = YT.PlayerState;
+
         if(e.data === S.PLAYING){
-          // Always restart loop from current YT time — handles resume after buffer/seek
-          lastLoopTime = -1; // force jump-detection reset
+          lastLoopTime = -1;
           if(!playing){
-            playing=true;
-            playBtn.textContent='⏸ PAUSE';
-            statusText.textContent='PLAYING';
+            playing = true;
+            playBtn.textContent = '⏸ PAUSE';
+            statusText.textContent = 'PLAYING';
             startWave();
-            if(idleMsg) idleMsg.style.display='none';
+            if(idleMsg) idleMsg.style.display = 'none';
           }
-          if(!raf) raf=requestAnimationFrame(loop);
+          if(!raf) raf = requestAnimationFrame(loop);
         }
+
         if(e.data === S.PAUSED){
           if(playing) pauseAll();
         }
+
         if(e.data === S.BUFFERING){
-          // Keep playing flag true but note we're buffering
-          statusText.textContent='BUFFERING...';
+          statusText.textContent = 'BUFFERING...';
+          // keep loop alive — YT will fire PLAYING again when ready
         }
+
         if(e.data === S.ENDED) onEnd();
       },
+
       onError(e){
-        ytLabel.textContent='— blocked (use SYNC)';
-        ytLabel.style.color='var(--amber)';
-        statusText.textContent='YT BLOCKED';
+        const msgs = {2:'bad videoId', 5:'HTML5 error', 100:'not found', 101:'embed blocked', 150:'embed blocked'};
+        ytLabel.textContent = '— ' + (msgs[e.data] || 'error ' + e.data);
+        ytLabel.style.color = 'var(--amber)';
+        statusText.textContent = 'YT ERROR';
       }
     }
   });
@@ -1483,12 +1505,19 @@ function applyConfig(){
   Object.keys(lyricIdxToRow).forEach(k => delete lyricIdxToRow[k]);
   buildLyricsList();
 
-  // Reload YouTube player with new video
-  if(ytReady){
-    ytPlayer.loadVideoById(newYtId);
-    ytPlayer.stopVideo();
-  }
+  // Reload YouTube player — destroy and recreate for Safari compatibility
+  pauseAll();
+  ytReady = false;
+  _lastGoodTime = 0; _lastGoodStamp = 0;
+  try{ ytPlayer.destroy(); }catch(err){}
+  // Recreate container div (destroy removes it)
+  const container = $('yt-player-container');
+  container.innerHTML = '';
   YT_ID_current = newYtId;
+  // Re-fire onYouTubeIframeAPIReady to rebuild player
+  if(window.YT && window.YT.Player){
+    window.onYouTubeIframeAPIReady();
+  }
 
   // Reset player state
   pauseAll();
