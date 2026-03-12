@@ -140,7 +140,11 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
   font-size:9px;color:var(--muted2);letter-spacing:.07em;
   font-family:'Share Tech Mono',monospace;
 }
-.dev-credit span{color:var(--muted)}
+.dev-credit span{
+  color:var(--green);
+  font-weight:600;
+  text-shadow:0 0 12px rgba(0,255,136,0.3);
+}
 
 /* ── RIGHT PANEL ── */
 .right-col{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
@@ -335,6 +339,123 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
 .kb-hint{font-size:9px;color:var(--muted2);letter-spacing:.04em;display:flex;gap:8px}
 .kb-hint kbd{background:#13162a;border:1px solid var(--muted2);border-radius:2px;padding:1px 4px;color:var(--muted);font-family:inherit}
 
+/* ── CONFIG PANEL OVERLAY ── */
+.config-overlay{
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(5,6,10,0.92);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+}
+.config-overlay.open{opacity:1;pointer-events:all;}
+
+.config-panel{
+  width:100%;max-width:620px;
+  background:#0b0d1a;
+  border:1px solid var(--term-border);
+  border-radius:12px;
+  box-shadow:0 0 0 1px rgba(0,255,136,0.04), 0 40px 100px rgba(0,0,0,0.95);
+  overflow:hidden;
+  transform:translateY(24px) scale(.97);
+  transition:transform .35s cubic-bezier(.22,1,.36,1);
+  max-height:92vh;
+  display:flex;flex-direction:column;
+}
+.config-overlay.open .config-panel{transform:translateY(0) scale(1);}
+
+.config-titlebar{
+  background:#0e1020;border-bottom:1px solid var(--term-border);
+  padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.config-titlebar .dots{display:flex;gap:7px;}
+.config-title{flex:1;text-align:center;font-size:11px;color:var(--muted);letter-spacing:.1em;}
+.config-title em{color:var(--green);font-style:normal;}
+.config-close{
+  background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;
+  padding:2px 6px;border-radius:3px;transition:color .15s,background .15s;font-family:inherit;
+}
+.config-close:hover{color:var(--white);background:rgba(255,255,255,0.06);}
+
+.config-body{
+  padding:20px 22px 22px;
+  overflow-y:auto;
+  flex:1;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--muted2) transparent;
+}
+.config-body::-webkit-scrollbar{width:3px}
+.config-body::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px;}
+
+/* field groups */
+.cfg-row{display:flex;gap:12px;margin-bottom:14px;}
+.cfg-row.col{flex-direction:column;}
+.cfg-field{flex:1;display:flex;flex-direction:column;gap:5px;}
+.cfg-label{
+  font-size:9px;color:var(--amber);letter-spacing:.14em;text-transform:uppercase;
+}
+.cfg-input{
+  background:#0d0f1c;
+  border:1px solid var(--term-border);
+  border-radius:5px;
+  color:var(--white);
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;
+  padding:8px 10px;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  width:100%;
+}
+.cfg-input:focus{
+  border-color:rgba(0,255,136,0.45);
+  box-shadow:0 0 0 3px rgba(0,255,136,0.06);
+}
+.cfg-input::placeholder{color:var(--muted2);}
+.cfg-textarea{
+  resize:vertical;
+  min-height:180px;
+  line-height:1.7;
+  font-size:11px;
+}
+.cfg-hint{font-size:9px;color:var(--muted2);line-height:1.6;margin-top:2px;}
+.cfg-hint code{
+  background:#13162a;padding:1px 5px;border-radius:2px;
+  color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;
+}
+
+/* apply button */
+.cfg-apply{
+  width:100%;
+  background:linear-gradient(90deg,rgba(0,255,136,0.12),rgba(0,229,255,0.08));
+  border:1px solid rgba(0,255,136,0.35);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;
+  letter-spacing:.1em;
+  padding:11px;
+  border-radius:6px;
+  cursor:pointer;
+  margin-top:6px;
+  transition:all .2s;
+}
+.cfg-apply:hover{
+  background:linear-gradient(90deg,rgba(0,255,136,0.2),rgba(0,229,255,0.12));
+  border-color:rgba(0,255,136,0.6);
+  box-shadow:0 0 20px rgba(0,255,136,0.1);
+}
+.cfg-error{
+  font-size:10px;color:#ff6b6b;margin-top:8px;
+  min-height:14px;letter-spacing:.04em;
+}
+
+/* config trigger btn in titlebar */
+.cfg-trigger{
+  background:none;border:1px solid var(--muted2);color:var(--muted);
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  padding:3px 8px;border-radius:3px;cursor:pointer;
+  letter-spacing:.08em;transition:all .2s;white-space:nowrap;
+}
+.cfg-trigger:hover{border-color:var(--green);color:var(--green);}
+
 /* Sync flash */
 @keyframes syncFlash{0%{background:rgba(255,170,0,0.15)}100%{background:transparent}}
 .sync-flash{animation:syncFlash .4s ease-out}
@@ -348,15 +469,18 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
   <div class="terminal">
     <div class="titlebar">
       <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
-      <div class="titlebar-text"><em>lyrics</em> — flashing_lights.js — Kanye West ft. Dwele</div>
-      <div style="font-size:9px;color:var(--muted2);letter-spacing:.06em;white-space:nowrap">by <span style="color:var(--green)">Thoeung Sereymongkol</span></div>
+      <div class="titlebar-text"><em>lyrics</em> — <span id="titlebarSongName">flashing_lights.js — Kanye West ft. Dwele</span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="cfg-trigger" onclick="openConfig()">⚙ EDIT</button>
+        <div style="font-size:9px;color:var(--muted2);letter-spacing:.06em;white-space:nowrap">by <span style="color:var(--muted)">Thoeung Sereymongkol</span></div>
+      </div>
     </div>
 
     <div class="terminal-body">
       <div class="hdr">
         <span class="cmd">$</span> <span class="val">node flashing_lights.js --player=youtube --sync=auto</span><br>
-        <span class="track-title">FLASHING LIGHTS</span>
-        <span style="color:var(--muted)">Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007) &nbsp;·&nbsp; 3:57</span>
+        <span class="track-title" id="hdrTrackTitle">FLASHING LIGHTS</span>
+        <span style="color:var(--muted)" id="hdrArtist">Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007) &nbsp;·&nbsp; 3:57</span>
       </div>
 
       <div class="content-row">
@@ -431,6 +555,52 @@ body::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
           <span><kbd>←</kbd><kbd>→</kbd> ±5s</span>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIG PANEL ══════════════════════════════════════ -->
+<div class="config-overlay" id="configOverlay">
+  <div class="config-panel">
+    <div class="config-titlebar">
+      <div class="dots">
+        <div class="dot dot-r" style="cursor:pointer" onclick="closeConfig()"></div>
+        <div class="dot dot-y"></div><div class="dot dot-g"></div>
+      </div>
+      <div class="config-title"><em>⚙</em> configure — lyrics player</div>
+      <button class="config-close" onclick="closeConfig()">✕</button>
+    </div>
+    <div class="config-body">
+      <div class="cfg-row">
+        <div class="cfg-field">
+          <div class="cfg-label">Track Title</div>
+          <input class="cfg-input" id="cfgTitle" placeholder="e.g. Flashing Lights" />
+        </div>
+        <div class="cfg-field">
+          <div class="cfg-label">Artist / Singers</div>
+          <input class="cfg-input" id="cfgArtist" placeholder="e.g. Kanye West ft. Dwele" />
+        </div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field">
+          <div class="cfg-label">YouTube URL</div>
+          <input class="cfg-input" id="cfgYtUrl" placeholder="https://youtu.be/ZAz3rnLGthg" />
+          <div class="cfg-hint">Paste any YouTube URL — full link or short youtu.be link.</div>
+        </div>
+      </div>
+      <div class="cfg-row col">
+        <div class="cfg-field">
+          <div class="cfg-label">Lyrics with timestamps</div>
+          <textarea class="cfg-input cfg-textarea" id="cfgLyrics" placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[00:42.62] She don't believe in shootin' stars&#10;[#CHORUS]&#10;[01:23.66] As I recall..."></textarea>
+          <div class="cfg-hint">
+            Each lyric line: <code>[mm:ss.cs] lyric text</code> or <code>[ss.cs] lyric text</code><br>
+            Section header: start a line with <code>[#SECTION NAME]</code> e.g. <code>[#CHORUS]</code><br>
+            Lines without a valid timestamp are ignored.
+          </div>
+        </div>
+      </div>
+      <div class="cfg-error" id="cfgError"></div>
+      <button class="cfg-apply" onclick="applyConfig()">▶ APPLY &amp; LOAD</button>
     </div>
   </div>
 </div>
@@ -526,8 +696,9 @@ const sections = [
   {t:168.51, label:"OUTRO"},
 ];
 
-const TOTAL    = 237; // 3:57
-const YT_ID    = 'ZAz3rnLGthg'; // https://youtu.be/ZAz3rnLGthg
+const TOTAL    = 237; // 3:57 — overridden dynamically via window._dynamicTotal
+let   YT_ID_current = 'ZAz3rnLGthg';
+function getTotal(){ return window._dynamicTotal || TOTAL; }
 
 // ─── State ────────────────────────────────────────────────
 let ytPlayer    = null;
@@ -589,7 +760,7 @@ function freezeWave(){
 
 // ─── Section markers ──────────────────────────────────────
 sections.forEach(s=>{
-  const pct=(s.t/TOTAL)*100;
+  const pct=(s.t/getTotal())*100;
   const m=document.createElement('div');m.className='s-mark';m.style.left=pct+'%';
   const l=document.createElement('div');l.className='s-mark-lbl';l.textContent=s.label;l.style.left=pct+'%';
   seekMarkers.appendChild(m);seekMarkers.appendChild(l);
@@ -603,12 +774,12 @@ function getPct(clientX){
 
 seekWrap.addEventListener('mousemove',e=>{
   const pct=getPct(e.clientX);
-  seekTip.textContent=fmt(pct*TOTAL);
+  seekTip.textContent=fmt(pct*getTotal());
   const wr=seekWrap.getBoundingClientRect(),tr=seekTrack.getBoundingClientRect();
   seekTip.style.left=(tr.left-wr.left+pct*tr.width)+'px';
   if(isDragging){
     seekFill.style.width=(pct*100)+'%';
-    const tf=fmt(pct*TOTAL);timeDisplay.textContent=tf;timeDock.textContent=tf;
+    const tf=fmt(pct*getTotal());timeDisplay.textContent=tf;timeDock.textContent=tf;
   }
 });
 seekWrap.addEventListener('mousedown',e=>{
@@ -618,7 +789,7 @@ seekWrap.addEventListener('mousedown',e=>{
 });
 document.addEventListener('mouseup',e=>{
   if(!isDragging)return;isDragging=false;
-  seekTo(getPct(e.clientX)*TOTAL,dragWasPlay);
+  seekTo(getPct(e.clientX)*getTotal(),dragWasPlay);
 });
 seekWrap.addEventListener('touchstart',e=>{
   isDragging=true;dragWasPlay=playing;
@@ -628,18 +799,18 @@ seekWrap.addEventListener('touchmove',e=>{
   if(!isDragging)return;
   const pct=getPct(e.touches[0].clientX);
   seekFill.style.width=(pct*100)+'%';
-  const tf=fmt(pct*TOTAL);timeDisplay.textContent=tf;timeDock.textContent=tf;
+  const tf=fmt(pct*getTotal());timeDisplay.textContent=tf;timeDock.textContent=tf;
 },{passive:true});
 seekWrap.addEventListener('touchend',e=>{
   if(!isDragging)return;isDragging=false;
-  seekTo(getPct(e.changedTouches[0].clientX)*TOTAL,dragWasPlay);
+  seekTo(getPct(e.changedTouches[0].clientX)*getTotal(),dragWasPlay);
 });
 
 // ─── Helpers ──────────────────────────────────────────────
 function fmt(s){const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,'0')}`}
 function triggerFlash(){flashOver.classList.add('flash');setTimeout(()=>flashOver.classList.remove('flash'),65);}
 function safeGetTime(){
-  if(ytReady){try{return ytPlayer.getCurrentTime();}catch(e){}}
+  if(ytReady){ try{ return ytPlayer.getCurrentTime(); }catch(e){} }
   return 0;
 }
 
@@ -663,22 +834,23 @@ function playAll(){
 }
 
 function seekTo(t,resume){
-  const c=Math.max(0,Math.min(TOTAL,t));
+  const c=Math.max(0,Math.min(getTotal(),t));
+  // reset lyric state so loop re-detects correct line
   currentIdx=-1;
+  lastLoopTime=-1;
   rowPrev.textContent=''; rowPrev.classList.remove('has-text');
   rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
   rowNext.textContent=''; rowNext.classList.remove('has-text');
-  seekFill.style.width=(c/TOTAL*100)+'%';
+  seekFill.style.width=(c/getTotal()*100)+'%';
   timeDisplay.textContent=fmt(c);timeDock.textContent=fmt(c);
   if(c<1&&idleMsg) idleMsg.style.display='flex';
-  if(ytReady){ytPlayer.seekTo(c,true);}
+  if(ytReady){ ytPlayer.seekTo(c,true); }
   if(resume) playAll();
   else {
     playing=false;
     playBtn.textContent='▶ PLAY';
     statusText.textContent='PAUSED';
   }
-  // jump lyrics list
   let idx=0;
   for(let i=0;i<lyrics.length;i++){if(lyrics[i].t<=c)idx=i;else break;}
   userScrolling=false;
@@ -691,8 +863,58 @@ function togglePlay(){
   else pauseAll();
 }
 
+// ─── Main render loop — driven entirely by ytPlayer.getCurrentTime() ─────
+// lastLoopTime tracks previous frame's YT time to detect seeks/jumps
+let lastLoopTime = -1;
+
+function loop(){
+  if(!playing){raf=null;return;}
+
+  const t = safeGetTime();
+  const total = getTotal();
+
+  // Detect a seek/jump (time moved backwards or jumped >2s forward unexpectedly)
+  const delta = t - lastLoopTime;
+  if(lastLoopTime >= 0 && (delta < -0.3 || delta > 2.5)){
+    // YT time jumped — force re-scan from scratch
+    currentIdx = -1;
+    rowPrev.textContent=''; rowPrev.classList.remove('has-text');
+    rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
+    rowNext.textContent=''; rowNext.classList.remove('has-text');
+  }
+  lastLoopTime = t;
+
+  // Update seek bar + time display
+  seekFill.style.width=(t/total*100)+'%';
+  const tf=fmt(t);
+  timeDisplay.textContent=tf;
+  timeDock.textContent=tf;
+
+  // Find which lyric index matches current time
+  let idx=-1;
+  for(let i=0;i<lyrics.length;i++){
+    if(lyrics[i].t<=t) idx=i;
+    else break;
+  }
+
+  // Trigger lyric change only when index actually changes
+  if(idx !== currentIdx && idx >= 0){
+    currentIdx = idx;
+    showLyric(idx);
+  }
+
+  if(t >= total){ onEnd(); return; }
+  raf = requestAnimationFrame(loop);
+}
+
+function onEnd(){
+  playing=false; raf=null; freezeWave();
+  playBtn.textContent='↺ RESTART';
+  statusText.textContent='FINISHED';
+}
+
 function syncNow(){
-  currentIdx=-1;
+  currentIdx=-1; lastLoopTime=-1;
   rowPrev.textContent=''; rowPrev.classList.remove('has-text');
   rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
   rowNext.textContent=''; rowNext.classList.remove('has-text');
@@ -705,25 +927,6 @@ function syncNow(){
 }
 
 function setVol(v){if(ytReady)ytPlayer.setVolume(parseInt(v));}
-
-// ─── Main render loop ─────────────────────────────────────
-function loop(){
-  if(!playing){raf=null;return;}
-  const t=Math.min(safeGetTime(),TOTAL);
-  seekFill.style.width=(t/TOTAL*100)+'%';
-  const tf=fmt(t);timeDisplay.textContent=tf;timeDock.textContent=tf;
-
-  let idx=-1;
-  for(let i=0;i<lyrics.length;i++){if(lyrics[i].t<=t)idx=i;else break;}
-  if(idx!==currentIdx&&idx>=0){currentIdx=idx;showLyric(idx);}
-  if(t>=TOTAL){onEnd();return;}
-  raf=requestAnimationFrame(loop);
-}
-
-function onEnd(){
-  playing=false;raf=null;freezeWave();
-  playBtn.textContent='↺ RESTART';statusText.textContent='FINISHED';
-}
 
 // ─── 3-row lyric display ──────────────────────────────────
 const rowPrev    = $('rowPrev');
@@ -794,7 +997,7 @@ const llScroll = $('llScroll');
 const llRows   = [];
 const lyricIdxToRow = {};
 
-(function buildList(){
+function buildLyricsList(){
   let lastSection='';
   lyrics.forEach((entry,i)=>{
     if(entry.section && entry.section!==lastSection){
@@ -818,7 +1021,8 @@ const lyricIdxToRow = {};
     lyricIdxToRow[i]=ri;
     llRows.push({el:r,lyricIdx:i,t:entry.t});
   });
-})();
+}
+buildLyricsList();
 
 let llActiveRow=-1;
 let userScrolling=false;
@@ -859,14 +1063,14 @@ document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT')return;
   if(e.code==='Space'){e.preventDefault();togglePlay();}
   if(e.code==='KeyS'){e.preventDefault();syncNow();}
-  if(e.code==='ArrowRight'){e.preventDefault();if(ytReady)seekTo(Math.min(safeGetTime()+5,TOTAL),playing);}
+  if(e.code==='ArrowRight'){e.preventDefault();if(ytReady)seekTo(Math.min(safeGetTime()+5,getTotal()),playing);}
   if(e.code==='ArrowLeft') {e.preventDefault();if(ytReady)seekTo(Math.max(safeGetTime()-5,0),playing);}
 });
 
 // ─── YouTube IFrame API ───────────────────────────────────
 window.onYouTubeIframeAPIReady=function(){
   ytPlayer=new YT.Player('yt-player-container',{
-    videoId: YT_ID,
+    videoId: YT_ID_current,
     playerVars:{
       autoplay:0, rel:0, modestbranding:1, iv_load_policy:3,
       origin: window.location.origin
@@ -880,20 +1084,27 @@ window.onYouTubeIframeAPIReady=function(){
         statusText.textContent='YT READY';
       },
       onStateChange(e){
-        if(e.data===YT.PlayerState.PLAYING){
+        const S = YT.PlayerState;
+        if(e.data === S.PLAYING){
+          // Always restart loop from current YT time — handles resume after buffer/seek
+          lastLoopTime = -1; // force jump-detection reset
           if(!playing){
             playing=true;
             playBtn.textContent='⏸ PAUSE';
             statusText.textContent='PLAYING';
             startWave();
             if(idleMsg) idleMsg.style.display='none';
-            if(!raf) raf=requestAnimationFrame(loop);
           }
+          if(!raf) raf=requestAnimationFrame(loop);
         }
-        if(e.data===YT.PlayerState.PAUSED && playing){
-          pauseAll();
+        if(e.data === S.PAUSED){
+          if(playing) pauseAll();
         }
-        if(e.data===YT.PlayerState.ENDED) onEnd();
+        if(e.data === S.BUFFERING){
+          // Keep playing flag true but note we're buffering
+          statusText.textContent='BUFFERING...';
+        }
+        if(e.data === S.ENDED) onEnd();
       },
       onError(e){
         ytLabel.textContent='— blocked (use SYNC)';
@@ -903,6 +1114,184 @@ window.onYouTubeIframeAPIReady=function(){
     }
   });
 };
+
+// ─── CONFIG PANEL ────────────────────────────────────────
+function openConfig(){
+  const overlay = $('configOverlay');
+  // pre-fill with current values
+  $('cfgTitle').value  = document.title.split('—')[0].trim();
+  $('cfgArtist').value = $('hdrArtist') ? $('hdrArtist').textContent : '';
+  $('cfgYtUrl').value  = 'https://youtu.be/' + YT_ID_current;
+  $('cfgLyrics').value = lyrics
+    .filter(l => l.text || l.section)
+    .map(l => {
+      const lines = [];
+      if(l.section) lines.push('[#' + l.section + ']');
+      if(l.text !== undefined){
+        const m = Math.floor(l.t / 60);
+        const s = (l.t % 60).toFixed(2).padStart(5,'0');
+        lines.push(`[${String(m).padStart(2,'0')}:${s}] ${l.text}`);
+      }
+      return lines.join('\n');
+    }).join('\n');
+  $('cfgError').textContent = '';
+  overlay.classList.add('open');
+  setTimeout(()=>$('cfgTitle').focus(), 350);
+}
+
+function closeConfig(){
+  $('configOverlay').classList.remove('open');
+}
+
+// Close on backdrop click
+$('configOverlay').addEventListener('click', e => {
+  if(e.target === $('configOverlay')) closeConfig();
+});
+
+// Escape key closes config
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && $('configOverlay').classList.contains('open')) closeConfig();
+});
+
+function extractYTId(url){
+  url = url.trim();
+  // youtu.be/ID
+  let m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if(m) return m[1];
+  // youtube.com/watch?v=ID
+  m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if(m) return m[1];
+  // embed/ID
+  m = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+  if(m) return m[1];
+  // raw 11-char ID
+  if(/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+  return null;
+}
+
+function parseLyrics(raw){
+  const lines = raw.split('\n');
+  const result = [];
+  let pendingSection = '';
+
+  for(const line of lines){
+    const trimmed = line.trim();
+    if(!trimmed) continue;
+
+    // Section header: [#NAME] or [# NAME]
+    const secMatch = trimmed.match(/^\[#\s*(.+?)\]$/);
+    if(secMatch){ pendingSection = secMatch[1].trim(); continue; }
+
+    // Timestamp line: [mm:ss.cs] text  OR  [ss.cs] text
+    const tsMatch = trimmed.match(/^\[(\d{1,2}):(\d{2}(?:\.\d+)?)\]\s*(.*)/);
+    if(tsMatch){
+      const t = parseFloat(tsMatch[1]) * 60 + parseFloat(tsMatch[2]);
+      const text = tsMatch[3].trim();
+      result.push({ t, text, section: pendingSection });
+      pendingSection = ''; // section label consumed by first lyric line
+      continue;
+    }
+
+    // Simple [ss.cs] text (no minutes)
+    const tsMatch2 = trimmed.match(/^\[(\d+(?:\.\d+)?)\]\s*(.*)/);
+    if(tsMatch2){
+      const t = parseFloat(tsMatch2[1]);
+      const text = tsMatch2[2].trim();
+      result.push({ t, text, section: pendingSection });
+      pendingSection = '';
+    }
+  }
+
+  // Sort by time ascending
+  result.sort((a,b) => a.t - b.t);
+  return result;
+}
+
+function applyConfig(){
+  const errEl = $('cfgError');
+  errEl.textContent = '';
+
+  const title  = $('cfgTitle').value.trim();
+  const artist = $('cfgArtist').value.trim();
+  const ytUrl  = $('cfgYtUrl').value.trim();
+  const raw    = $('cfgLyrics').value.trim();
+
+  // Validate
+  if(!title)  { errEl.textContent = '⚠ Track title is required.'; return; }
+  if(!ytUrl)  { errEl.textContent = '⚠ YouTube URL is required.'; return; }
+  if(!raw)    { errEl.textContent = '⚠ Lyrics are required.'; return; }
+
+  const newYtId = extractYTId(ytUrl);
+  if(!newYtId){ errEl.textContent = '⚠ Could not parse YouTube video ID from that URL.'; return; }
+
+  const newLyrics = parseLyrics(raw);
+  if(newLyrics.length === 0){ errEl.textContent = '⚠ No valid timestamped lines found. Use format: [mm:ss.cs] lyric'; return; }
+
+  // Apply — update UI
+  document.title = title + (artist ? ' — ' + artist : '');
+  $('hdrTrackTitle').textContent = title.toUpperCase();
+  $('hdrArtist').textContent     = artist || '';
+  $('titlebarSongName').textContent = (title + (artist ? ' ft. ' + artist : '')).toLowerCase();
+
+  // Update global lyrics + sections
+  lyrics.length = 0;
+  newLyrics.forEach(l => lyrics.push(l));
+
+  // Rebuild sections from lyrics
+  sections.length = 0;
+  const seenSections = new Set();
+  lyrics.forEach(l => {
+    if(l.section && !seenSections.has(l.section)){
+      seenSections.add(l.section);
+      const shortLabel = l.section.split(/[—\-–]/)[0].trim().substring(0,12);
+      sections.push({t: l.t, label: shortLabel});
+    }
+  });
+
+  // Update total duration
+  const lastT = lyrics[lyrics.length - 1].t;
+  // can't reassign const, update seekbar markers only via sections
+  const newTotal = Math.ceil(lastT + 30);
+  // patch total dynamically
+  window._dynamicTotal = newTotal;
+
+  // Rebuild seek markers
+  seekMarkers.innerHTML = '';
+  sections.forEach(s => {
+    const pct = (s.t / newTotal) * 100;
+    const mk = document.createElement('div'); mk.className='s-mark'; mk.style.left=pct+'%';
+    const lb = document.createElement('div'); lb.className='s-mark-lbl'; lb.textContent=s.label; lb.style.left=pct+'%';
+    seekMarkers.appendChild(mk); seekMarkers.appendChild(lb);
+  });
+
+  // Rebuild lyrics list
+  llInner.innerHTML = '';
+  llRows.length = 0;
+  Object.keys(lyricIdxToRow).forEach(k => delete lyricIdxToRow[k]);
+  buildLyricsList();
+
+  // Reload YouTube player with new video
+  if(ytReady){
+    ytPlayer.loadVideoById(newYtId);
+    ytPlayer.stopVideo();
+  }
+  YT_ID_current = newYtId;
+
+  // Reset player state
+  pauseAll();
+  currentIdx = -1;
+  rowPrev.textContent=''; rowPrev.classList.remove('has-text');
+  rowCurrent.textContent=''; rowCurrent.classList.remove('has-text','exiting');
+  rowNext.textContent=''; rowNext.classList.remove('has-text');
+  sectionLbl.classList.remove('show');
+  seekFill.style.width = '0%';
+  timeDisplay.textContent = '0:00';
+  timeDock.textContent = '0:00';
+  if(idleMsg) idleMsg.style.display = 'flex';
+  statusText.textContent = 'LOADED';
+
+  closeConfig();
+}
 
 // Load YT API
 (function(){
