@@ -273,9 +273,9 @@
         font-family: 'DM Sans', sans-serif;
         line-height: 1.25;
         max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
         transition:
           opacity 0.35s ease,
           transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
@@ -396,7 +396,10 @@
         font-family: 'Share Tech Mono', monospace;
       }
       .dev-credit span {
-        color: var(--muted);
+        color: var(--green);
+        text-shadow:
+          0 0 8px rgba(0, 255, 136, 0.45),
+          0 0 18px rgba(0, 255, 136, 0.25);
       }
 
       /* ── RIGHT PANEL ── */
@@ -1376,10 +1379,20 @@
           margin-bottom: 8px;
           padding-bottom: 8px;
         }
+        .lyrics-col {
+          flex: 1 1 0;
+          min-height: 0;
+        }
+        .lyric-stage {
+          padding: 20px 0 18px;
+          gap: 14px;
+        }
         .lyric-row-current,
         .lyric-row-prev,
         .lyric-row-next {
-          font-size: clamp(13px, 2.4vw, 20px);
+          font-size: clamp(18px, 3.1vw, 26px);
+          line-height: 1.35;
+          white-space: normal;
         }
         .controls {
           padding: 4px 12px 0;
@@ -1572,7 +1585,9 @@
           flex-wrap: wrap;
         }
         .ctrl-right {
-          display: none;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
         .waveform {
           display: none;
@@ -1591,6 +1606,9 @@
         }
         .kb-hint {
           display: none;
+        }
+        .vol-slider {
+          width: 90px;
         }
         .config-panel {
           margin: 0 8px;
@@ -1670,6 +1688,14 @@
         .controls {
           justify-content: center;
           padding: 2px 8px 0;
+        }
+        .ctrl-right {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .vol-slider {
+          width: 80px;
         }
         .ctrl-mid {
           justify-content: center;
@@ -1873,6 +1899,18 @@
             >
           </div>
           <div class="ctrl-right">
+            <div class="vol-wrap">
+              <span class="vol-icon">VOL</span>
+              <input
+                class="vol-slider"
+                id="volSlider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+                oninput="setVol(this.value)"
+              />
+            </div>
             <div class="kb-hint">
               <span><kbd>Space</kbd> play/pause</span>
               <span><kbd>S</kbd> sync</span>
@@ -3105,26 +3143,24 @@
         try {
           const qTitle = encodeURIComponent(titleKey);
           const qArtist = encodeURIComponent(artistKey);
-          const findResp = await sbFetch(
-            `${TRACKS_TABLE}?select=id&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&limit=1`,
+          const listResp = await sbFetch(
+            `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
             { method: 'GET' },
           );
-          if (!findResp.ok) {
-            const t = await findResp.text();
+          if (!listResp.ok) {
+            const t = await listResp.text();
             errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
             setStatus(cfgStatus, t ? t.slice(0, 120) : 'Save failed', '#ff6b6b');
             return;
           }
-          const found = await findResp.json();
-          if (found.length) {
-            const patchResp = await sbFetch(
-              `${TRACKS_TABLE}?title_key=eq.${qTitle}&artist_key=eq.${qArtist}`,
-              {
-                method: 'PATCH',
-                headers: { Prefer: 'return=representation' },
-                body: JSON.stringify(payload),
-              },
-            );
+          const rows = await listResp.json();
+          if (rows.length) {
+            const keepId = rows[0].id;
+            const patchResp = await sbFetch(`${TRACKS_TABLE}?id=eq.${keepId}`, {
+              method: 'PATCH',
+              headers: { Prefer: 'return=representation' },
+              body: JSON.stringify(payload),
+            });
             if (!patchResp.ok) {
               const t = await patchResp.text();
               errEl.textContent =
@@ -3136,36 +3172,26 @@
               );
               return;
             }
-            // Delete duplicates beyond the most recent one
-            try {
-              const listResp = await sbFetch(
-                `${TRACKS_TABLE}?select=id&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
-                { method: 'GET' },
-              );
-              if (listResp.ok) {
-                const rows = await listResp.json();
-                if (rows.length > 1) {
-                  const keepId = rows[0].id;
-                  const delIds = rows
-                    .slice(1)
-                    .map((r) => r.id)
-                    .filter(Boolean);
-                  if (delIds.length) {
-                    const idList = delIds.join(',');
-                    await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
-                      method: 'DELETE',
-                    });
-                  }
-                  // ensure the kept row is the latest payload
-                  await sbFetch(`${TRACKS_TABLE}?id=eq.${keepId}`, {
-                    method: 'PATCH',
-                    headers: { Prefer: 'return=representation' },
-                    body: JSON.stringify(payload),
-                  });
-                }
+            if (rows.length > 1) {
+              const delIds = rows
+                .slice(1)
+                .map((r) => r.id)
+                .filter(Boolean);
+              if (delIds.length) {
+                const idList = delIds.join(',');
+                await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
+                  method: 'DELETE',
+                });
               }
-            } catch (err) {}
+            }
             setStatus(cfgStatus, 'Updated ✓', 'var(--green)');
+            try {
+              localStorage.setItem('lastTrackId', String(keepId));
+              localStorage.setItem(
+                'lastTrackKey',
+                JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
+              );
+            } catch (err) {}
           } else {
             const resp = await sbFetch(`${TRACKS_TABLE}`, {
               method: 'POST',
@@ -3182,12 +3208,76 @@
               );
               return;
             }
+            const saved = await resp.json();
+            const newId = saved?.[0]?.id;
             setStatus(cfgStatus, 'Saved ✓', 'var(--green)');
+            try {
+              if (newId) localStorage.setItem('lastTrackId', String(newId));
+              localStorage.setItem(
+                'lastTrackKey',
+                JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
+              );
+            } catch (err) {}
           }
         } catch (err) {
           errEl.textContent = '⚠ Save failed. Network or Supabase error.';
           setStatus(cfgStatus, 'Save failed', '#ff6b6b');
         }
+      }
+
+      async function loadLastTrack() {
+        try {
+          let track = null;
+          const lastId = localStorage.getItem('lastTrackId');
+          if (lastId) {
+            const resp = await sbFetch(
+              `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&id=eq.${encodeURIComponent(
+                lastId,
+              )}&limit=1`,
+              { method: 'GET' },
+            );
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.length) track = data[0];
+            }
+          }
+          const raw = localStorage.getItem('lastTrackKey');
+          if (raw) {
+            const key = JSON.parse(raw);
+            if (key?.title_key && key?.artist_key) {
+              const resp = await sbFetch(
+                `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&title_key=eq.${encodeURIComponent(
+                  key.title_key,
+                )}&artist_key=eq.${encodeURIComponent(
+                  key.artist_key,
+                )}&order=created_at.desc&limit=1`,
+                { method: 'GET' },
+              );
+              if (resp.ok) {
+                const data = await resp.json();
+                if (data.length) track = data[0];
+              }
+            }
+          }
+          if (!track) {
+            const resp = await sbFetch(
+              `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&order=created_at.desc&limit=1`,
+              { method: 'GET' },
+            );
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.length) track = data[0];
+            }
+          }
+          if (track) {
+            applyTrackData({
+              title: track.title || 'Untitled',
+              artist: track.artist || '',
+              ytId: track.yt_id,
+              lyricsRaw: track.lyrics || '',
+            });
+          }
+        } catch (err) {}
       }
 
       async function openLibrary() {
@@ -3270,6 +3360,22 @@
                 $('cfgYtUrl').value = `https://youtu.be/${track.yt_id}`;
                 $('cfgLyrics').value = track.lyrics || '';
                 setStatus(cfgStatus, '');
+                try {
+                  localStorage.setItem('lastTrackId', String(track.id));
+                  localStorage.setItem(
+                    'lastTrackKey',
+                    JSON.stringify({
+                      title_key: (track.title || '')
+                        .trim()
+                        .replace(/\s+/g, ' ')
+                        .toLowerCase(),
+                      artist_key: (track.artist || '')
+                        .trim()
+                        .replace(/\s+/g, ' ')
+                        .toLowerCase(),
+                    }),
+                  );
+                } catch (err) {}
                 closeLibrary();
               } else {
                 libraryStatus.textContent =
@@ -3455,6 +3561,10 @@
         s.src = 'https://www.youtube.com/iframe_api';
         document.head.appendChild(s);
       })();
+
+      // Try auto-load last saved track (if any)
+      loadLastTrack();
     </script>
+    <script defer src="/_vercel/insights/script.js"></script>
   </body>
 </html>
