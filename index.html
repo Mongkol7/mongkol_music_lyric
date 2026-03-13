@@ -2288,16 +2288,20 @@
       const TRACKS_TABLE = 'tracks';
 
       function sbFetch(path, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
         const headers = {
           'Content-Type': 'application/json',
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
           ...(options.headers || {}),
         };
-        return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-          ...options,
-          headers,
-        });
+        if (method === 'GET') {
+          headers['Cache-Control'] = 'no-cache';
+          headers.Pragma = 'no-cache';
+        }
+        const fetchOptions = { ...options, headers };
+        if (method === 'GET') fetchOptions.cache = 'no-store';
+        return fetch(`${SUPABASE_URL}/rest/v1/${path}`, fetchOptions);
       }
 
       // ─── Waveform ─────────────────────────────────────────────
@@ -3229,11 +3233,16 @@
         try {
           let track = null;
           const lastId = localStorage.getItem('lastTrackId');
+          const raw = localStorage.getItem('lastTrackKey');
+          if (!lastId && !raw) {
+            return;
+          }
+          const cacheBust = `_ts=${Date.now()}`;
           if (lastId) {
             const resp = await sbFetch(
               `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&id=eq.${encodeURIComponent(
                 lastId,
-              )}&limit=1`,
+              )}&limit=1&${cacheBust}`,
               { method: 'GET' },
             );
             if (resp.ok) {
@@ -3241,7 +3250,6 @@
               if (data.length) track = data[0];
             }
           }
-          const raw = localStorage.getItem('lastTrackKey');
           if (raw) {
             const key = JSON.parse(raw);
             if (key?.title_key && key?.artist_key) {
@@ -3250,7 +3258,7 @@
                   key.title_key,
                 )}&artist_key=eq.${encodeURIComponent(
                   key.artist_key,
-                )}&order=created_at.desc&limit=1`,
+                )}&order=created_at.desc&limit=1&${cacheBust}`,
                 { method: 'GET' },
               );
               if (resp.ok) {
@@ -3261,7 +3269,7 @@
           }
           if (!track) {
             const resp = await sbFetch(
-              `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&order=created_at.desc&limit=1`,
+              `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&order=created_at.desc&limit=1&${cacheBust}`,
               { method: 'GET' },
             );
             if (resp.ok) {
