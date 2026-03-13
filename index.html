@@ -3145,73 +3145,71 @@
         };
 
         try {
+          let storedKey = null;
+          try {
+            storedKey = JSON.parse(localStorage.getItem('lastTrackKey'));
+          } catch (err) {}
+          const lastId = localStorage.getItem('lastTrackId');
+          const keyMatchesLast =
+            storedKey?.title_key === titleKey &&
+            storedKey?.artist_key === artistKey;
+
+          // If user is editing the same track (same artist/title), update by id.
+          let updatedById = false;
+          if (lastId && keyMatchesLast) {
+            const patchResp = await sbFetch(`${TRACKS_TABLE}?id=eq.${lastId}`, {
+              method: 'PATCH',
+              headers: { Prefer: 'return=representation' },
+              body: JSON.stringify(payload),
+            });
+            if (patchResp.ok) {
+              updatedById = true;
+              try {
+                localStorage.setItem('lastTrackId', String(lastId));
+                localStorage.setItem(
+                  'lastTrackKey',
+                  JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
+                );
+              } catch (err) {}
+            }
+          }
+
           const qTitle = encodeURIComponent(titleKey);
           const qArtist = encodeURIComponent(artistKey);
           // Prefer UPSERT so updates always reach Supabase
           let upsertId = null;
-          const upsertResp = await sbFetch(
-            `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
-            {
-              method: 'POST',
-              headers: {
-                Prefer: 'resolution=merge-duplicates,return=representation',
+          if (!updatedById) {
+            const upsertResp = await sbFetch(
+              `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
+              {
+                method: 'POST',
+                headers: {
+                  Prefer: 'resolution=merge-duplicates,return=representation',
+                },
+                body: JSON.stringify([payload]),
               },
-              body: JSON.stringify([payload]),
-            },
-          );
-          if (upsertResp.ok) {
-            const saved = await upsertResp.json();
-            upsertId = saved?.[0]?.id || null;
-          } else {
-            const t = await upsertResp.text();
-            if (!/no unique|exclusion constraint/i.test(t || '')) {
-              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-              setStatus(cfgStatus, t ? t.slice(0, 120) : 'Save failed', '#ff6b6b');
-              return;
-            }
-            // Fallback when ON CONFLICT isn't available
-            const listResp = await sbFetch(
-              `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
-              { method: 'GET' },
             );
-            if (!listResp.ok) {
-              const tt = await listResp.text();
-              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-              setStatus(
-                cfgStatus,
-                tt ? tt.slice(0, 120) : 'Save failed',
-                '#ff6b6b',
-              );
-              return;
-            }
-            const rows = await listResp.json();
-            if (rows.length) {
-              const keepId = rows[0].id;
-              const patchResp = await sbFetch(`${TRACKS_TABLE}?id=eq.${keepId}`, {
-                method: 'PATCH',
-                headers: { Prefer: 'return=representation' },
-                body: JSON.stringify(payload),
-              });
-              if (!patchResp.ok) {
-                const tt = await patchResp.text();
-                errEl.textContent =
-                  '⚠ Update failed. Check Supabase table/RLS.';
+            if (upsertResp.ok) {
+              const saved = await upsertResp.json();
+              upsertId = saved?.[0]?.id || null;
+            } else {
+              const t = await upsertResp.text();
+              if (!/no unique|exclusion constraint/i.test(t || '')) {
+                errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
                 setStatus(
                   cfgStatus,
-                  tt ? tt.slice(0, 120) : 'Update failed',
+                  t ? t.slice(0, 120) : 'Save failed',
                   '#ff6b6b',
                 );
                 return;
               }
-              upsertId = keepId;
-            } else {
-              const resp = await sbFetch(`${TRACKS_TABLE}`, {
-                method: 'POST',
-                headers: { Prefer: 'return=representation' },
-                body: JSON.stringify([payload]),
-              });
-              if (!resp.ok) {
-                const tt = await resp.text();
+              // Fallback when ON CONFLICT isn't available
+              const listResp = await sbFetch(
+                `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
+                { method: 'GET' },
+              );
+              if (!listResp.ok) {
+                const tt = await listResp.text();
                 errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
                 setStatus(
                   cfgStatus,
@@ -3220,9 +3218,51 @@
                 );
                 return;
               }
-              const saved = await resp.json();
-              upsertId = saved?.[0]?.id || null;
+              const rows = await listResp.json();
+              if (rows.length) {
+                const keepId = rows[0].id;
+                const patchResp = await sbFetch(
+                  `${TRACKS_TABLE}?id=eq.${keepId}`,
+                  {
+                    method: 'PATCH',
+                    headers: { Prefer: 'return=representation' },
+                    body: JSON.stringify(payload),
+                  },
+                );
+                if (!patchResp.ok) {
+                  const tt = await patchResp.text();
+                  errEl.textContent =
+                    '⚠ Update failed. Check Supabase table/RLS.';
+                  setStatus(
+                    cfgStatus,
+                    tt ? tt.slice(0, 120) : 'Update failed',
+                    '#ff6b6b',
+                  );
+                  return;
+                }
+                upsertId = keepId;
+              } else {
+                const resp = await sbFetch(`${TRACKS_TABLE}`, {
+                  method: 'POST',
+                  headers: { Prefer: 'return=representation' },
+                  body: JSON.stringify([payload]),
+                });
+                if (!resp.ok) {
+                  const tt = await resp.text();
+                  errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+                  setStatus(
+                    cfgStatus,
+                    tt ? tt.slice(0, 120) : 'Save failed',
+                    '#ff6b6b',
+                  );
+                  return;
+                }
+                const saved = await resp.json();
+                upsertId = saved?.[0]?.id || null;
+              }
             }
+          } else {
+            upsertId = lastId;
           }
 
           // Cleanup duplicates beyond the newest (if any)
