@@ -3289,6 +3289,25 @@
             }
           } catch (err) {}
 
+          // Verify the saved lyrics actually reached Supabase
+          if (upsertId) {
+            try {
+              const verifyResp = await sbFetch(
+                `${TRACKS_TABLE}?select=id,lyrics&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc&limit=1`,
+                { method: 'GET' },
+              );
+              if (verifyResp.ok) {
+                const verifyRows = await verifyResp.json();
+                if (verifyRows.length && verifyRows[0].lyrics !== raw) {
+                  errEl.textContent =
+                    '⚠ Save failed. Supabase rejected the update.';
+                  setStatus(cfgStatus, 'Save failed', '#ff6b6b');
+                  return;
+                }
+              }
+            } catch (err) {}
+          }
+
           setStatus(cfgStatus, upsertId ? 'Saved ✓' : 'Updated ✓', 'var(--green)');
           try {
             if (upsertId) localStorage.setItem('lastTrackId', String(upsertId));
