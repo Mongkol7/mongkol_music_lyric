@@ -3147,82 +3147,116 @@
         try {
           const qTitle = encodeURIComponent(titleKey);
           const qArtist = encodeURIComponent(artistKey);
-          const listResp = await sbFetch(
-            `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
-            { method: 'GET' },
+          // Prefer UPSERT so updates always reach Supabase
+          let upsertId = null;
+          const upsertResp = await sbFetch(
+            `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
+            {
+              method: 'POST',
+              headers: {
+                Prefer: 'resolution=merge-duplicates,return=representation',
+              },
+              body: JSON.stringify([payload]),
+            },
           );
-          if (!listResp.ok) {
-            const t = await listResp.text();
-            errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-            setStatus(cfgStatus, t ? t.slice(0, 120) : 'Save failed', '#ff6b6b');
-            return;
-          }
-          const rows = await listResp.json();
-          if (rows.length) {
-            const keepId = rows[0].id;
-            const patchResp = await sbFetch(`${TRACKS_TABLE}?id=eq.${keepId}`, {
-              method: 'PATCH',
-              headers: { Prefer: 'return=representation' },
-              body: JSON.stringify(payload),
-            });
-            if (!patchResp.ok) {
-              const t = await patchResp.text();
-              errEl.textContent =
-                '⚠ Update failed. Check Supabase table/RLS.';
-              setStatus(
-                cfgStatus,
-                t ? t.slice(0, 120) : 'Update failed',
-                '#ff6b6b',
-              );
+          if (upsertResp.ok) {
+            const saved = await upsertResp.json();
+            upsertId = saved?.[0]?.id || null;
+          } else {
+            const t = await upsertResp.text();
+            if (!/no unique|exclusion constraint/i.test(t || '')) {
+              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+              setStatus(cfgStatus, t ? t.slice(0, 120) : 'Save failed', '#ff6b6b');
               return;
             }
-            if (rows.length > 1) {
-              const delIds = rows
-                .slice(1)
-                .map((r) => r.id)
-                .filter(Boolean);
-              if (delIds.length) {
-                const idList = delIds.join(',');
-                await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
-                  method: 'DELETE',
-                });
-              }
-            }
-            setStatus(cfgStatus, 'Updated ✓', 'var(--green)');
-            try {
-              localStorage.setItem('lastTrackId', String(keepId));
-              localStorage.setItem(
-                'lastTrackKey',
-                JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
-              );
-            } catch (err) {}
-          } else {
-            const resp = await sbFetch(`${TRACKS_TABLE}`, {
-              method: 'POST',
-              headers: { Prefer: 'return=representation' },
-              body: JSON.stringify([payload]),
-            });
-            if (!resp.ok) {
-              const t = await resp.text();
+            // Fallback when ON CONFLICT isn't available
+            const listResp = await sbFetch(
+              `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
+              { method: 'GET' },
+            );
+            if (!listResp.ok) {
+              const tt = await listResp.text();
               errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
               setStatus(
                 cfgStatus,
-                t ? t.slice(0, 120) : 'Save failed',
+                tt ? tt.slice(0, 120) : 'Save failed',
                 '#ff6b6b',
               );
               return;
             }
-            const saved = await resp.json();
-            const newId = saved?.[0]?.id;
-            setStatus(cfgStatus, 'Saved ✓', 'var(--green)');
-            try {
-              if (newId) localStorage.setItem('lastTrackId', String(newId));
-              localStorage.setItem(
-                'lastTrackKey',
-                JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
-              );
-            } catch (err) {}
+            const rows = await listResp.json();
+            if (rows.length) {
+              const keepId = rows[0].id;
+              const patchResp = await sbFetch(`${TRACKS_TABLE}?id=eq.${keepId}`, {
+                method: 'PATCH',
+                headers: { Prefer: 'return=representation' },
+                body: JSON.stringify(payload),
+              });
+              if (!patchResp.ok) {
+                const tt = await patchResp.text();
+                errEl.textContent =
+                  '⚠ Update failed. Check Supabase table/RLS.';
+                setStatus(
+                  cfgStatus,
+                  tt ? tt.slice(0, 120) : 'Update failed',
+                  '#ff6b6b',
+                );
+                return;
+              }
+              upsertId = keepId;
+            } else {
+              const resp = await sbFetch(`${TRACKS_TABLE}`, {
+                method: 'POST',
+                headers: { Prefer: 'return=representation' },
+                body: JSON.stringify([payload]),
+              });
+              if (!resp.ok) {
+                const tt = await resp.text();
+                errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+                setStatus(
+                  cfgStatus,
+                  tt ? tt.slice(0, 120) : 'Save failed',
+                  '#ff6b6b',
+                );
+                return;
+              }
+              const saved = await resp.json();
+              upsertId = saved?.[0]?.id || null;
+            }
           }
+
+          // Cleanup duplicates beyond the newest (if any)
+          try {
+            const listResp = await sbFetch(
+              `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
+              { method: 'GET' },
+            );
+            if (listResp.ok) {
+              const rows = await listResp.json();
+              if (rows.length > 1) {
+                const delIds = rows
+                  .slice(1)
+                  .map((r) => r.id)
+                  .filter(Boolean);
+                if (delIds.length) {
+                  const idList = delIds.join(',');
+                  await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
+                    method: 'DELETE',
+                  });
+                }
+              }
+              if (!upsertId && rows.length) upsertId = rows[0].id;
+            }
+          } catch (err) {}
+
+          setStatus(cfgStatus, upsertId ? 'Saved ✓' : 'Updated ✓', 'var(--green)');
+          try {
+            if (upsertId) localStorage.setItem('lastTrackId', String(upsertId));
+            localStorage.setItem(
+              'lastTrackKey',
+              JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
+            );
+          } catch (err) {}
         } catch (err) {
           errEl.textContent = '⚠ Save failed. Network or Supabase error.';
           setStatus(cfgStatus, 'Save failed', '#ff6b6b');
