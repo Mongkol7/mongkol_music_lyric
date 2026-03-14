@@ -462,25 +462,6 @@ export default async function handler(req, res) {
         const candByLine = lineIdxs.map((li) =>
           buildCandidates(entries[li], rangeStart, rangeEnd, 12),
         );
-        const span = Math.max(1, rangeEnd - rangeStart);
-        for (let i = 0; i < candByLine.length; i++) {
-          if (candByLine[i].length) continue;
-          const ratio = lineIdxs.length > 1 ? i / (lineIdxs.length - 1) : 0;
-          const idx = Math.min(
-            rangeEnd,
-            Math.max(rangeStart, Math.round(rangeStart + span * ratio)),
-          );
-          const t = normalizedWords[idx]?.start ?? 0;
-          candByLine[i].push({
-            idx,
-            score: 0.01,
-            coverage: 0,
-            matchedStrong: 0,
-            firstMatch: idx,
-            lastMatch: idx,
-            time: t,
-          });
-        }
 
         const dp = candByLine.map(() => []);
         const back = candByLine.map(() => []);
