@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "busboy": "^1.6.0",
     "ytdl-core": "^4.11.5"
   }
 }

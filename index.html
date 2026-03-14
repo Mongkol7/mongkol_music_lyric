@@ -1391,6 +1391,10 @@
         border-color: var(--green);
         box-shadow: 0 0 16px rgba(0, 255, 136, 0.25);
       }
+      .cfg-file {
+        padding: 7px 10px;
+        font-size: 10px;
+      }
       .cfg-merge {
         display: inline-flex;
         align-items: center;
@@ -2119,6 +2123,27 @@
               <div class="cfg-hint">
                 Paste plain lyrics, then auto-align using the YouTube audio.
               </div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-label">Audio File (Optional)</div>
+              <input
+                class="cfg-input cfg-file"
+                id="cfgAudioFile"
+                type="file"
+                accept="audio/*"
+              />
+              <div class="cfg-hint">
+                If YouTube blocks audio, upload a local audio file for alignment.
+              </div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <button class="cfg-align" onclick="autoAlignFromUpload()">
+                ✦ AUTO ALIGN (UPLOAD AUDIO)
+              </button>
             </div>
           </div>
           <div class="cfg-error" id="cfgError"></div>
@@ -3423,6 +3448,60 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: ytUrl, lyrics: raw }),
+          });
+          if (!resp.ok) {
+            let msg = 'Alignment failed.';
+            try {
+              const data = await resp.json();
+              if (data?.error) msg = data.error;
+              if (data?.details) msg += `: ${data.details}`;
+            } catch (err) {
+              const t = await resp.text();
+              if (t) msg = t.slice(0, 160);
+            }
+            errEl.textContent = `⚠ ${msg}`;
+            setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+            return;
+          }
+          const data = await resp.json();
+          if (!data?.lrc) {
+            errEl.textContent = '⚠ Alignment returned no data.';
+            setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+            return;
+          }
+          $('cfgLyrics').value = data.lrc;
+          setStatus(cfgStatus, 'Aligned ✓', 'var(--green)');
+        } catch (err) {
+          errEl.textContent = '⚠ Alignment failed. Network error.';
+          setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+        }
+      }
+
+      async function autoAlignFromUpload() {
+        const errEl = $('cfgError');
+        errEl.textContent = '';
+        setStatus(cfgStatus, 'Aligning with upload...', 'var(--cyan)');
+
+        const raw = $('cfgLyrics').value.trim();
+        const file = $('cfgAudioFile').files[0];
+        if (!file) {
+          errEl.textContent = '⚠ Please select an audio file first.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+        if (!raw) {
+          errEl.textContent = '⚠ Paste lyrics first (with or without timestamps).';
+          setStatus(cfgStatus, '');
+          return;
+        }
+
+        try {
+          const form = new FormData();
+          form.append('audio', file);
+          form.append('lyrics', raw);
+          const resp = await fetch('/api/align-upload', {
+            method: 'POST',
+            body: form,
           });
           if (!resp.ok) {
             let msg = 'Alignment failed.';
