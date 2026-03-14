@@ -180,59 +180,77 @@ export default async function handler(req, res) {
         }
       }
 
-      const lineIdx = entries
-        .map((e, i) => (!e.isSection ? i : null))
-        .filter((i) => i !== null);
-      const matchedIdx = lineIdx.filter((i) => entries[i].time !== null);
+    const STEP = 0.6;
+    let lastGlobalTime = 0;
+    let idx = 0;
+    while (idx < entries.length) {
+      if (entries[idx].isSection) idx += 1;
+      const sectionStart = idx;
+      while (idx < entries.length && !entries[idx].isSection) idx += 1;
+      const lineIdx = [];
+      for (let i = sectionStart; i < idx; i++) {
+        if (!entries[i].isSection) lineIdx.push(i);
+      }
+      if (!lineIdx.length) continue;
 
+      const matchedIdx = lineIdx.filter((i) => entries[i].time !== null);
       if (!matchedIdx.length) {
-        let t = 0;
+        let t = Math.max(0, lastGlobalTime + STEP);
         lineIdx.forEach((i) => {
           entries[i].time = t;
-          t += 0.6;
+          t += STEP;
         });
       } else {
-        // Leading gap
         let t = entries[matchedIdx[0]].time;
-        for (let i = matchedIdx[0] - 1; i >= 0; i--) {
-          if (entries[i].isSection) continue;
-          t = Math.max(0, t - 0.6);
-          entries[i].time = t;
+        for (let i = lineIdx.indexOf(matchedIdx[0]) - 1; i >= 0; i--) {
+          t = Math.max(0, t - STEP);
+          entries[lineIdx[i]].time = t;
         }
 
-        // Between gaps
         for (let m = 0; m < matchedIdx.length - 1; m++) {
           const a = matchedIdx[m];
           const b = matchedIdx[m + 1];
           const gap = [];
-          for (let i = a + 1; i < b; i++) {
-            if (!entries[i].isSection) gap.push(i);
+          for (
+            let i = lineIdx.indexOf(a) + 1;
+            i < lineIdx.indexOf(b);
+            i++
+          ) {
+            gap.push(lineIdx[i]);
           }
           if (!gap.length) continue;
           const start = entries[a].time;
           const end = entries[b].time;
           if (!(end > start)) {
             let cur = start;
-            gap.forEach((idx) => {
-              cur += 0.6;
-              entries[idx].time = cur;
+            gap.forEach((g) => {
+              cur += STEP;
+              entries[g].time = cur;
             });
           } else {
             const step = (end - start) / (gap.length + 1);
-            gap.forEach((idx, gi) => {
-              entries[idx].time = start + step * (gi + 1);
+            gap.forEach((g, gi) => {
+              entries[g].time = start + step * (gi + 1);
             });
           }
         }
 
-        // Trailing gap
         t = entries[matchedIdx[matchedIdx.length - 1]].time;
-        for (let i = matchedIdx[matchedIdx.length - 1] + 1; i < entries.length; i++) {
-          if (entries[i].isSection) continue;
-          t += 0.6;
-          entries[i].time = t;
+        for (
+          let i = lineIdx.indexOf(matchedIdx[matchedIdx.length - 1]) + 1;
+          i < lineIdx.length;
+          i++
+        ) {
+          t += STEP;
+          entries[lineIdx[i]].time = t;
         }
       }
+
+      const lastLine = lineIdx[lineIdx.length - 1];
+      if (entries[lastLine].time !== null) {
+        lastGlobalTime = Math.max(lastGlobalTime, entries[lastLine].time);
+      }
+    }
 
       const aligned = [];
       let lastTime = 0;
