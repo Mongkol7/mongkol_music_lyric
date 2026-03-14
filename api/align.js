@@ -79,54 +79,131 @@ export default async function handler(req, res) {
   }
 
   function alignLinesToWords(lines, words) {
-    const aligned = [];
-    let cursor = 0;
-    const normalizedWords = words.map((w) => ({
-      text: normalizeWord(w.text),
-      start: w.start,
-    }));
+    const normalizedWords = words
+      .map((w) => ({
+        text: normalizeWord(w.text),
+        start: w.start,
+      }))
+      .filter((w) => w.text);
 
-    for (const rawLine of lines) {
-      const isSection = /^\[#\s*.+\]$/.test(rawLine);
-      if (isSection) {
-        aligned.push(rawLine);
-        continue;
-      }
-
-      const lineText = stripTimestamp(rawLine);
+    const entries = lines.map((raw) => {
+      const isSection = /^\[#\s*.+\]$/.test(raw);
+      const lineText = stripTimestamp(raw);
       const lineWords = lineText
         .split(/\s+/)
         .map(normalizeWord)
         .filter(Boolean);
-      if (!lineWords.length) continue;
+      return {
+        raw,
+        isSection,
+        text: lineText,
+        words: lineWords,
+        time: null,
+        matched: false,
+      };
+    });
+
+    let cursor = 0;
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (entry.isSection || !entry.words.length) continue;
 
       let startIdx = -1;
-      for (let i = cursor; i < normalizedWords.length; i++) {
-        if (normalizedWords[i].text === lineWords[0]) {
-          startIdx = i;
+      for (let j = cursor; j < normalizedWords.length; j++) {
+        if (normalizedWords[j].text === entry.words[0]) {
+          startIdx = j;
           break;
         }
       }
-      if (startIdx === -1) startIdx = cursor;
-
-      const startTime = normalizedWords[startIdx]
-        ? normalizedWords[startIdx].start
-        : null;
-
-      // Advance cursor roughly by line word count, allowing skips
-      let matches = 0;
-      let idx = startIdx;
-      while (idx < normalizedWords.length && matches < lineWords.length) {
-        if (normalizedWords[idx].text === lineWords[matches]) {
-          matches += 1;
+      if (startIdx === -1) {
+        for (let j = cursor; j < normalizedWords.length; j++) {
+          if (entry.words.includes(normalizedWords[j].text)) {
+            startIdx = j;
+            break;
+          }
         }
-        idx += 1;
       }
-      cursor = Math.max(cursor, idx);
 
-      if (startTime !== null && isFinite(startTime)) {
-        aligned.push(`[${toLrcTime(startTime)}] ${lineText}`);
+      if (startIdx !== -1 && normalizedWords[startIdx]) {
+        entry.time = normalizedWords[startIdx].start;
+        entry.matched = true;
+
+        let matches = 0;
+        let idx = startIdx;
+        while (idx < normalizedWords.length && matches < entry.words.length) {
+          if (normalizedWords[idx].text === entry.words[matches]) {
+            matches += 1;
+          }
+          idx += 1;
+        }
+        cursor = Math.max(cursor, idx);
       }
+    }
+
+    const lineIdx = entries
+      .map((e, i) => (!e.isSection ? i : null))
+      .filter((i) => i !== null);
+    const matchedIdx = lineIdx.filter((i) => entries[i].time !== null);
+
+    if (!matchedIdx.length) {
+      let t = 0;
+      lineIdx.forEach((i) => {
+        entries[i].time = t;
+        t += 0.6;
+      });
+    } else {
+      let t = entries[matchedIdx[0]].time;
+      for (let i = matchedIdx[0] - 1; i >= 0; i--) {
+        if (entries[i].isSection) continue;
+        t = Math.max(0, t - 0.6);
+        entries[i].time = t;
+      }
+
+      for (let m = 0; m < matchedIdx.length - 1; m++) {
+        const a = matchedIdx[m];
+        const b = matchedIdx[m + 1];
+        const gap = [];
+        for (let i = a + 1; i < b; i++) {
+          if (!entries[i].isSection) gap.push(i);
+        }
+        if (!gap.length) continue;
+        const start = entries[a].time;
+        const end = entries[b].time;
+        if (!(end > start)) {
+          let cur = start;
+          gap.forEach((idx) => {
+            cur += 0.6;
+            entries[idx].time = cur;
+          });
+        } else {
+          const step = (end - start) / (gap.length + 1);
+          gap.forEach((idx, gi) => {
+            entries[idx].time = start + step * (gi + 1);
+          });
+        }
+      }
+
+      t = entries[matchedIdx[matchedIdx.length - 1]].time;
+      for (let i = matchedIdx[matchedIdx.length - 1] + 1; i < entries.length; i++) {
+        if (entries[i].isSection) continue;
+        t += 0.6;
+        entries[i].time = t;
+      }
+    }
+
+    const aligned = [];
+    let lastTime = 0;
+    for (const entry of entries) {
+      if (entry.isSection) {
+        aligned.push(entry.raw);
+        continue;
+      }
+      if (entry.time === null || !isFinite(entry.time)) {
+        entry.time = lastTime + 0.01;
+      }
+      if (entry.time < lastTime) entry.time = lastTime + 0.01;
+      lastTime = entry.time;
+      aligned.push(`[${toLrcTime(entry.time)}] ${entry.text}`);
     }
 
     return aligned.join('\n');
