@@ -2653,7 +2653,6 @@
       const SUPABASE_KEY =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoZnVrY3BudWFraHhnempkcXlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyOTc0NjcsImV4cCI6MjA4ODg3MzQ2N30.4xlY4uR8oBVQjKcho68WjL6rXXYyLIwEFzGPdC7BlAs';
       const TRACKS_TABLE = 'tracks';
-      const ALIGN_STORAGE_BUCKET = 'align-audio';
 
       function sbFetch(path, options = {}) {
         const method = (options.method || 'GET').toUpperCase();
@@ -2670,26 +2669,6 @@
         const fetchOptions = { ...options, headers };
         if (method === 'GET') fetchOptions.cache = 'no-store';
         return fetch(`${SUPABASE_URL}/rest/v1/${path}`, fetchOptions);
-      }
-
-      function encodeStoragePath(path) {
-        return String(path || '')
-          .split('/')
-          .map((seg) => encodeURIComponent(seg))
-          .join('/');
-      }
-
-      function sbStorageUpload(bucket, path, file) {
-        const headers = {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': file?.type || 'application/octet-stream',
-          'x-upsert': 'true',
-        };
-        const target = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeStoragePath(
-          path,
-        )}`;
-        return fetch(target, { method: 'POST', headers, body: file });
       }
 
       // ─── Waveform ─────────────────────────────────────────────
@@ -3734,7 +3713,7 @@
       async function autoAlignFromUpload() {
         const errEl = $('cfgError');
         errEl.textContent = '';
-        setStatus(cfgStatus, 'Uploading audio...', 'var(--cyan)');
+        setStatus(cfgStatus, 'Aligning with upload...', 'var(--cyan)');
         const btn = $('autoAlignUploadBtn');
         if (btn) {
           btn.classList.add('is-loading');
@@ -3755,39 +3734,12 @@
         }
 
         try {
-          const extRaw = file.name && file.name.includes('.')
-            ? file.name.split('.').pop()
-            : 'audio';
-          const safeExt = String(extRaw || 'audio')
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, '') || 'audio';
-          const rand =
-            (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
-            `a${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-          const path = `auto-align/${rand}.${safeExt}`;
-
-          const uploadResp = await sbStorageUpload(
-            ALIGN_STORAGE_BUCKET,
-            path,
-            file,
-          );
-          if (!uploadResp.ok) {
-            const t = await uploadResp.text();
-            errEl.textContent =
-              '⚠ Upload failed. Check Supabase storage bucket and CORS.';
-            setStatus(cfgStatus, t ? t.slice(0, 120) : 'Upload failed', '#ff6b6b');
-            return;
-          }
-
-          setStatus(cfgStatus, 'Aligning with upload...', 'var(--cyan)');
-          const resp = await fetch('/api/align-storage', {
+          const form = new FormData();
+          form.append('audio', file);
+          form.append('lyrics', raw);
+          const resp = await fetch('/api/align-upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              path,
-              lyrics: raw,
-              mime: file.type || 'audio/mpeg',
-            }),
+            body: form,
           });
           if (!resp.ok) {
             let msg = 'Alignment failed.';
