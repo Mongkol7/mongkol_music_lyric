@@ -3789,8 +3789,7 @@
             const rows = await matchResp.json();
             if (rows.length) {
               if (!savePassword) {
-                savePassError.textContent = '';
-                openSavePass();
+                openSavePass('Password required to update this track.');
                 setStatus(cfgStatus, '');
                 return false;
               }
@@ -3826,6 +3825,9 @@
               upsertId = data?.id || rows[0].id;
               updatedByMatch = true;
             }
+          } else {
+            // If we cannot read existing rows (RLS), we may still be updating.
+            // We'll detect by duplicate-key on insert and then ask for password.
           }
 
           if (!updatedByMatch) {
@@ -3836,6 +3838,11 @@
             });
             if (!insertResp.ok) {
               const t = await insertResp.text();
+              if (/duplicate key|23505/i.test(t || '')) {
+                openSavePass('Password required to update this track.');
+                setStatus(cfgStatus, '');
+                return false;
+              }
               errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
               setStatus(
                 cfgStatus,
@@ -4156,8 +4163,8 @@
         passOverlay.classList.remove('open');
       }
 
-      function openSavePass() {
-        savePassError.textContent = '';
+      function openSavePass(msg) {
+        savePassError.textContent = msg || '';
         savePassInput.value = '';
         savePassOverlay.classList.add('open');
         setTimeout(() => savePassInput.focus(), 50);
