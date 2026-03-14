@@ -3429,6 +3429,7 @@
             try {
               const data = await resp.json();
               if (data?.error) msg = data.error;
+              if (data?.details) msg += `: ${data.details}`;
             } catch (err) {
               const t = await resp.text();
               if (t) msg = t.slice(0, 160);

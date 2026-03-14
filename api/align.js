@@ -133,7 +133,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const info = await ytdl.getInfo(videoId);
+    let info;
+    try {
+      info = await ytdl.getInfo(videoId);
+    } catch (err) {
+      res.status(500).json({
+        error: 'Failed to fetch YouTube audio',
+        details: String(err?.message || err),
+      });
+      return;
+    }
     const format = ytdl.chooseFormat(info.formats, {
       quality: 'lowestaudio',
       filter: 'audioonly',
@@ -171,7 +180,9 @@ export default async function handler(req, res) {
     });
     if (!resp.ok) {
       const t = await resp.text();
-      res.status(500).json({ error: 'Alignment failed', details: t });
+      res
+        .status(500)
+        .json({ error: 'Alignment failed (ElevenLabs)', details: t });
       return;
     }
     const data = await resp.json();
@@ -190,6 +201,9 @@ export default async function handler(req, res) {
 
     res.status(200).json({ lrc, loss: data?.loss ?? null });
   } catch (err) {
-    res.status(500).json({ error: 'Alignment failed' });
+    res.status(500).json({
+      error: 'Alignment failed',
+      details: String(err?.message || err),
+    });
   }
 }
