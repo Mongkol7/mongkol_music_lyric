@@ -84,6 +84,40 @@ export default async function handler(req, res) {
     return Array.isArray(items) ? items : null;
   }
 
+  function decodeXml(text) {
+    return text
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+  }
+
+  function parseTimedTextXml(xml) {
+    if (!xml) return null;
+    const items = [];
+    const re = /<text[^>]*start="([^"]+)"[^>]*>([\s\S]*?)<\/text>/g;
+    let match;
+    while ((match = re.exec(xml))) {
+      const start = parseFloat(match[1]);
+      const text = decodeXml(match[2].replace(/\s+/g, ' ').trim());
+      if (!text || !isFinite(start)) continue;
+      items.push({ start, text });
+    }
+    return items.length ? items : null;
+  }
+
+  async function fetchTimedText(videoId, lang, asr = false) {
+    const url = new URL('https://video.google.com/timedtext');
+    url.searchParams.set('v', videoId);
+    if (lang && lang !== 'auto') url.searchParams.set('lang', lang);
+    if (asr) url.searchParams.set('kind', 'asr');
+    const resp = await fetch(url.toString(), { method: 'GET' });
+    if (!resp.ok) return null;
+    const xml = await resp.text();
+    return parseTimedTextXml(xml);
+  }
+
   try {
     if (languageList.length) {
       const detected = [];
@@ -113,6 +147,18 @@ export default async function handler(req, res) {
     }
     if (!items || items.length === 0) {
       items = await fetchAlt(videoId);
+    }
+    if (!items || items.length === 0) {
+      for (const lang of langAttempts) {
+        items = await fetchTimedText(videoId, lang, false);
+        if (items && items.length) break;
+      }
+    }
+    if (!items || items.length === 0) {
+      for (const lang of langAttempts) {
+        items = await fetchTimedText(videoId, lang, true);
+        if (items && items.length) break;
+      }
     }
     if (!items || items.length === 0) {
       res.status(404).json({ error: 'No captions found' });
