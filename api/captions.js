@@ -11,7 +11,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const body = req.body || {};
+  const body =
+    typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
   const videoId = body.videoId;
   const language = body.language || 'en';
   const languageList = Array.isArray(body.languageList) ? body.languageList : [];
@@ -22,10 +23,11 @@ export default async function handler(req, res) {
   }
 
   async function fetchPrimary(lang) {
+    const payload = lang && lang !== 'auto' ? { videoId, language: lang } : { videoId };
     const resp = await fetch('https://youtubetranscripts.app/api', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId, language: lang }),
+      body: JSON.stringify(payload),
     });
     if (!resp.ok) return null;
     const data = await resp.json();
@@ -71,6 +73,17 @@ export default async function handler(req, res) {
     return null;
   }
 
+  async function fetchAlt(videoId) {
+    const resp = await fetch(
+      `https://youtubetranscript.com/?server_vid2=${encodeURIComponent(videoId)}`,
+      { method: 'GET' },
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const items = data?.transcript || data?.captions || data;
+    return Array.isArray(items) ? items : null;
+  }
+
   try {
     if (languageList.length) {
       const detected = [];
@@ -84,9 +97,22 @@ export default async function handler(req, res) {
       return;
     }
 
-    let items = await fetchPrimary(language);
+    const langAttempts = Array.from(
+      new Set([language, 'en', 'en-US', 'en-GB', 'auto']),
+    );
+    let items = null;
+    for (const lang of langAttempts) {
+      items = await fetchPrimary(lang);
+      if (items && items.length) break;
+    }
     if (!items || items.length === 0) {
-      items = await fetchFallback(body.url || '', language);
+      for (const lang of langAttempts) {
+        items = await fetchFallback(body.url || '', lang);
+        if (items && items.length) break;
+      }
+    }
+    if (!items || items.length === 0) {
+      items = await fetchAlt(videoId);
     }
     if (!items || items.length === 0) {
       res.status(404).json({ error: 'No captions found' });
