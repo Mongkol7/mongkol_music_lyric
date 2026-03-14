@@ -3780,54 +3780,95 @@
           let upsertId = null;
           let updatedByMatch = false;
 
-          // If any two of (title, artist, youtube) match, update that row
-          const matchResp = await sbFetch(
-            `${TRACKS_TABLE}?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitle},artist_key.eq.${qArtist}),and(title_key.eq.${qTitle},yt_id.eq.${qYt}),and(artist_key.eq.${qArtist},yt_id.eq.${qYt}))&order=created_at.desc`,
-            { method: 'GET' },
-          );
-          if (matchResp.ok) {
-            const rows = await matchResp.json();
-            if (rows.length) {
-              if (!savePassword) {
-                openSavePass('Password required to update this track.');
-                setStatus(cfgStatus, '');
-                return false;
-              }
-
-              const updateResp = await fetch('/api/update-track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  password: savePassword,
-                  title,
-                  artist,
-                  title_key: titleKey,
-                  artist_key: artistKey,
-                  yt_id: ytId,
-                  lyrics: raw,
-                }),
-              });
-              if (!updateResp.ok) {
-                let msg = 'Update failed.';
-                try {
-                  const data = await updateResp.json();
-                  if (data?.error) msg = data.error;
-                  if (data?.details) msg += `: ${data.details}`;
-                } catch (err) {
-                  const t = await updateResp.text();
-                  if (t) msg = t.slice(0, 160);
-                }
-                errEl.textContent = `⚠ ${msg}`;
-                setStatus(cfgStatus, 'Update failed', '#ff6b6b');
-                return false;
-              }
+          // If password provided, attempt server-side update first (bypasses RLS)
+          if (savePassword) {
+            const updateResp = await fetch('/api/update-track', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                password: savePassword,
+                title,
+                artist,
+                title_key: titleKey,
+                artist_key: artistKey,
+                yt_id: ytId,
+                lyrics: raw,
+              }),
+            });
+            if (updateResp.ok) {
               const data = await updateResp.json();
-              upsertId = data?.id || rows[0].id;
+              upsertId = data?.id || null;
               updatedByMatch = true;
+            } else if (updateResp.status === 401) {
+              savePassError.textContent = 'Wrong password.';
+              setStatus(cfgStatus, '');
+              return false;
+            } else if (updateResp.status !== 404) {
+              let msg = 'Update failed.';
+              try {
+                const data = await updateResp.json();
+                if (data?.error) msg = data.error;
+                if (data?.details) msg += `: ${data.details}`;
+              } catch (err) {
+                const t = await updateResp.text();
+                if (t) msg = t.slice(0, 160);
+              }
+              errEl.textContent = `⚠ ${msg}`;
+              setStatus(cfgStatus, 'Update failed', '#ff6b6b');
+              return false;
             }
-          } else {
-            // If we cannot read existing rows (RLS), we may still be updating.
-            // We'll detect by duplicate-key on insert and then ask for password.
+          }
+
+          // If any two of (title, artist, youtube) match, update that row
+          if (!updatedByMatch) {
+            const matchResp = await sbFetch(
+              `${TRACKS_TABLE}?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitle},artist_key.eq.${qArtist}),and(title_key.eq.${qTitle},yt_id.eq.${qYt}),and(artist_key.eq.${qArtist},yt_id.eq.${qYt}))&order=created_at.desc`,
+              { method: 'GET' },
+            );
+            if (matchResp.ok) {
+              const rows = await matchResp.json();
+              if (rows.length) {
+                if (!savePassword) {
+                  openSavePass('Password required to update this track.');
+                  setStatus(cfgStatus, '');
+                  return false;
+                }
+
+                const updateResp = await fetch('/api/update-track', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    password: savePassword,
+                    title,
+                    artist,
+                    title_key: titleKey,
+                    artist_key: artistKey,
+                    yt_id: ytId,
+                    lyrics: raw,
+                  }),
+                });
+                if (!updateResp.ok) {
+                  let msg = 'Update failed.';
+                  try {
+                    const data = await updateResp.json();
+                    if (data?.error) msg = data.error;
+                    if (data?.details) msg += `: ${data.details}`;
+                  } catch (err) {
+                    const t = await updateResp.text();
+                    if (t) msg = t.slice(0, 160);
+                  }
+                  errEl.textContent = `⚠ ${msg}`;
+                  setStatus(cfgStatus, 'Update failed', '#ff6b6b');
+                  return false;
+                }
+                const data = await updateResp.json();
+                upsertId = data?.id || rows[0].id;
+                updatedByMatch = true;
+              }
+            } else {
+              // If we cannot read existing rows (RLS), we may still be updating.
+              // We'll detect by duplicate-key on insert and then ask for password.
+            }
           }
 
           if (!updatedByMatch) {
