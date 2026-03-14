@@ -1374,6 +1374,23 @@
         border-color: var(--green);
         box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
       }
+      .cfg-align {
+        width: 100%;
+        background: linear-gradient(90deg, #0e2a20, #0d141a);
+        border: 1px solid rgba(0, 255, 136, 0.45);
+        color: var(--green);
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-transform: uppercase;
+      }
+      .cfg-align:hover {
+        border-color: var(--green);
+        box-shadow: 0 0 16px rgba(0, 255, 136, 0.25);
+      }
       .cfg-merge {
         display: inline-flex;
         align-items: center;
@@ -2094,6 +2111,16 @@
               </div>
             </div>
           </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <button class="cfg-align" onclick="autoAlignLyrics()">
+                ✦ AUTO ALIGN (ADD TIMESTAMPS)
+              </button>
+              <div class="cfg-hint">
+                Paste plain lyrics, then auto-align using the YouTube audio.
+              </div>
+            </div>
+          </div>
           <div class="cfg-error" id="cfgError"></div>
           <div class="cfg-actions">
             <button class="cfg-apply" onclick="applyConfig()">
@@ -2105,9 +2132,6 @@
             </label>
             <button class="cfg-import" onclick="importCaptions()">
               ⬇ IMPORT CAPTIONS
-            </button>
-            <button class="cfg-import" onclick="autoAlignLyrics()">
-              ✦ AUTO ALIGN
             </button>
             <button class="cfg-save" onclick="saveTrackToLibrary()">
               ⬤ SAVE TO LIBRARY
