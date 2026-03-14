@@ -3251,56 +3251,6 @@
         return merged.join('\n');
       }
 
-      async function fetchTranscriptPrimary(ytId, lang) {
-        const resp = await fetch('https://youtubetranscripts.app/api', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ videoId: ytId, language: lang }),
-        });
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        const items = data?.transcript || data?.captions || data?.segments;
-        return Array.isArray(items) ? items : null;
-      }
-
-      async function fetchTranscriptFallback(ytUrl, lang) {
-        const payload = {
-          jsonrpc: '2.0',
-          id: Date.now(),
-          method: 'tools/call',
-          params: {
-            name: 'get_transcript',
-            arguments: { url: ytUrl, language: lang },
-          },
-        };
-        const resp = await fetch(
-          'https://youtube-transcript-mcp.ergut.workers.dev/mcp',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          },
-        );
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        const res = data?.result ?? data;
-        const candidate =
-          res?.transcript ||
-          res?.segments ||
-          res?.captions ||
-          res?.content ||
-          res;
-        if (Array.isArray(candidate)) return candidate;
-        if (candidate?.text) {
-          try {
-            const parsed = JSON.parse(candidate.text);
-            if (Array.isArray(parsed)) return parsed;
-            if (Array.isArray(parsed?.transcript)) return parsed.transcript;
-          } catch (err) {}
-        }
-        return null;
-      }
-
       async function detectCaptionLanguages() {
         const errEl = $('cfgError');
         errEl.textContent = '';
@@ -3315,12 +3265,22 @@
         }
 
         const detected = [];
-        for (const code of CAPTION_LANG_CANDIDATES) {
-          try {
-            const items = await fetchTranscriptPrimary(ytId, code);
-            if (items && items.length) detected.push(code);
-          } catch (err) {}
-        }
+        try {
+          const resp = await fetch('/api/captions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              videoId: ytId,
+              languageList: CAPTION_LANG_CANDIDATES,
+            }),
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data?.languages)) {
+              detected.push(...data.languages);
+            }
+          }
+        } catch (err) {}
 
         const list = $('capLangList');
         if (list) {
@@ -3359,10 +3319,20 @@
         const lang = ($('cfgCapLang').value || 'en').trim() || 'en';
 
         try {
-          let items = await fetchTranscriptPrimary(ytId, lang);
-          if (!items || items.length === 0) {
-            items = await fetchTranscriptFallback(ytUrl, lang);
+          const resp = await fetch('/api/captions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId: ytId, language: lang, url: ytUrl }),
+          });
+          if (!resp.ok) {
+            const t = await resp.text();
+            errEl.textContent =
+              '⚠ Failed to fetch captions. Try another language code.';
+            setStatus(cfgStatus, t ? t.slice(0, 120) : 'Fetch failed', '#ff6b6b');
+            return;
           }
+          const data = await resp.json();
+          const items = data?.items;
           if (!Array.isArray(items) || items.length === 0) {
             errEl.textContent =
               '⚠ No captions found for this video/language.';
