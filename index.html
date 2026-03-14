@@ -3340,7 +3340,10 @@
 
       // Close on backdrop click
       $('configOverlay').addEventListener('click', (e) => {
-        if (e.target === $('configOverlay')) closeConfig();
+        // Only close when the click starts and ends on the backdrop
+        if (e.target === $('configOverlay') && e.currentTarget === e.target) {
+          closeConfig();
+        }
       });
       $('libraryOverlay').addEventListener('click', (e) => {
         if (e.target === $('libraryOverlay')) closeLibrary();
