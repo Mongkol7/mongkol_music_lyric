@@ -2679,7 +2679,7 @@
           .join('/');
       }
 
-      function sbStorageUpload(bucket, path, file) {
+      async function sbStorageUpload(bucket, path, file) {
         const headers = {
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -2689,7 +2689,11 @@
         const target = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeStoragePath(
           path,
         )}`;
-        return fetch(target, { method: 'POST', headers, body: file });
+        let resp = await fetch(target, { method: 'POST', headers, body: file });
+        if (resp.status === 400) {
+          resp = await fetch(target, { method: 'PUT', headers, body: file });
+        }
+        return resp;
       }
 
       // ─── Waveform ─────────────────────────────────────────────
@@ -3774,8 +3778,8 @@
           if (!uploadResp.ok) {
             const t = await uploadResp.text();
             errEl.textContent =
-              '⚠ Upload failed. Check Supabase storage bucket and CORS.';
-            setStatus(cfgStatus, t ? t.slice(0, 120) : 'Upload failed', '#ff6b6b');
+              '⚠ Upload failed. Check Supabase storage bucket/policy.';
+            setStatus(cfgStatus, t ? t.slice(0, 160) : 'Upload failed', '#ff6b6b');
             return;
           }
 
