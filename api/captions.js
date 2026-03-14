@@ -13,9 +13,27 @@ export default async function handler(req, res) {
 
   const body =
     typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
-  const videoId = body.videoId;
+  let videoId = body.videoId;
   const language = body.language || 'en';
   const languageList = Array.isArray(body.languageList) ? body.languageList : [];
+
+  function extractIdFromUrl(url) {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes('youtu.be')) {
+        return u.pathname.replace('/', '').trim();
+      }
+      if (u.searchParams.get('v')) return u.searchParams.get('v');
+      const paths = u.pathname.split('/').filter(Boolean);
+      const embedIdx = paths.indexOf('embed');
+      if (embedIdx >= 0 && paths[embedIdx + 1]) return paths[embedIdx + 1];
+    } catch (err) {}
+    return null;
+  }
+
+  if (!videoId && body.url) {
+    videoId = extractIdFromUrl(body.url);
+  }
 
   if (!videoId) {
     res.status(400).json({ error: 'Missing videoId' });
@@ -118,6 +136,22 @@ export default async function handler(req, res) {
     return parseTimedTextXml(xml);
   }
 
+  async function fetchTimedTextList(videoId) {
+    const url = new URL('https://video.google.com/timedtext');
+    url.searchParams.set('v', videoId);
+    url.searchParams.set('type', 'list');
+    const resp = await fetch(url.toString(), { method: 'GET' });
+    if (!resp.ok) return [];
+    const xml = await resp.text();
+    const langs = [];
+    const re = /<track[^>]*lang_code="([^"]+)"[^>]*>/g;
+    let match;
+    while ((match = re.exec(xml))) {
+      langs.push(match[1]);
+    }
+    return Array.from(new Set(langs));
+  }
+
   try {
     if (languageList.length) {
       const detected = [];
@@ -126,6 +160,10 @@ export default async function handler(req, res) {
           const items = await fetchPrimary(code);
           if (items && items.length) detected.push(code);
         } catch (err) {}
+      }
+      if (!detected.length) {
+        const list = await fetchTimedTextList(videoId);
+        if (list.length) detected.push(...list);
       }
       res.status(200).json({ languages: detected });
       return;
@@ -157,6 +195,13 @@ export default async function handler(req, res) {
     if (!items || items.length === 0) {
       for (const lang of langAttempts) {
         items = await fetchTimedText(videoId, lang, true);
+        if (items && items.length) break;
+      }
+    }
+    if (!items || items.length === 0) {
+      const available = await fetchTimedTextList(videoId);
+      for (const lang of available) {
+        items = await fetchTimedText(videoId, lang, false);
         if (items && items.length) break;
       }
     }
