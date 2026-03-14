@@ -2255,6 +2255,23 @@
       </div>
     </div>
 
+    <div class="pass-overlay" id="savePassOverlay">
+      <div class="pass-panel">
+        <div class="pass-title">Save to Library</div>
+        <input
+          class="pass-input"
+          id="savePassInput"
+          type="password"
+          placeholder="Enter password"
+        />
+        <div class="pass-error" id="savePassError"></div>
+        <div class="pass-actions">
+          <button class="pass-cancel" id="savePassCancel">Cancel</button>
+          <button class="pass-confirm" id="savePassConfirm">Save</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       // ═══════════════════════════════════════════════════════════
       //  FULL LYRICS — exact LRC timestamps from official track
@@ -2494,6 +2511,11 @@
       const passError = $('passError');
       const passCancel = $('passCancel');
       const passConfirm = $('passConfirm');
+      const savePassOverlay = $('savePassOverlay');
+      const savePassInput = $('savePassInput');
+      const savePassError = $('savePassError');
+      const savePassCancel = $('savePassCancel');
+      const savePassConfirm = $('savePassConfirm');
       let pendingDeleteId = null;
 
       libraryList.addEventListener('click', (e) => {
@@ -3705,7 +3727,7 @@
         return true;
       }
 
-      async function saveTrackToLibrary() {
+      async function saveTrackToLibrary(savePassword) {
         const errEl = $('cfgError');
         errEl.textContent = '';
         setStatus(cfgStatus, 'Saving...', 'var(--cyan)');
@@ -3766,106 +3788,64 @@
           if (matchResp.ok) {
             const rows = await matchResp.json();
             if (rows.length) {
-              const keepId = rows[0].id;
-              const patchResp = await sbFetch(
-                `${TRACKS_TABLE}?id=eq.${keepId}`,
-                {
-                  method: 'PATCH',
-                  headers: { Prefer: 'return=representation' },
-                  body: JSON.stringify(payload),
-                },
-              );
-              if (!patchResp.ok) {
-                const tt = await patchResp.text();
-                errEl.textContent =
-                  '⚠ Update failed. Check Supabase table/RLS.';
-                setStatus(
-                  cfgStatus,
-                  tt ? tt.slice(0, 120) : 'Update failed',
-                  '#ff6b6b',
-                );
-                return;
+              if (!savePassword) {
+                savePassError.textContent = '';
+                openSavePass();
+                setStatus(cfgStatus, '');
+                return false;
               }
-              upsertId = keepId;
-              updatedByMatch = true;
 
-              // Remove extra duplicates that match the 2-of-3 rule
-              if (rows.length > 1) {
-                const delIds = rows
-                  .slice(1)
-                  .map((r) => r.id)
-                  .filter(Boolean);
-                if (delIds.length) {
-                  const idList = delIds.join(',');
-                  await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
-                    method: 'DELETE',
-                  });
+              const updateResp = await fetch('/api/update-track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  password: savePassword,
+                  title,
+                  artist,
+                  title_key: titleKey,
+                  artist_key: artistKey,
+                  yt_id: ytId,
+                  lyrics: raw,
+                }),
+              });
+              if (!updateResp.ok) {
+                let msg = 'Update failed.';
+                try {
+                  const data = await updateResp.json();
+                  if (data?.error) msg = data.error;
+                  if (data?.details) msg += `: ${data.details}`;
+                } catch (err) {
+                  const t = await updateResp.text();
+                  if (t) msg = t.slice(0, 160);
                 }
+                errEl.textContent = `⚠ ${msg}`;
+                setStatus(cfgStatus, 'Update failed', '#ff6b6b');
+                return false;
               }
+              const data = await updateResp.json();
+              upsertId = data?.id || rows[0].id;
+              updatedByMatch = true;
             }
           }
 
           if (!updatedByMatch) {
-            const upsertResp = await sbFetch(
-              `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
-              {
-                method: 'POST',
-                headers: {
-                  Prefer: 'resolution=merge-duplicates,return=representation',
-                },
-                body: JSON.stringify([payload]),
-              },
-            );
-            if (upsertResp.ok) {
-              const saved = await upsertResp.json();
-              upsertId = saved?.[0]?.id || null;
-            } else {
-              const t = await upsertResp.text();
-              if (!/no unique|exclusion constraint/i.test(t || '')) {
-                errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-                setStatus(
-                  cfgStatus,
-                  t ? t.slice(0, 120) : 'Save failed',
-                  '#ff6b6b',
-                );
-                return;
-              }
-              // Fallback when ON CONFLICT isn't available:
-              // overwrite any rows that match title+artist
-              const patchResp = await sbFetch(
-                `${TRACKS_TABLE}?title_key=eq.${qTitle}&artist_key=eq.${qArtist}`,
-                {
-                  method: 'PATCH',
-                  headers: { Prefer: 'return=representation' },
-                  body: JSON.stringify(payload),
-                },
+            const insertResp = await sbFetch(`${TRACKS_TABLE}`, {
+              method: 'POST',
+              headers: { Prefer: 'return=representation' },
+              body: JSON.stringify([payload]),
+            });
+            if (!insertResp.ok) {
+              const t = await insertResp.text();
+              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+              setStatus(
+                cfgStatus,
+                t ? t.slice(0, 120) : 'Save failed',
+                '#ff6b6b',
               );
-              if (!patchResp.ok) {
-                const tt = await patchResp.text();
-                errEl.textContent =
-                  '⚠ Update failed. Check Supabase table/RLS.';
-                setStatus(
-                  cfgStatus,
-                  tt ? tt.slice(0, 120) : 'Update failed',
-                  '#ff6b6b',
-                );
-                return;
-              }
-              try {
-                const patched = await patchResp.json();
-                upsertId = patched?.[0]?.id || null;
-              } catch (err) {}
-              if (!upsertId) {
-                const listResp = await sbFetch(
-                  `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc&limit=1`,
-                  { method: 'GET' },
-                );
-                if (listResp.ok) {
-                  const rows = await listResp.json();
-                  if (rows.length) upsertId = rows[0].id;
-                }
-              }
+              return false;
             }
+            const saved = await insertResp.json();
+            upsertId = saved?.[0]?.id || null;
           }
 
           // Cleanup duplicates beyond the newest (title+artist only)
@@ -3907,7 +3887,7 @@
                   errEl.textContent =
                     '⚠ Save failed. Supabase rejected the update.';
                   setStatus(cfgStatus, 'Save failed', '#ff6b6b');
-                  return;
+                  return false;
                 }
               }
             } catch (err) {}
@@ -3921,9 +3901,11 @@
               JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
             );
           } catch (err) {}
+          return true;
         } catch (err) {
           errEl.textContent = '⚠ Save failed. Network or Supabase error.';
           setStatus(cfgStatus, 'Save failed', '#ff6b6b');
+          return false;
         }
       }
 
@@ -4174,6 +4156,17 @@
         passOverlay.classList.remove('open');
       }
 
+      function openSavePass() {
+        savePassError.textContent = '';
+        savePassInput.value = '';
+        savePassOverlay.classList.add('open');
+        setTimeout(() => savePassInput.focus(), 50);
+      }
+
+      function closeSavePass() {
+        savePassOverlay.classList.remove('open');
+      }
+
       async function confirmDelete() {
         if (!pendingDeleteId) return;
         if (passInput.value !== '007') {
@@ -4213,6 +4206,17 @@
       passConfirm.addEventListener('click', () => confirmDelete());
       passInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') confirmDelete();
+      });
+
+      savePassCancel.addEventListener('click', () => closeSavePass());
+      savePassConfirm.addEventListener('click', async () => {
+        const ok = await saveTrackToLibrary(savePassInput.value);
+        if (ok) closeSavePass();
+      });
+      savePassInput.addEventListener('keydown', async (e) => {
+        if (e.key !== 'Enter') return;
+        const ok = await saveTrackToLibrary(savePassInput.value);
+        if (ok) closeSavePass();
       });
 
       function applyConfig() {
