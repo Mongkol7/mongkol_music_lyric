@@ -394,12 +394,39 @@
         color: var(--muted2);
         letter-spacing: 0.07em;
         font-family: 'Share Tech Mono', monospace;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
-      .dev-credit span {
+      .dev-credit .dev-name {
         color: var(--green);
         text-shadow:
           0 0 8px rgba(0, 255, 136, 0.45),
           0 0 18px rgba(0, 255, 136, 0.25);
+      }
+      .dev-bar {
+        height: 6px;
+        width: 160px;
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        opacity: 0.75;
+      }
+      .dev-bar-seg {
+        width: 4px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--green);
+        box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+        transition:
+          height 0.18s ease,
+          opacity 0.18s ease;
+        opacity: 0.35;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .dev-bar-seg {
+          transition: none;
+        }
       }
 
       /* ── RIGHT PANEL ── */
@@ -967,6 +994,24 @@
         color: var(--white);
         background: rgba(255, 255, 255, 0.06);
       }
+      .library-add {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--green);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        cursor: pointer;
+        margin-left: 8px;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+      .library-add:hover {
+        border-color: var(--green);
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.25);
+      }
 
       .config-body {
         padding: 20px 22px 22px;
@@ -1311,6 +1356,38 @@
       .cfg-save:hover {
         border-color: var(--cyan);
         box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+      }
+      .cfg-import {
+        width: 100%;
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--green);
+        padding: 9px 14px;
+        border-radius: 7px;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-transform: uppercase;
+      }
+      .cfg-import:hover {
+        border-color: var(--green);
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+      }
+      .cfg-merge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 6px 8px;
+        border: 1px solid var(--term-border);
+        border-radius: 7px;
+      }
+      .cfg-merge input {
+        accent-color: var(--green);
       }
       .cfg-status {
         font-size: 10px;
@@ -1813,7 +1890,8 @@
                 <span class="cur" id="timeDisplay">0:00</span> / 3:57
               </div>
               <div class="dev-credit">
-                dev: <span>Thoeung Sereymongkol</span>
+                dev: <span class="dev-name">Thoeung Sereymongkol</span>
+                <div class="dev-bar" id="devBar"></div>
               </div>
             </div>
 
@@ -1969,6 +2047,36 @@
               </div>
             </div>
           </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-label">Caption Language</div>
+              <input
+                class="cfg-input"
+                id="cfgCapLang"
+                list="capLangList"
+                placeholder="en"
+                value="en"
+              />
+              <div class="cfg-hint">Use a language code like <code>en</code>, <code>es</code>, <code>th</code>.</div>
+            </div>
+            <div class="cfg-field" style="align-self: flex-end">
+              <button class="cfg-import" onclick="detectCaptionLanguages()">
+                ✦ DETECT LANGS
+              </button>
+            </div>
+          </div>
+          <datalist id="capLangList">
+            <option value="en"></option>
+            <option value="es"></option>
+            <option value="fr"></option>
+            <option value="de"></option>
+            <option value="it"></option>
+            <option value="pt"></option>
+            <option value="ja"></option>
+            <option value="ko"></option>
+            <option value="zh"></option>
+            <option value="th"></option>
+          </datalist>
           <div class="cfg-row col">
             <div class="cfg-field">
               <div class="cfg-label">Lyrics with timestamps</div>
@@ -1978,8 +2086,8 @@
                 placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[00:42.62] She don't believe in shootin' stars&#10;[#CHORUS]&#10;[01:23.66] As I recall..."
               ></textarea>
               <div class="cfg-hint">
-                Each lyric line: <code>[mm:ss.cs] lyric text</code> or
-                <code>[ss.cs] lyric text</code><br />
+                Each lyric line: <code>[mm:ss]</code> or <code>[mm:ss.xx]</code> or
+                <code>[ss.xx]</code><br />
                 Section header: start a line with
                 <code>[#SECTION NAME]</code> e.g. <code>[#CHORUS]</code><br />
                 Lines without a valid timestamp are ignored.
@@ -1990,6 +2098,13 @@
           <div class="cfg-actions">
             <button class="cfg-apply" onclick="applyConfig()">
               ▶ APPLY &amp; LOAD
+            </button>
+            <label class="cfg-merge">
+              <input type="checkbox" id="cfgMergeCaptions" />
+              merge captions
+            </label>
+            <button class="cfg-import" onclick="importCaptions()">
+              ⬇ IMPORT CAPTIONS
             </button>
             <button class="cfg-save" onclick="saveTrackToLibrary()">
               ⬤ SAVE TO LIBRARY
@@ -2014,6 +2129,7 @@
             <div class="dot dot-g"></div>
           </div>
           <div class="config-title"><em>♪</em> select music — library</div>
+          <button class="library-add" onclick="openConfigFromLibrary()">＋ ADD</button>
           <button class="config-close" onclick="closeLibrary()">✕</button>
         </div>
         <div class="library-body">
@@ -2263,6 +2379,7 @@
       const flashOver = $('flashOverlay');
       const glowOrb = $('glowOrb');
       const waveformEl = $('waveformEl');
+      const devBar = $('devBar');
       const ytLabel = $('ytStatusLabel');
       const cfgStatus = $('cfgStatus');
       const libraryOverlay = $('libraryOverlay');
@@ -2332,6 +2449,61 @@
           b.style.height = '4px';
           b.style.opacity = '.2';
         });
+      }
+
+      // ─── Dev name light bar ───────────────────────────────────
+      const devSegs = [];
+      let devBarRaf = null;
+      let devBarPhase = 0;
+      const prefersReduced =
+        window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function initDevBar() {
+        if (!devBar || devSegs.length) return;
+        const segCount = 18;
+        for (let i = 0; i < segCount; i++) {
+          const seg = document.createElement('div');
+          seg.className = 'dev-bar-seg';
+          devBar.appendChild(seg);
+          devSegs.push(seg);
+        }
+        setDevBarIdle();
+      }
+
+      function setDevBarIdle() {
+        devSegs.forEach((seg) => {
+          seg.style.height = '2px';
+          seg.style.opacity = '0.25';
+        });
+      }
+
+      function startDevBar() {
+        if (prefersReduced || devBarRaf) return;
+        const tick = () => {
+          if (!playing) {
+            devBarRaf = null;
+            setDevBarIdle();
+            return;
+          }
+          devBarPhase += 0.08;
+          devSegs.forEach((seg, i) => {
+            const base = Math.sin(devBarPhase + i * 0.55);
+            const jitter = (Math.random() - 0.5) * 0.4;
+            const amp = Math.max(0, base + jitter);
+            const h = 2 + amp * 7;
+            seg.style.height = `${h}px`;
+            seg.style.opacity = `${0.25 + amp * 0.7}`;
+          });
+          devBarRaf = requestAnimationFrame(tick);
+        };
+        devBarRaf = requestAnimationFrame(tick);
+      }
+
+      function stopDevBar() {
+        if (devBarRaf) cancelAnimationFrame(devBarRaf);
+        devBarRaf = null;
+        setDevBarIdle();
       }
 
       // ─── Section markers ──────────────────────────────────────
@@ -2449,6 +2621,7 @@
           raf = null;
         }
         freezeWave();
+        stopDevBar();
         try {
           if (ytPlayer) ytPlayer.pauseVideo();
         } catch (err) {}
@@ -2459,6 +2632,7 @@
       function playAll() {
         playing = true;
         startWave();
+        startDevBar();
         try {
           if (ytPlayer) ytPlayer.playVideo();
         } catch (err) {}
@@ -2570,6 +2744,7 @@
         playing = false;
         raf = null;
         freezeWave();
+        stopDevBar();
         clearInterval(_ytPollInterval);
         _ytPollInterval = null;
         playBtn.textContent = '↺ RESTART';
@@ -2596,7 +2771,18 @@
       }
 
       function setVol(v) {
-        if (ytReady) ytPlayer.setVolume(parseInt(v));
+        applyVolume(v);
+      }
+
+      let pendingVolume = null;
+      function applyVolume(v) {
+        const vol = Math.max(0, Math.min(100, parseInt(v)));
+        pendingVolume = Number.isFinite(vol) ? vol : pendingVolume;
+        if (!ytReady) return;
+        try {
+          if (ytPlayer.isMuted && ytPlayer.isMuted()) ytPlayer.unMute();
+          ytPlayer.setVolume(pendingVolume ?? 70);
+        } catch (err) {}
       }
 
       // ─── 3-row lyric display ──────────────────────────────────
@@ -2839,7 +3025,7 @@
               }
 
               try {
-                ytPlayer.setVolume(parseInt($('volSlider').value));
+                applyVolume($('volSlider').value);
               } catch (err) {}
 
               // Start background time polling (Safari-safe)
@@ -2861,11 +3047,13 @@
               if (e.data === S.PLAYING) {
                 lastLoopTime = -1;
                 _startYTTimePoll();
+                applyVolume(pendingVolume ?? $('volSlider').value);
                 if (!playing) {
                   playing = true;
                   playBtn.textContent = '⏸ PAUSE';
                   statusText.textContent = 'PLAYING';
                   startWave();
+                  startDevBar();
                   if (idleMsg) idleMsg.style.display = 'none';
                 }
                 if (!raf) raf = requestAnimationFrame(loop);
@@ -2915,6 +3103,19 @@
             return lines.join('\n');
           })
           .join('\n');
+        $('cfgError').textContent = '';
+        setStatus(cfgStatus, '');
+        overlay.classList.add('open');
+        setTimeout(() => $('cfgTitle').focus(), 350);
+      }
+
+      function openConfigFromLibrary() {
+        closeLibrary();
+        const overlay = $('configOverlay');
+        $('cfgTitle').value = '';
+        $('cfgArtist').value = '';
+        $('cfgYtUrl').value = '';
+        $('cfgLyrics').value = '';
         $('cfgError').textContent = '';
         setStatus(cfgStatus, '');
         overlay.classList.add('open');
@@ -3007,6 +3208,191 @@
         if (!el) return;
         el.textContent = msg || '';
         el.style.color = color || 'var(--muted)';
+      }
+
+      function fmtLrcTime(sec) {
+        const s = Math.max(0, sec || 0);
+        const m = Math.floor(s / 60);
+        const r = (s - m * 60).toFixed(2).padStart(5, '0');
+        return `${String(m).padStart(2, '0')}:${r}`;
+      }
+
+      const CAPTION_LANG_CANDIDATES = [
+        'en',
+        'es',
+        'fr',
+        'de',
+        'it',
+        'pt',
+        'ja',
+        'ko',
+        'zh',
+        'th',
+      ];
+
+      function mergeLyricsText(existingText, newText) {
+        const existing = existingText
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean);
+        const incoming = newText
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean);
+        if (!existing.length) return newText;
+        const seen = new Set(existing);
+        const merged = [...existing];
+        incoming.forEach((line) => {
+          if (!seen.has(line)) {
+            seen.add(line);
+            merged.push(line);
+          }
+        });
+        return merged.join('\n');
+      }
+
+      async function fetchTranscriptPrimary(ytId, lang) {
+        const resp = await fetch('https://youtubetranscripts.app/api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoId: ytId, language: lang }),
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const items = data?.transcript || data?.captions || data?.segments;
+        return Array.isArray(items) ? items : null;
+      }
+
+      async function fetchTranscriptFallback(ytUrl, lang) {
+        const payload = {
+          jsonrpc: '2.0',
+          id: Date.now(),
+          method: 'tools/call',
+          params: {
+            name: 'get_transcript',
+            arguments: { url: ytUrl, language: lang },
+          },
+        };
+        const resp = await fetch(
+          'https://youtube-transcript-mcp.ergut.workers.dev/mcp',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          },
+        );
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const res = data?.result ?? data;
+        const candidate =
+          res?.transcript ||
+          res?.segments ||
+          res?.captions ||
+          res?.content ||
+          res;
+        if (Array.isArray(candidate)) return candidate;
+        if (candidate?.text) {
+          try {
+            const parsed = JSON.parse(candidate.text);
+            if (Array.isArray(parsed)) return parsed;
+            if (Array.isArray(parsed?.transcript)) return parsed.transcript;
+          } catch (err) {}
+        }
+        return null;
+      }
+
+      async function detectCaptionLanguages() {
+        const errEl = $('cfgError');
+        errEl.textContent = '';
+        setStatus(cfgStatus, 'Detecting languages...', 'var(--cyan)');
+
+        const ytUrl = $('cfgYtUrl').value.trim();
+        const ytId = extractYTId(ytUrl);
+        if (!ytId) {
+          errEl.textContent = '⚠ Please provide a valid YouTube URL first.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+
+        const detected = [];
+        for (const code of CAPTION_LANG_CANDIDATES) {
+          try {
+            const items = await fetchTranscriptPrimary(ytId, code);
+            if (items && items.length) detected.push(code);
+          } catch (err) {}
+        }
+
+        const list = $('capLangList');
+        if (list) {
+          list.innerHTML = '';
+          detected.forEach((code) => {
+            const opt = document.createElement('option');
+            opt.value = code;
+            list.appendChild(opt);
+          });
+        }
+
+        if (detected.length) {
+          $('cfgCapLang').value = detected[0];
+          setStatus(
+            cfgStatus,
+            `Detected: ${detected.join(', ')}`,
+            'var(--green)',
+          );
+        } else {
+          setStatus(cfgStatus, 'No captions detected', '#ff6b6b');
+        }
+      }
+
+      async function importCaptions() {
+        const errEl = $('cfgError');
+        errEl.textContent = '';
+        setStatus(cfgStatus, 'Fetching captions...', 'var(--cyan)');
+
+        const ytUrl = $('cfgYtUrl').value.trim();
+        const ytId = extractYTId(ytUrl);
+        if (!ytId) {
+          errEl.textContent = '⚠ Please provide a valid YouTube URL first.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+        const lang = ($('cfgCapLang').value || 'en').trim() || 'en';
+
+        try {
+          let items = await fetchTranscriptPrimary(ytId, lang);
+          if (!items || items.length === 0) {
+            items = await fetchTranscriptFallback(ytUrl, lang);
+          }
+          if (!Array.isArray(items) || items.length === 0) {
+            errEl.textContent =
+              '⚠ No captions found for this video/language.';
+            setStatus(cfgStatus, '');
+            return;
+          }
+          const lines = items
+            .map((seg) => {
+              const start = seg.start ?? seg.startTime ?? seg.offset ?? 0;
+              const text = (seg.text || seg.caption || '').replace(/\s+/g, ' ').trim();
+              if (!text) return '';
+              return `[${fmtLrcTime(Number(start))}] ${text}`;
+            })
+            .filter(Boolean)
+            .join('\n');
+
+          const merge = $('cfgMergeCaptions')?.checked;
+          if (merge) {
+            $('cfgLyrics').value = mergeLyricsText(
+              $('cfgLyrics').value,
+              lines,
+            );
+          } else {
+            $('cfgLyrics').value = lines;
+          }
+          setStatus(cfgStatus, 'Captions loaded ✓', 'var(--green)');
+        } catch (err) {
+          errEl.textContent = '⚠ Failed to fetch captions. Network error.';
+          setStatus(cfgStatus, 'Fetch failed', '#ff6b6b');
+        }
       }
 
       function applyTrackData({ title, artist, ytId, lyricsRaw }) {
@@ -3133,8 +3519,8 @@
           return;
         }
 
-        const titleKey = title.toLowerCase();
-        const artistKey = artist.toLowerCase();
+        const titleKey = title.trim().replace(/\s+/g, ' ').toLowerCase();
+        const artistKey = artist.trim().replace(/\s+/g, ' ').toLowerCase();
         const payload = {
           title,
           artist,
@@ -3145,124 +3531,69 @@
         };
 
         try {
-          let storedKey = null;
-          try {
-            storedKey = JSON.parse(localStorage.getItem('lastTrackKey'));
-          } catch (err) {}
-          const lastId = localStorage.getItem('lastTrackId');
-          const keyMatchesLast =
-            storedKey?.title_key === titleKey &&
-            storedKey?.artist_key === artistKey;
-
-          // If user is editing the same track (same artist/title), update by id.
-          let updatedById = false;
-          if (lastId && keyMatchesLast) {
-            const patchResp = await sbFetch(`${TRACKS_TABLE}?id=eq.${lastId}`, {
-              method: 'PATCH',
-              headers: { Prefer: 'return=representation' },
-              body: JSON.stringify(payload),
-            });
-            if (patchResp.ok) {
-              updatedById = true;
-              try {
-                localStorage.setItem('lastTrackId', String(lastId));
-                localStorage.setItem(
-                  'lastTrackKey',
-                  JSON.stringify({ title_key: titleKey, artist_key: artistKey }),
-                );
-              } catch (err) {}
-            }
-          }
-
           const qTitle = encodeURIComponent(titleKey);
           const qArtist = encodeURIComponent(artistKey);
           // Prefer UPSERT so updates always reach Supabase
           let upsertId = null;
-          if (!updatedById) {
-            const upsertResp = await sbFetch(
-              `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
+          const upsertResp = await sbFetch(
+            `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
+            {
+              method: 'POST',
+              headers: {
+                Prefer: 'resolution=merge-duplicates,return=representation',
+              },
+              body: JSON.stringify([payload]),
+            },
+          );
+          if (upsertResp.ok) {
+            const saved = await upsertResp.json();
+            upsertId = saved?.[0]?.id || null;
+          } else {
+            const t = await upsertResp.text();
+            if (!/no unique|exclusion constraint/i.test(t || '')) {
+              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+              setStatus(
+                cfgStatus,
+                t ? t.slice(0, 120) : 'Save failed',
+                '#ff6b6b',
+              );
+              return;
+            }
+            // Fallback when ON CONFLICT isn't available:
+            // overwrite any rows that match title+artist
+            const patchResp = await sbFetch(
+              `${TRACKS_TABLE}?title_key=eq.${qTitle}&artist_key=eq.${qArtist}`,
               {
-                method: 'POST',
-                headers: {
-                  Prefer: 'resolution=merge-duplicates,return=representation',
-                },
-                body: JSON.stringify([payload]),
+                method: 'PATCH',
+                headers: { Prefer: 'return=representation' },
+                body: JSON.stringify(payload),
               },
             );
-            if (upsertResp.ok) {
-              const saved = await upsertResp.json();
-              upsertId = saved?.[0]?.id || null;
-            } else {
-              const t = await upsertResp.text();
-              if (!/no unique|exclusion constraint/i.test(t || '')) {
-                errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-                setStatus(
-                  cfgStatus,
-                  t ? t.slice(0, 120) : 'Save failed',
-                  '#ff6b6b',
-                );
-                return;
-              }
-              // Fallback when ON CONFLICT isn't available
+            if (!patchResp.ok) {
+              const tt = await patchResp.text();
+              errEl.textContent =
+                '⚠ Update failed. Check Supabase table/RLS.';
+              setStatus(
+                cfgStatus,
+                tt ? tt.slice(0, 120) : 'Update failed',
+                '#ff6b6b',
+              );
+              return;
+            }
+            try {
+              const patched = await patchResp.json();
+              upsertId = patched?.[0]?.id || null;
+            } catch (err) {}
+            if (!upsertId) {
               const listResp = await sbFetch(
-                `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
+                `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc&limit=1`,
                 { method: 'GET' },
               );
-              if (!listResp.ok) {
-                const tt = await listResp.text();
-                errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-                setStatus(
-                  cfgStatus,
-                  tt ? tt.slice(0, 120) : 'Save failed',
-                  '#ff6b6b',
-                );
-                return;
-              }
-              const rows = await listResp.json();
-              if (rows.length) {
-                const keepId = rows[0].id;
-                const patchResp = await sbFetch(
-                  `${TRACKS_TABLE}?id=eq.${keepId}`,
-                  {
-                    method: 'PATCH',
-                    headers: { Prefer: 'return=representation' },
-                    body: JSON.stringify(payload),
-                  },
-                );
-                if (!patchResp.ok) {
-                  const tt = await patchResp.text();
-                  errEl.textContent =
-                    '⚠ Update failed. Check Supabase table/RLS.';
-                  setStatus(
-                    cfgStatus,
-                    tt ? tt.slice(0, 120) : 'Update failed',
-                    '#ff6b6b',
-                  );
-                  return;
-                }
-                upsertId = keepId;
-              } else {
-                const resp = await sbFetch(`${TRACKS_TABLE}`, {
-                  method: 'POST',
-                  headers: { Prefer: 'return=representation' },
-                  body: JSON.stringify([payload]),
-                });
-                if (!resp.ok) {
-                  const tt = await resp.text();
-                  errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-                  setStatus(
-                    cfgStatus,
-                    tt ? tt.slice(0, 120) : 'Save failed',
-                    '#ff6b6b',
-                  );
-                  return;
-                }
-                const saved = await resp.json();
-                upsertId = saved?.[0]?.id || null;
+              if (listResp.ok) {
+                const rows = await listResp.json();
+                if (rows.length) upsertId = rows[0].id;
               }
             }
-          } else {
-            upsertId = lastId;
           }
 
           // Cleanup duplicates beyond the newest (if any)
@@ -3665,6 +3996,7 @@
 
       // Try auto-load last saved track (if any)
       loadLastTrack();
+      initDevBar();
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
   </body>
