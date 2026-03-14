@@ -3776,6 +3776,9 @@
           const qTitle = encodeURIComponent(titleKey);
           const qArtist = encodeURIComponent(artistKey);
           const qYt = encodeURIComponent(ytId);
+          const qTitleQ = encodeURIComponent(`"${titleKey}"`);
+          const qArtistQ = encodeURIComponent(`"${artistKey}"`);
+          const qYtQ = encodeURIComponent(`"${ytId}"`);
           // Prefer UPSERT so updates always reach Supabase
           let upsertId = null;
           let updatedByMatch = false;
@@ -3822,7 +3825,7 @@
           // If any two of (title, artist, youtube) match, update that row
           if (!updatedByMatch) {
             const matchResp = await sbFetch(
-              `${TRACKS_TABLE}?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitle},artist_key.eq.${qArtist}),and(title_key.eq.${qTitle},yt_id.eq.${qYt}),and(artist_key.eq.${qArtist},yt_id.eq.${qYt}))&order=created_at.desc`,
+              `${TRACKS_TABLE}?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitleQ},artist_key.eq.${qArtistQ}),and(title_key.eq.${qTitleQ},yt_id.eq.${qYtQ}),and(artist_key.eq.${qArtistQ},yt_id.eq.${qYtQ}))&order=created_at.desc`,
               { method: 'GET' },
             );
             if (matchResp.ok) {

@@ -49,6 +49,9 @@ export default async function handler(req, res) {
   const qTitle = encodeURIComponent(titleKey);
   const qArtist = encodeURIComponent(artistKey);
   const qYt = encodeURIComponent(ytId);
+  const qTitleQ = encodeURIComponent(`"${titleKey}"`);
+  const qArtistQ = encodeURIComponent(`"${artistKey}"`);
+  const qYtQ = encodeURIComponent(`"${ytId}"`);
 
   const headers = {
     'Content-Type': 'application/json',
@@ -58,7 +61,7 @@ export default async function handler(req, res) {
 
   try {
     const matchResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/tracks?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitle},artist_key.eq.${qArtist}),and(title_key.eq.${qTitle},yt_id.eq.${qYt}),and(artist_key.eq.${qArtist},yt_id.eq.${qYt}))&order=created_at.desc`,
+      `${SUPABASE_URL}/rest/v1/tracks?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitleQ},artist_key.eq.${qArtistQ}),and(title_key.eq.${qTitleQ},yt_id.eq.${qYtQ}),and(artist_key.eq.${qArtistQ},yt_id.eq.${qYtQ}))&order=created_at.desc`,
       { method: 'GET', headers },
     );
     if (!matchResp.ok) {
