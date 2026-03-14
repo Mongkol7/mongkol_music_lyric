@@ -1391,6 +1391,31 @@
         border-color: var(--green);
         box-shadow: 0 0 16px rgba(0, 255, 136, 0.25);
       }
+      .cfg-align.is-loading {
+        opacity: 0.7;
+        cursor: wait;
+        position: relative;
+        overflow: hidden;
+      }
+      .cfg-align.is-loading::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          120deg,
+          transparent,
+          rgba(0, 255, 136, 0.12),
+          transparent
+        );
+        transform: translateX(-120%);
+        animation: alignShine 1s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes alignShine {
+        to {
+          transform: translateX(120%);
+        }
+      }
       .cfg-file {
         padding: 7px 10px;
         font-size: 10px;
@@ -2117,7 +2142,11 @@
           </div>
           <div class="cfg-row">
             <div class="cfg-field">
-              <button class="cfg-align" onclick="autoAlignLyrics()">
+              <button
+                class="cfg-align"
+                id="autoAlignBtn"
+                onclick="autoAlignLyrics()"
+              >
                 ✦ AUTO ALIGN (ADD TIMESTAMPS)
               </button>
               <div class="cfg-hint">
@@ -2141,7 +2170,11 @@
           </div>
           <div class="cfg-row">
             <div class="cfg-field">
-              <button class="cfg-align" onclick="autoAlignFromUpload()">
+              <button
+                class="cfg-align"
+                id="autoAlignUploadBtn"
+                onclick="autoAlignFromUpload()"
+              >
                 ✦ AUTO ALIGN (UPLOAD AUDIO)
               </button>
             </div>
@@ -3429,6 +3462,11 @@
         const errEl = $('cfgError');
         errEl.textContent = '';
         setStatus(cfgStatus, 'Aligning lyrics...', 'var(--cyan)');
+        const btn = $('autoAlignBtn');
+        if (btn) {
+          btn.classList.add('is-loading');
+          btn.disabled = true;
+        }
 
         const ytUrl = $('cfgYtUrl').value.trim();
         const raw = $('cfgLyrics').value.trim();
@@ -3474,6 +3512,11 @@
         } catch (err) {
           errEl.textContent = '⚠ Alignment failed. Network error.';
           setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+        } finally {
+          if (btn) {
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+          }
         }
       }
 
@@ -3481,6 +3524,11 @@
         const errEl = $('cfgError');
         errEl.textContent = '';
         setStatus(cfgStatus, 'Aligning with upload...', 'var(--cyan)');
+        const btn = $('autoAlignUploadBtn');
+        if (btn) {
+          btn.classList.add('is-loading');
+          btn.disabled = true;
+        }
 
         const raw = $('cfgLyrics').value.trim();
         const file = $('cfgAudioFile').files[0];
@@ -3528,6 +3576,11 @@
         } catch (err) {
           errEl.textContent = '⚠ Alignment failed. Network error.';
           setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+        } finally {
+          if (btn) {
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+          }
         }
       }
 
