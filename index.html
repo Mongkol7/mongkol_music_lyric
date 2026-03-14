@@ -3722,77 +3722,43 @@
         try {
           const qTitle = encodeURIComponent(titleKey);
           const qArtist = encodeURIComponent(artistKey);
+          const qYt = encodeURIComponent(ytId);
           // Prefer UPSERT so updates always reach Supabase
           let upsertId = null;
-          const upsertResp = await sbFetch(
-            `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
-            {
-              method: 'POST',
-              headers: {
-                Prefer: 'resolution=merge-duplicates,return=representation',
-              },
-              body: JSON.stringify([payload]),
-            },
-          );
-          if (upsertResp.ok) {
-            const saved = await upsertResp.json();
-            upsertId = saved?.[0]?.id || null;
-          } else {
-            const t = await upsertResp.text();
-            if (!/no unique|exclusion constraint/i.test(t || '')) {
-              errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
-              setStatus(
-                cfgStatus,
-                t ? t.slice(0, 120) : 'Save failed',
-                '#ff6b6b',
-              );
-              return;
-            }
-            // Fallback when ON CONFLICT isn't available:
-            // overwrite any rows that match title+artist
-            const patchResp = await sbFetch(
-              `${TRACKS_TABLE}?title_key=eq.${qTitle}&artist_key=eq.${qArtist}`,
-              {
-                method: 'PATCH',
-                headers: { Prefer: 'return=representation' },
-                body: JSON.stringify(payload),
-              },
-            );
-            if (!patchResp.ok) {
-              const tt = await patchResp.text();
-              errEl.textContent =
-                '⚠ Update failed. Check Supabase table/RLS.';
-              setStatus(
-                cfgStatus,
-                tt ? tt.slice(0, 120) : 'Update failed',
-                '#ff6b6b',
-              );
-              return;
-            }
-            try {
-              const patched = await patchResp.json();
-              upsertId = patched?.[0]?.id || null;
-            } catch (err) {}
-            if (!upsertId) {
-              const listResp = await sbFetch(
-                `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc&limit=1`,
-                { method: 'GET' },
-              );
-              if (listResp.ok) {
-                const rows = await listResp.json();
-                if (rows.length) upsertId = rows[0].id;
-              }
-            }
-          }
+          let updatedByMatch = false;
 
-          // Cleanup duplicates beyond the newest (if any)
-          try {
-            const listResp = await sbFetch(
-              `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
-              { method: 'GET' },
-            );
-            if (listResp.ok) {
-              const rows = await listResp.json();
+          // If any two of (title, artist, youtube) match, update that row
+          const matchResp = await sbFetch(
+            `${TRACKS_TABLE}?select=id,created_at,title_key,artist_key,yt_id&or=(and(title_key.eq.${qTitle},artist_key.eq.${qArtist}),and(title_key.eq.${qTitle},yt_id.eq.${qYt}),and(artist_key.eq.${qArtist},yt_id.eq.${qYt}))&order=created_at.desc`,
+            { method: 'GET' },
+          );
+          if (matchResp.ok) {
+            const rows = await matchResp.json();
+            if (rows.length) {
+              const keepId = rows[0].id;
+              const patchResp = await sbFetch(
+                `${TRACKS_TABLE}?id=eq.${keepId}`,
+                {
+                  method: 'PATCH',
+                  headers: { Prefer: 'return=representation' },
+                  body: JSON.stringify(payload),
+                },
+              );
+              if (!patchResp.ok) {
+                const tt = await patchResp.text();
+                errEl.textContent =
+                  '⚠ Update failed. Check Supabase table/RLS.';
+                setStatus(
+                  cfgStatus,
+                  tt ? tt.slice(0, 120) : 'Update failed',
+                  '#ff6b6b',
+                );
+                return;
+              }
+              upsertId = keepId;
+              updatedByMatch = true;
+
+              // Remove extra duplicates that match the 2-of-3 rule
               if (rows.length > 1) {
                 const delIds = rows
                   .slice(1)
@@ -3805,15 +3771,103 @@
                   });
                 }
               }
-              if (!upsertId && rows.length) upsertId = rows[0].id;
             }
-          } catch (err) {}
+          }
+
+          if (!updatedByMatch) {
+            const upsertResp = await sbFetch(
+              `${TRACKS_TABLE}?on_conflict=title_key,artist_key`,
+              {
+                method: 'POST',
+                headers: {
+                  Prefer: 'resolution=merge-duplicates,return=representation',
+                },
+                body: JSON.stringify([payload]),
+              },
+            );
+            if (upsertResp.ok) {
+              const saved = await upsertResp.json();
+              upsertId = saved?.[0]?.id || null;
+            } else {
+              const t = await upsertResp.text();
+              if (!/no unique|exclusion constraint/i.test(t || '')) {
+                errEl.textContent = '⚠ Save failed. Check Supabase table/RLS.';
+                setStatus(
+                  cfgStatus,
+                  t ? t.slice(0, 120) : 'Save failed',
+                  '#ff6b6b',
+                );
+                return;
+              }
+              // Fallback when ON CONFLICT isn't available:
+              // overwrite any rows that match title+artist
+              const patchResp = await sbFetch(
+                `${TRACKS_TABLE}?title_key=eq.${qTitle}&artist_key=eq.${qArtist}`,
+                {
+                  method: 'PATCH',
+                  headers: { Prefer: 'return=representation' },
+                  body: JSON.stringify(payload),
+                },
+              );
+              if (!patchResp.ok) {
+                const tt = await patchResp.text();
+                errEl.textContent =
+                  '⚠ Update failed. Check Supabase table/RLS.';
+                setStatus(
+                  cfgStatus,
+                  tt ? tt.slice(0, 120) : 'Update failed',
+                  '#ff6b6b',
+                );
+                return;
+              }
+              try {
+                const patched = await patchResp.json();
+                upsertId = patched?.[0]?.id || null;
+              } catch (err) {}
+              if (!upsertId) {
+                const listResp = await sbFetch(
+                  `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc&limit=1`,
+                  { method: 'GET' },
+                );
+                if (listResp.ok) {
+                  const rows = await listResp.json();
+                  if (rows.length) upsertId = rows[0].id;
+                }
+              }
+            }
+          }
+
+          // Cleanup duplicates beyond the newest (title+artist only)
+          if (!updatedByMatch) {
+            try {
+              const listResp = await sbFetch(
+                `${TRACKS_TABLE}?select=id,created_at&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc`,
+                { method: 'GET' },
+              );
+              if (listResp.ok) {
+                const rows = await listResp.json();
+                if (rows.length > 1) {
+                  const delIds = rows
+                    .slice(1)
+                    .map((r) => r.id)
+                    .filter(Boolean);
+                  if (delIds.length) {
+                    const idList = delIds.join(',');
+                    await sbFetch(`${TRACKS_TABLE}?id=in.(${idList})`, {
+                      method: 'DELETE',
+                    });
+                  }
+                }
+                if (!upsertId && rows.length) upsertId = rows[0].id;
+              }
+            } catch (err) {}
+          }
 
           // Verify the saved lyrics actually reached Supabase
           if (upsertId) {
             try {
               const verifyResp = await sbFetch(
-                `${TRACKS_TABLE}?select=id,lyrics&title_key=eq.${qTitle}&artist_key=eq.${qArtist}&order=created_at.desc&limit=1`,
+                `${TRACKS_TABLE}?select=id,lyrics&id=eq.${upsertId}&limit=1`,
                 { method: 'GET' },
               );
               if (verifyResp.ok) {
