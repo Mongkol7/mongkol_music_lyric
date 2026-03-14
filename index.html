@@ -2522,22 +2522,35 @@
           if (clickAudioCtx.state === 'suspended') {
             clickAudioCtx.resume();
           }
-          const osc = clickAudioCtx.createOscillator();
+          const t = clickAudioCtx.currentTime;
           const gain = clickAudioCtx.createGain();
-          osc.type = 'square';
-          osc.frequency.value = 880;
-          gain.gain.value = 0.04;
-          osc.connect(gain);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(0.05, t + 0.005);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+
+          const osc1 = clickAudioCtx.createOscillator();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(1300, t);
+
+          const osc2 = clickAudioCtx.createOscillator();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(650, t);
+
+          osc1.connect(gain);
+          osc2.connect(gain);
           gain.connect(clickAudioCtx.destination);
-          osc.start();
-          osc.stop(clickAudioCtx.currentTime + 0.03);
+
+          osc1.start(t);
+          osc2.start(t);
+          osc1.stop(t + 0.05);
+          osc2.stop(t + 0.05);
         } catch (err) {}
       }
 
       function hapticTap() {
         if (!isTouchDevice) return;
         try {
-          if (navigator.vibrate) navigator.vibrate(10);
+          if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
         } catch (err) {}
       }
 
