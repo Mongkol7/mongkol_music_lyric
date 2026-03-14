@@ -103,40 +103,70 @@ export default async function handler(req, res) {
       };
     });
 
+    function findBestMatch(lineWords, cursor) {
+      if (!lineWords.length) return null;
+      const wordSet = new Set(lineWords);
+      const total = normalizedWords.length;
+      const windows = [300, 900];
+      const scanMax = Math.max(20, lineWords.length * 6);
+
+      const scoreAt = (startIdx) => {
+        let matches = 0;
+        let idx = startIdx;
+        let lastMatch = startIdx;
+        for (let w = 0; w < lineWords.length; w++) {
+          const target = lineWords[w];
+          let advanced = 0;
+          while (idx < total && advanced < scanMax) {
+            if (normalizedWords[idx].text === target) {
+              matches += 1;
+              lastMatch = idx;
+              idx += 1;
+              break;
+            }
+            idx += 1;
+            advanced += 1;
+          }
+        }
+        return { matches, lastMatch };
+      };
+
+      for (const win of windows) {
+        let best = null;
+        const end = Math.min(total, cursor + win);
+        for (let i = cursor; i < end; i++) {
+          if (normalizedWords[i].text !== lineWords[0]) continue;
+          const { matches, lastMatch } = scoreAt(i);
+          if (!best || matches > best.matches) {
+            best = { idx: i, matches, lastMatch };
+          }
+        }
+        if (!best) {
+          for (let i = cursor; i < end; i++) {
+            if (!wordSet.has(normalizedWords[i].text)) continue;
+            const { matches, lastMatch } = scoreAt(i);
+            if (!best || matches > best.matches) {
+              best = { idx: i, matches, lastMatch };
+            }
+          }
+        }
+        if (best && best.matches >= Math.max(2, Math.ceil(lineWords.length * 0.3))) {
+          return best;
+        }
+      }
+      return null;
+    }
+
     let cursor = 0;
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       if (entry.isSection || !entry.words.length) continue;
 
-      let startIdx = -1;
-      for (let j = cursor; j < normalizedWords.length; j++) {
-        if (normalizedWords[j].text === entry.words[0]) {
-          startIdx = j;
-          break;
-        }
-      }
-      if (startIdx === -1) {
-        for (let j = cursor; j < normalizedWords.length; j++) {
-          if (entry.words.includes(normalizedWords[j].text)) {
-            startIdx = j;
-            break;
-          }
-        }
-      }
-
-      if (startIdx !== -1 && normalizedWords[startIdx]) {
-        entry.time = normalizedWords[startIdx].start;
+      const best = findBestMatch(entry.words, cursor);
+      if (best && normalizedWords[best.idx]) {
+        entry.time = normalizedWords[best.idx].start;
         entry.matched = true;
-
-        let matches = 0;
-        let idx = startIdx;
-        while (idx < normalizedWords.length && matches < entry.words.length) {
-          if (normalizedWords[idx].text === entry.words[matches]) {
-            matches += 1;
-          }
-          idx += 1;
-        }
-        cursor = Math.max(cursor, idx);
+        cursor = Math.max(cursor, best.lastMatch + 1);
       }
     }
 
