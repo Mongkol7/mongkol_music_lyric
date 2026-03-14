@@ -2106,6 +2106,9 @@
             <button class="cfg-import" onclick="importCaptions()">
               ⬇ IMPORT CAPTIONS
             </button>
+            <button class="cfg-import" onclick="autoAlignLyrics()">
+              ✦ AUTO ALIGN
+            </button>
             <button class="cfg-save" onclick="saveTrackToLibrary()">
               ⬤ SAVE TO LIBRARY
             </button>
@@ -3342,8 +3345,16 @@
           const lines = items
             .map((seg) => {
               const start = seg.start ?? seg.startTime ?? seg.offset ?? 0;
-              const text = (seg.text || seg.caption || '').replace(/\s+/g, ' ').trim();
+              const text = (seg.text || seg.caption || '')
+                .replace(/\s+/g, ' ')
+                .trim();
               if (!text) return '';
+              if (
+                /requested language/i.test(text) &&
+                /not available/i.test(text)
+              ) {
+                return '';
+              }
               return `[${fmtLrcTime(Number(start))}] ${text}`;
             })
             .filter(Boolean)
@@ -3362,6 +3373,57 @@
         } catch (err) {
           errEl.textContent = '⚠ Failed to fetch captions. Network error.';
           setStatus(cfgStatus, 'Fetch failed', '#ff6b6b');
+        }
+      }
+
+      async function autoAlignLyrics() {
+        const errEl = $('cfgError');
+        errEl.textContent = '';
+        setStatus(cfgStatus, 'Aligning lyrics...', 'var(--cyan)');
+
+        const ytUrl = $('cfgYtUrl').value.trim();
+        const raw = $('cfgLyrics').value.trim();
+        if (!ytUrl) {
+          errEl.textContent = '⚠ Please provide a YouTube URL first.';
+          setStatus(cfgStatus, '');
+          return;
+        }
+        if (!raw) {
+          errEl.textContent = '⚠ Paste lyrics first (with or without timestamps).';
+          setStatus(cfgStatus, '');
+          return;
+        }
+
+        try {
+          const resp = await fetch('/api/align', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: ytUrl, lyrics: raw }),
+          });
+          if (!resp.ok) {
+            let msg = 'Alignment failed.';
+            try {
+              const data = await resp.json();
+              if (data?.error) msg = data.error;
+            } catch (err) {
+              const t = await resp.text();
+              if (t) msg = t.slice(0, 160);
+            }
+            errEl.textContent = `⚠ ${msg}`;
+            setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+            return;
+          }
+          const data = await resp.json();
+          if (!data?.lrc) {
+            errEl.textContent = '⚠ Alignment returned no data.';
+            setStatus(cfgStatus, 'Align failed', '#ff6b6b');
+            return;
+          }
+          $('cfgLyrics').value = data.lrc;
+          setStatus(cfgStatus, 'Aligned ✓', 'var(--green)');
+        } catch (err) {
+          errEl.textContent = '⚠ Alignment failed. Network error.';
+          setStatus(cfgStatus, 'Align failed', '#ff6b6b');
         }
       }
 
