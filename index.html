@@ -898,6 +898,17 @@
         background: var(--spotify);
         cursor: pointer;
       }
+      .vol-note {
+        font-size: 9px;
+        color: var(--muted2);
+        margin-left: 6px;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .vol-note.show {
+        opacity: 0.8;
+      }
       .kb-hint {
         font-size: 9px;
         color: var(--muted2);
@@ -2034,6 +2045,7 @@
                 value="70"
                 oninput="setVol(this.value)"
               />
+              <span class="vol-note" id="volNote"></span>
             </div>
             <div class="kb-hint">
               <span><kbd>Space</kbd> play/pause</span>
@@ -2465,6 +2477,11 @@
       const glowOrb = $('glowOrb');
       const waveformEl = $('waveformEl');
       const devBar = $('devBar');
+      const volNote = $('volNote');
+      if (volNote && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        volNote.textContent = 'Use device volume';
+        volNote.classList.add('show');
+      }
       const ytLabel = $('ytStatusLabel');
       const cfgStatus = $('cfgStatus');
       const libraryOverlay = $('libraryOverlay');
@@ -2865,8 +2882,20 @@
         pendingVolume = Number.isFinite(vol) ? vol : pendingVolume;
         if (!ytReady) return;
         try {
+          const before =
+            typeof ytPlayer.getVolume === 'function'
+              ? ytPlayer.getVolume()
+              : null;
           if (ytPlayer.isMuted && ytPlayer.isMuted()) ytPlayer.unMute();
           ytPlayer.setVolume(pendingVolume ?? 70);
+          setTimeout(() => {
+            if (!volNote || typeof ytPlayer.getVolume !== 'function') return;
+            const after = ytPlayer.getVolume();
+            if (before === after && after !== pendingVolume) {
+              volNote.textContent = 'Use device volume';
+              volNote.classList.add('show');
+            }
+          }, 200);
         } catch (err) {}
       }
 
