@@ -2883,8 +2883,18 @@
 
       function loop() {
         if (!playing) {
-          raf = null;
-          return;
+          if (ytReady && ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+            const state = ytPlayer.getPlayerState();
+            if (state === YT.PlayerState.PLAYING) {
+              playing = true;
+            } else {
+              raf = null;
+              return;
+            }
+          } else {
+            raf = null;
+            return;
+          }
         }
 
         const t = safeGetTime();
