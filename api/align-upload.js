@@ -67,6 +67,50 @@ export default async function handler(req, res) {
       'just','yeah','oh','uh','ah','la','na','ooh','woo','yo'
     ]);
 
+    const SLANG_MAP = new Map([
+      ['im', 'i am'],
+      ['ima', 'i am'],
+      ['imma', 'i am'],
+      ['ive', 'i have'],
+      ['id', 'i would'],
+      ['dont', 'do not'],
+      ['cant', 'can not'],
+      ['wont', 'will not'],
+      ['aint', 'is not'],
+      ['gonna', 'going to'],
+      ['gon', 'going'],
+      ['wanna', 'want to'],
+      ['gotta', 'got to'],
+      ['tryna', 'trying to'],
+      ['finna', 'fixing to'],
+      ['kinda', 'kind of'],
+      ['sorta', 'sort of'],
+      ['lemme', 'let me'],
+      ['gimme', 'give me'],
+      ['yall', 'you all'],
+      ['ya', 'you'],
+      ['u', 'you'],
+      ['ur', 'your'],
+      ['tho', 'though'],
+      ['thru', 'through'],
+      ['cuz', 'because'],
+      ['coz', 'because'],
+      ['n', 'and'],
+      ['em', 'them'],
+      ['dem', 'them'],
+      ['bout', 'about'],
+      ['outta', 'out of'],
+      ['kno', 'know'],
+      ['w', 'with'],
+      ['w/', 'with'],
+      ['f*ck', 'fuck'],
+      ['f**k', 'fuck'],
+      ['f***', 'fuck'],
+      ['nigga', 'nigger'],
+      ['niggas', 'niggers'],
+      ['homie', 'homey'],
+    ]);
+
     function normalizeToken(t) {
       return (t || '')
         .toLowerCase()
@@ -79,8 +123,28 @@ export default async function handler(req, res) {
         .replace(/\s+/g, '');
     }
 
+    function tokenVariants(tok) {
+      const vars = new Set();
+      if (!tok) return [];
+      vars.add(tok);
+      if (tok.length >= 4) {
+        if (tok.endsWith('in')) vars.add(tok + 'g');
+        if (tok.endsWith('ing')) {
+          vars.add(tok.slice(0, -3));
+          vars.add(tok.slice(0, -3) + 'in');
+        }
+        if (tok.endsWith('ed')) vars.add(tok.slice(0, -2));
+        if (tok.endsWith('ers')) {
+          vars.add(tok.slice(0, -1));
+          vars.add(tok.slice(0, -3));
+        }
+        if (tok.endsWith('s')) vars.add(tok.slice(0, -1));
+      }
+      return Array.from(vars).filter((v) => v && v.length >= 2);
+    }
+
     function tokenize(text) {
-      return (text || '')
+      const base = (text || '')
         .toLowerCase()
         .replace(/[’']/g, '')
         .replace(/[–—-]/g, ' ')
@@ -92,6 +156,28 @@ export default async function handler(req, res) {
         .map((t) => t.trim())
         .filter(Boolean)
         .map((t) => t.replace(/[^\p{L}\p{N}]+/gu, ''));
+      const expanded = [];
+      for (const tok of base) {
+        const mapped = SLANG_MAP.get(tok);
+        if (mapped) {
+          mapped
+            .split(' ')
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .forEach((t) => expanded.push(t));
+        }
+      expanded.push(tok);
+    }
+    const out = [];
+    const seen = new Set();
+    for (const tok of expanded) {
+      for (const v of tokenVariants(tok)) {
+        if (seen.has(v)) continue;
+        seen.add(v);
+        out.push(v);
+      }
+    }
+    return out;
     }
 
     function parseLyricsLines(text) {
@@ -142,8 +228,11 @@ export default async function handler(req, res) {
 
       const wordPositions = new Map();
       normalizedWords.forEach((w, idx) => {
-        if (!wordPositions.has(w.text)) wordPositions.set(w.text, []);
-        wordPositions.get(w.text).push(idx);
+        const variants = tokenVariants(w.text);
+        variants.forEach((v) => {
+          if (!wordPositions.has(v)) wordPositions.set(v, []);
+          wordPositions.get(v).push(idx);
+        });
       });
 
       function findNextIndex(word, fromIdx, maxIdx) {
@@ -164,6 +253,16 @@ export default async function handler(req, res) {
         if (ans === null) return null;
         if (maxIdx != null && ans > maxIdx) return null;
         return ans;
+      }
+
+      function findNextIndexVariants(variants, fromIdx, maxIdx) {
+        let best = null;
+        for (const v of variants) {
+          const idx = findNextIndex(v, fromIdx, maxIdx);
+          if (idx === null) continue;
+          if (best === null || idx < best) best = idx;
+        }
+        return best;
       }
 
       const entries = lines.map((raw) => {
@@ -198,14 +297,26 @@ export default async function handler(req, res) {
           const isStop = STOPWORDS.has(t);
           const strong = t.length >= 4 && !isStop;
           const weight = strong ? 1.2 : isStop ? 0.6 : 1.0;
-          tokens.push({ text: t, weight, strong, optional: false });
+          tokens.push({
+            text: t,
+            variants: tokenVariants(t),
+            weight,
+            strong,
+            optional: false,
+          });
           if (strong) strongTokens.push(t);
         });
         optionalTokens.forEach((t) => {
           const isStop = STOPWORDS.has(t);
           const strong = t.length >= 4 && !isStop;
           const weight = strong ? 0.5 : isStop ? 0.3 : 0.4;
-          tokens.push({ text: t, weight, strong, optional: true });
+          tokens.push({
+            text: t,
+            variants: tokenVariants(t),
+            weight,
+            strong,
+            optional: true,
+          });
         });
 
         return {
@@ -251,7 +362,7 @@ export default async function handler(req, res) {
           if (!token.text) continue;
           totalWeight += token.weight;
           if (token.strong && !token.optional) strongTotal += 1;
-          const found = findNextIndex(token.text, idx, rangeEnd);
+          const found = findNextIndexVariants(token.variants, idx, rangeEnd);
           if (found !== null) {
             matchedWeight += token.weight;
             matchedCount += 1;
@@ -287,7 +398,7 @@ export default async function handler(req, res) {
         };
       }
 
-      function buildCandidates(entry, rangeStart, rangeEnd, maxCandidates = 8) {
+      function buildCandidates(entry, rangeStart, rangeEnd, maxCandidates = 12) {
         if (entry.isSection) return [];
         const seeds = new Set();
         const addSeeds = (tokens) => {
@@ -312,7 +423,7 @@ export default async function handler(req, res) {
         const candidates = [];
         for (const idx of seeds) {
           const cand = scoreCandidate(entry, idx, rangeEnd);
-          if (cand && cand.coverage >= 0.2) candidates.push(cand);
+          if (cand && cand.coverage >= 0.12) candidates.push(cand);
         }
         candidates.sort((a, b) => b.score - a.score);
         return candidates.slice(0, maxCandidates);
@@ -327,7 +438,17 @@ export default async function handler(req, res) {
         const rangeEnd = Math.min(normalizedWords.length - 1, cursor + 900);
         const candidates = buildCandidates(entry, rangeStart, rangeEnd, 6);
         const best = candidates[0];
-        if (best && best.coverage >= 0.6 && best.matchedStrong >= 2 && best.time !== null) {
+        const tokenCount = entry.tokens.filter((t) => !t.optional).length;
+        const minCoverage =
+          tokenCount <= 3 ? 0.32 : tokenCount <= 6 ? 0.42 : 0.6;
+        const minStrong =
+          entry.strongTokens.length >= 2 ? 2 : entry.strongTokens.length ? 1 : 0;
+        if (
+          best &&
+          best.coverage >= minCoverage &&
+          best.matchedStrong >= minStrong &&
+          best.time !== null
+        ) {
           entry.time = best.time;
           entry.matched = true;
           entry.anchorWordIdx = best.idx;
@@ -339,8 +460,27 @@ export default async function handler(req, res) {
       function alignSegment(lineIdxs, rangeStart, rangeEnd) {
         if (!lineIdxs.length) return;
         const candByLine = lineIdxs.map((li) =>
-          buildCandidates(entries[li], rangeStart, rangeEnd, 10),
+          buildCandidates(entries[li], rangeStart, rangeEnd, 12),
         );
+        const span = Math.max(1, rangeEnd - rangeStart);
+        for (let i = 0; i < candByLine.length; i++) {
+          if (candByLine[i].length) continue;
+          const ratio = lineIdxs.length > 1 ? i / (lineIdxs.length - 1) : 0;
+          const idx = Math.min(
+            rangeEnd,
+            Math.max(rangeStart, Math.round(rangeStart + span * ratio)),
+          );
+          const t = normalizedWords[idx]?.start ?? 0;
+          candByLine[i].push({
+            idx,
+            score: 0.01,
+            coverage: 0,
+            matchedStrong: 0,
+            firstMatch: idx,
+            lastMatch: idx,
+            time: t,
+          });
+        }
 
         const dp = candByLine.map(() => []);
         const back = candByLine.map(() => []);
