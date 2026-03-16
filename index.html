@@ -471,15 +471,25 @@
       .panel-title svg {
         flex-shrink: 0;
       }
-      #yt-player-container {
+      .yt-stack {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
         min-height: 150px;
       }
-      #yt-player-container-b {
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        width: 1px;
-        height: 1px;
+      .yt-frame {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 1;
+        transition: opacity 0.35s ease;
+      }
+      .yt-stack.xfade-running .yt-frame {
+        transition-duration: 6s;
+      }
+      .yt-frame.is-hidden {
         opacity: 0;
         pointer-events: none;
       }
@@ -1836,7 +1846,7 @@
         .panel-title {
           flex-shrink: 0;
         }
-        #yt-player-container {
+        .yt-stack {
           flex: 1 1 0;
           min-height: 0;
           width: 100%;
@@ -1938,7 +1948,7 @@
           flex: 0 0 150px;
           min-height: 0;
         }
-        #yt-player-container {
+        .yt-stack {
           min-height: 140px;
         }
         .lyrics-list-panel {
@@ -2105,7 +2115,8 @@
                 <div class="lyric-row lyric-row-next" id="rowNext"></div>
               </div>
               <div class="timestamp">
-                <span class="cur" id="timeDisplay">0:00</span> / 3:57
+                <span class="cur" id="timeDisplay">0:00</span> /
+                <span class="total" id="timeTotal">3:57</span>
               </div>
               <div class="dev-credit">
                 dev: <span class="dev-name">Thoeung Sereymongkol</span>
@@ -2134,16 +2145,13 @@
                       >— loading...</span
                     >
                   </div>
-                  <div
-                    id="yt-player-container"
-                    style="
-                      width: 100%;
-                      aspect-ratio: 16/9;
-                      background: #000;
-                      display: block;
-                    "
-                  ></div>
-                  <div id="yt-player-container-b"></div>
+                  <div class="yt-stack" id="ytStack">
+                    <div id="yt-player-container" class="yt-frame"></div>
+                    <div
+                      id="yt-player-container-b"
+                      class="yt-frame is-hidden"
+                    ></div>
+                  </div>
                 </div>
               </div>
 
@@ -2206,7 +2214,8 @@
               ⟳ SYNC NOW
             </button>
             <span class="time-lbl"
-              ><span class="cur" id="timeDock">0:00</span> / 3:57</span
+              ><span class="cur" id="timeDock">0:00</span> /
+              <span class="total" id="timeTotalDock">3:57</span></span
             >
           </div>
           <div class="ctrl-right">
@@ -2646,9 +2655,11 @@
         { t: 168.51, label: 'OUTRO' },
       ];
 
-      const TOTAL = 237; // 3:57 — overridden dynamically via window._dynamicTotal
+      const TOTAL = 237; // 3:57 — fallback, overridden by YT duration or lyrics
       let YT_ID_current = 'ZAz3rnLGthg';
+      let ytDuration = 0;
       function getTotal() {
+        if (Number.isFinite(ytDuration) && ytDuration > 1) return ytDuration;
         return window._dynamicTotal || TOTAL;
       }
 
@@ -2664,6 +2675,7 @@
       let raf = null;
       let waveTimer = null;
       let currentIdx = -1;
+      let endHandling = false;
 
       const glowMap = {
         CHORUS: 'rgba(0,229,255,0.08)',
@@ -2687,6 +2699,8 @@
       const seekMarkers = $('seekMarkers');
       const timeDisplay = $('timeDisplay');
       const timeDock = $('timeDock');
+      const timeTotal = $('timeTotal');
+      const timeTotalDock = $('timeTotalDock');
       const lyricDisp = $('lyricStage'); // kept for compat
       const lyricPrev = {
         textContent: '',
@@ -2699,6 +2713,9 @@
       const nextBtn = $('nextBtn');
       const crossfadeBtn = $('crossfadeBtn');
       const statusText = $('statusText');
+      const ytContainerA = $('yt-player-container');
+      const ytContainerB = $('yt-player-container-b');
+      const ytStack = $('ytStack');
       const flashOver = $('flashOverlay');
       const glowOrb = $('glowOrb');
       const waveformEl = $('waveformEl');
@@ -2798,7 +2815,7 @@
       let libraryLoadedOnce = false;
       let libraryOrderMode =
         localStorage.getItem('libraryOrder') || 'newest';
-      const CROSSFADE_SEC = 2;
+      const CROSSFADE_SEC = 6;
       let crossfadeEnabled =
         (localStorage.getItem('crossfadeEnabled') ?? 'true') === 'true';
       let crossfadeInProgress = false;
@@ -2904,6 +2921,27 @@
         updateNavButtons();
       }
 
+      function syncCurrentTrackToLibrary() {
+        if (currentTrackId || !libraryTracks.length) return;
+        const title =
+          (document.title.split('—')[0] || '')
+            .trim()
+            .toLowerCase();
+        const artist = ($('hdrArtist')?.textContent || '').trim().toLowerCase();
+        let match = libraryTracks.find((t) => t.yt_id === YT_ID_current);
+        if (!match && title) {
+          match = libraryTracks.find(
+            (t) =>
+              (t.title || '').trim().toLowerCase() === title &&
+              (t.artist || '').trim().toLowerCase() === artist,
+          );
+        }
+        if (match) {
+          currentTrackId = match.id;
+          updateCurrentIndex();
+        }
+      }
+
       function updateNavButtons() {
         const disabled = libraryLoadedOnce && !libraryTracks.length;
         if (prevBtn) prevBtn.disabled = disabled;
@@ -2929,10 +2967,47 @@
         return activePlayerKey === 'A' ? ytPlayerB : ytPlayerA;
       }
 
+      function waitForPlayerState(player, targetState, timeoutMs = 1500) {
+        return new Promise((resolve) => {
+          const start = performance.now();
+          const tick = () => {
+            try {
+              if (
+                player &&
+                typeof player.getPlayerState === 'function' &&
+                player.getPlayerState() === targetState
+              ) {
+                resolve(true);
+                return;
+              }
+            } catch (err) {}
+            if (performance.now() - start >= timeoutMs) {
+              resolve(false);
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+
       function setActivePlayer(key) {
         activePlayerKey = key;
         ytPlayer = key === 'A' ? ytPlayerA : ytPlayerB;
         ytReady = key === 'A' ? ytReadyA : ytReadyB;
+        updatePlayerVisibility();
+      }
+
+      function updatePlayerVisibility() {
+        if (crossfadeInProgress) return;
+        if (!ytContainerA || !ytContainerB) return;
+        if (activePlayerKey === 'A') {
+          ytContainerA.classList.remove('is-hidden');
+          ytContainerB.classList.add('is-hidden');
+        } else {
+          ytContainerA.classList.add('is-hidden');
+          ytContainerB.classList.remove('is-hidden');
+        }
       }
 
       function getNextTrackFromLibrary() {
@@ -2960,6 +3035,10 @@
         crossfadeInProgress = true;
         crossfadeNextTrack = nextTrack;
         crossfadeTargetVol = Number(pendingVolume ?? $('volSlider').value ?? 70);
+        const activeContainer =
+          activePlayerKey === 'A' ? ytContainerA : ytContainerB;
+        const inactiveContainer =
+          activePlayerKey === 'A' ? ytContainerB : ytContainerA;
 
         try {
           inactive.setVolume(0);
@@ -2968,6 +3047,32 @@
           inactive.loadVideoById(nextTrack.yt_id, 0);
           inactive.playVideo();
         } catch (err) {}
+        try {
+          if (active && typeof active.playVideo === 'function') {
+            active.playVideo();
+          }
+        } catch (err) {}
+
+        const canOverlap = await waitForPlayerState(
+          inactive,
+          YT.PlayerState.PLAYING,
+          2000,
+        );
+        if (!canOverlap) {
+          crossfadeInProgress = false;
+          crossfadeNextTrack = null;
+          if (ytStack) ytStack.classList.remove('xfade-running');
+          updatePlayerVisibility();
+          statusText.textContent = 'CROSSFADE BLOCKED';
+          pauseAll();
+          endHandling = false;
+          playNextTrack(true);
+          return;
+        }
+
+        if (ytStack) ytStack.classList.add('xfade-running');
+        if (inactiveContainer) inactiveContainer.classList.remove('is-hidden');
+        if (activeContainer) activeContainer.classList.add('is-hidden');
 
         const start = performance.now();
         const step = () => {
@@ -3005,6 +3110,9 @@
         setActivePlayer(activePlayerKey === 'A' ? 'B' : 'A');
         crossfadeInProgress = false;
         crossfadeNextTrack = null;
+        endHandling = false;
+        if (ytStack) ytStack.classList.remove('xfade-running');
+        updatePlayerVisibility();
 
         if (nextTrack) {
           currentTrackId = nextTrack.id || null;
@@ -3018,7 +3126,27 @@
             },
             { skipPlayerReload: true, keepTime: true },
           );
+          try {
+            if (newActive && typeof newActive.playVideo === 'function') {
+              newActive.playVideo();
+            }
+          } catch (err) {}
           playing = true;
+          currentIdx = -1;
+          lastLoopTime = -1;
+          _lastGoodTime = safeGetTime();
+          _lastGoodStamp = performance.now();
+          if (raf) {
+            cancelAnimationFrame(raf);
+            raf = null;
+          }
+          raf = requestAnimationFrame(loop);
+          startWave();
+          startDevBar();
+          if (idleMsg) idleMsg.style.display = 'none';
+          statusText.textContent = 'PLAYING';
+          playBtn.textContent = '⏸ PAUSE';
+          updateTotalFromPlayer(true);
         }
       }
 
@@ -3167,6 +3295,7 @@
           crossfadeInProgress = false;
           crossfadeNextTrack = null;
         }
+        endHandling = false;
         const ok = applyTrackData({
           title: track.title || 'Untitled',
           artist: track.artist || '',
@@ -3209,6 +3338,7 @@
         if (!data) return false;
         libraryTracksRaw = data;
         libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+        syncCurrentTrackToLibrary();
         updateCurrentIndex();
         return true;
       }
@@ -3218,6 +3348,7 @@
           crossfadeInProgress = false;
           crossfadeNextTrack = null;
         }
+        endHandling = false;
         const ok = await ensureLibraryReady();
         if (!ok || !libraryTracks.length) {
           if (fromEnd) {
@@ -3431,6 +3562,50 @@
         const m = Math.floor(s / 60);
         return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
       }
+      function setTotalDisplay(total) {
+        const safe = Number.isFinite(total) && total > 0 ? total : getTotal();
+        const text = fmt(Math.max(0, safe || 0));
+        if (timeTotal) timeTotal.textContent = text;
+        if (timeTotalDock) timeTotalDock.textContent = text;
+      }
+      function renderSeekMarkers(total) {
+        const safe = Math.max(1, total || getTotal());
+        seekMarkers.innerHTML = '';
+        sections.forEach((s) => {
+          if (!s || typeof s.t !== 'number') return;
+          const pct = Math.min(1, Math.max(0, s.t / safe)) * 100;
+          const mk = document.createElement('div');
+          mk.className = 's-mark';
+          mk.style.left = pct + '%';
+          const lb = document.createElement('div');
+          lb.className = 's-mark-lbl';
+          lb.textContent = s.label;
+          lb.style.left = pct + '%';
+          seekMarkers.appendChild(mk);
+          seekMarkers.appendChild(lb);
+        });
+      }
+      function getYTDurationSafe() {
+        try {
+          if (ytReady && ytPlayer && typeof ytPlayer.getDuration === 'function') {
+            const d = ytPlayer.getDuration();
+            if (Number.isFinite(d) && d > 1) return d;
+          }
+        } catch (err) {}
+        return 0;
+      }
+      function updateTotalFromPlayer(force = false) {
+        const d = getYTDurationSafe();
+        if (!d) return;
+        if (!force && Math.abs(d - ytDuration) < 0.5) return;
+        ytDuration = d;
+        setTotalDisplay(d);
+        renderSeekMarkers(d);
+        const ct = safeGetTime();
+        if (ct >= 0) {
+          seekFill.style.width = (ct / d) * 100 + '%';
+        }
+      }
       function triggerFlash() {
         flashOver.classList.add('flash');
         setTimeout(() => flashOver.classList.remove('flash'), 65);
@@ -3570,6 +3745,7 @@
 
         const t = safeGetTime();
         const total = getTotal();
+        const hasRealDuration = ytDuration > 1;
 
         // Detect a seek/jump (time moved backwards or jumped >2s forward unexpectedly)
         const delta = t - lastLoopTime;
@@ -3607,12 +3783,19 @@
         if (
           crossfadeEnabled &&
           !crossfadeInProgress &&
+          hasRealDuration &&
           total - t <= CROSSFADE_SEC + 0.05
         ) {
           startCrossfade();
         }
 
-        if (t >= total) {
+        let state = null;
+        try {
+          if (ytReady && ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+            state = ytPlayer.getPlayerState();
+          }
+        } catch (err) {}
+        if (state === YT.PlayerState.ENDED || (hasRealDuration && t >= total)) {
           onEnd();
           return;
         }
@@ -3621,6 +3804,8 @@
 
       function onEnd() {
         if (crossfadeInProgress) return;
+        if (endHandling) return;
+        endHandling = true;
         playing = false;
         raf = null;
         freezeWave();
@@ -3628,6 +3813,9 @@
         clearInterval(_ytPollInterval);
         _ytPollInterval = null;
         playNextTrack(true);
+        setTimeout(() => {
+          endHandling = false;
+        }, 2000);
       }
 
       function syncNow() {
@@ -3787,6 +3975,8 @@
         });
       }
       buildLyricsList();
+      setTotalDisplay(getTotal());
+      renderSeekMarkers(getTotal());
 
       let llActiveRow = -1;
       let userScrolling = false;
@@ -3929,6 +4119,7 @@
                   } catch (err) {}
 
                   _startYTTimePoll();
+                  updateTotalFromPlayer(true);
 
                   ytLabel.textContent = '? ready ?';
                   ytLabel.style.color = 'var(--green)';
@@ -3954,6 +4145,7 @@
                   lastLoopTime = -1;
                   _startYTTimePoll();
                   applyVolume(pendingVolume ?? $('volSlider').value);
+                  updateTotalFromPlayer();
                   if (!playing) {
                     playing = true;
                     playBtn.textContent = '? PAUSE';
@@ -3965,6 +4157,10 @@
                   if (!raf) raf = requestAnimationFrame(loop);
                 }
                 if (e.data === S.PAUSED) {
+                  if (crossfadeInProgress) {
+                    statusText.textContent = 'CROSSFADE...';
+                    return;
+                  }
                   if (playing) pauseAll();
                 }
                 if (e.data === S.BUFFERING) {
@@ -4421,6 +4617,7 @@
         const newLyrics = parseLyrics(lyricsRaw);
         if (newLyrics.length === 0) return false;
 
+        ytDuration = 0;
         document.title = title + (artist ? ' — ' + artist : '');
         $('hdrTrackTitle').textContent = title.toUpperCase();
         $('hdrArtist').textContent = artist || '';
@@ -4451,21 +4648,8 @@
         const lastT = lyrics[lyrics.length - 1].t;
         const newTotal = Math.ceil(lastT + 30);
         window._dynamicTotal = newTotal;
-
-        // Rebuild seek markers
-        seekMarkers.innerHTML = '';
-        sections.forEach((s) => {
-          const pct = (s.t / newTotal) * 100;
-          const mk = document.createElement('div');
-          mk.className = 's-mark';
-          mk.style.left = pct + '%';
-          const lb = document.createElement('div');
-          lb.className = 's-mark-lbl';
-          lb.textContent = s.label;
-          lb.style.left = pct + '%';
-          seekMarkers.appendChild(mk);
-          seekMarkers.appendChild(lb);
-        });
+        setTotalDisplay(newTotal);
+        renderSeekMarkers(newTotal);
 
         // Rebuild lyrics list
         llInner.innerHTML = '';
@@ -4499,9 +4683,13 @@
         } else {
           YT_ID_current = ytId;
         }
+        updateTotalFromPlayer(true);
 
         // Reset player state
         currentIdx = -1;
+        lastLoopTime = -1;
+        _lastGoodTime = safeGetTime();
+        _lastGoodStamp = performance.now();
         rowPrev.textContent = '';
         rowPrev.classList.remove('has-text');
         rowCurrent.textContent = '';

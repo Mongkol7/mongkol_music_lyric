@@ -8,6 +8,7 @@
 
 ## Key Features
 - YouTube lyric sync player with 3-row main lyrics + scrollable full lyrics list
+- Dual YouTube players for overlap crossfade (toggle `XFADE`) + prev/next
 - Supabase library save/load with unique matching and dedupe
 - Swipe-to-delete (mobile) + three-dot delete (desktop) + password prompt (`007`)
 - Volume control for YouTube player
@@ -42,6 +43,13 @@
 - Env var required in Vercel: `ELEVENLABS_API_KEY`
 - Alignment logic reverted to the original ElevenLabs matching (simple first-word anchor + cursor scan).
 - Reverted storage-based upload flow (bucket/CORS issues). Current upload still subject to Vercel payload limits.
+
+## Playback / Crossfade
+- Crossfade overlap uses two YT players; duration `CROSSFADE_SEC = 6`.
+- Video frames fade during crossfade via `.yt-stack.xfade-running`.
+- Auto-advance uses YT duration when available; total time display updates from `ytPlayer.getDuration()`.
+- Brave can block autoplay on the inactive player, causing crossfade fallback.
+- Added guard `endHandling` + `syncCurrentTrackToLibrary()` to reduce double-next and mis-synced lyrics/video.
 
 ## Commits (recent)
 - `9b3715f` Add audio upload auto align
