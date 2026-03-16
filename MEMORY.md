@@ -3,12 +3,39 @@
 ## Project
 - App: Mongkol Music Lyric (single-page `index.html` + Vercel serverless API)
 - Repo root: `mongkol_ai_app`
-- Frontend: static HTML/CSS/JS in `index.html`
+- Frontend: clean HTML shell (`index.html`) + split source files in `src/`
 - Backend: Vercel serverless functions in `api/`
+
+## File Structure
+```
+mongkol_ai_app/
+├── api/                      # Vercel serverless functions
+│   ├── align.js              # ElevenLabs auto-align via YouTube audio
+│   ├── align-upload.js       # ElevenLabs auto-align via file upload
+│   ├── captions.js           # YouTube captions proxy
+│   └── update-track.js       # Password-protected Supabase update
+├── src/
+│   ├── css/
+│   │   └── main.css          # ALL styles (extracted from old index.html)
+│   └── js/
+│       ├── data.js           # Default lyrics[], sections[], constants
+│       ├── player.js         # YouTube IFrame API + playback engine + seek
+│       ├── lyrics-display.js # 3-row lyric stage + scrollable list panel
+│       ├── library.js        # Supabase CRUD + library/password UI
+│       ├── config.js         # Config panel, caption import, align, save
+│       └── app.js            # Bootstrap (MediaSession + init calls)
+├── index.html                # Clean HTML shell (links CSS + JS)
+├── index.html.bak            # Backup of original monolithic file
+├── vercel.json               # Vercel function config
+├── package.json
+├── MEMORY.md
+└── README.md
+```
 
 ## Key Features
 - YouTube lyric sync player with 3-row main lyrics + scrollable full lyrics list
-- Dual YouTube players for overlap crossfade (toggle `XFADE`) + prev/next
+- Dual YouTube players kept for reliability; crossfade toggle removed
+- Auto-advance + prev/next
 - Supabase library save/load with unique matching and dedupe
 - Swipe-to-delete (mobile) + three-dot delete (desktop) + password prompt (`007`)
 - Volume control for YouTube player
@@ -24,7 +51,7 @@
 - `lastTrackId` stored in localStorage for reload
 
 ## Caption Import
-- Client: `importCaptions()` and `detectCaptionLanguages()` in `index.html`
+- Client: `importCaptions()` and `detectCaptionLanguages()` in `src/js/config.js`
 - Server proxy: `api/captions.js`
 - Providers:
   - `youtubetranscripts.app`
@@ -44,14 +71,17 @@
 - Alignment logic reverted to the original ElevenLabs matching (simple first-word anchor + cursor scan).
 - Reverted storage-based upload flow (bucket/CORS issues). Current upload still subject to Vercel payload limits.
 
-## Playback / Crossfade
-- Crossfade overlap uses two YT players; duration `CROSSFADE_SEC = 6`.
-- Video frames fade during crossfade via `.yt-stack.xfade-running`.
+## Playback
+- Crossfade removed; auto-advance reloads the player per song.
 - Auto-advance uses YT duration when available; total time display updates from `ytPlayer.getDuration()`.
-- Brave can block autoplay on the inactive player, causing crossfade fallback.
 - Added guard `endHandling` + `syncCurrentTrackToLibrary()` to reduce double-next and mis-synced lyrics/video.
+- **Lyric timing fix**: removed 180ms `setTimeout` in `showLyric()` — lyrics now display immediately at the correct timestamp. Entrance animation still uses double-`rAF` for smooth CSS transition.
+- Jump-detection delta raised from 2.5s → 3.5s to prevent false resets during buffering.
+- User-scroll auto-scroll lock reduced from 3000ms → 1500ms.
 
 ## Commits (recent)
+- `(pending)` Reorganize file structure: extract CSS/JS from index.html into src/
+- `(pending)` Fix lyric timing: remove 180ms setTimeout delay in showLyric
 - `9b3715f` Add audio upload auto align
 - `d9f1e8e` Improve align error reporting
 - `312d76a` Make auto align button visible
@@ -70,4 +100,3 @@
 
 ## Known Issues
 - Some YouTube links block audio download (HTTP 410), use upload alignment.
-
