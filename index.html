@@ -474,6 +474,15 @@
       #yt-player-container {
         min-height: 150px;
       }
+      #yt-player-container-b {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
 
       /* ── LYRICS LIST PANEL ── */
       .lyrics-list-panel {
@@ -807,6 +816,30 @@
         border-color: var(--green);
         box-shadow: 0 0 14px rgba(0, 255, 136, 0.12);
       }
+      .nav-btn {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--green);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 11px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        transition: all 0.2s;
+        white-space: nowrap;
+        min-width: 36px;
+      }
+      .nav-btn:hover {
+        background: var(--green-dim);
+        border-color: var(--green);
+        box-shadow: 0 0 14px rgba(0, 255, 136, 0.12);
+      }
+      .nav-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
       .sync-btn {
         background: none;
         border: 1px solid rgba(255, 170, 0, 0.3);
@@ -823,6 +856,29 @@
       .sync-btn:hover {
         background: rgba(255, 170, 0, 0.07);
         border-color: var(--amber);
+      }
+      .crossfade-btn {
+        background: none;
+        border: 1px solid var(--term-border);
+        color: var(--muted);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 10px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        transition: all 0.2s;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+      .crossfade-btn.is-on {
+        color: var(--green);
+        border-color: rgba(0, 255, 136, 0.45);
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+      }
+      .crossfade-btn.is-off {
+        color: var(--muted2);
+        opacity: 0.7;
       }
       .time-lbl {
         font-size: 11px;
@@ -1024,6 +1080,35 @@
       .library-add:hover {
         border-color: var(--green);
         box-shadow: 0 0 10px rgba(0, 255, 136, 0.25);
+      }
+      .library-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .library-order {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 9px;
+        color: var(--muted2);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .library-order select {
+        background: #0d0f1c;
+        border: 1px solid var(--term-border);
+        color: var(--white);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        outline: none;
+      }
+      .library-order select:focus {
+        border-color: rgba(0, 255, 136, 0.45);
+        box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.06);
       }
 
       .config-body {
@@ -1801,7 +1886,9 @@
           display: none;
         }
         .play-btn,
-        .sync-btn {
+        .sync-btn,
+        .nav-btn,
+        .crossfade-btn {
           padding: 7px 14px;
           font-size: 11px;
           min-height: 36px;
@@ -2056,6 +2143,7 @@
                       display: block;
                     "
                   ></div>
+                  <div id="yt-player-container-b"></div>
                 </div>
               </div>
 
@@ -2092,8 +2180,22 @@
             <div class="waveform" id="waveformEl"></div>
           </div>
           <div class="ctrl-mid">
+            <button class="nav-btn" id="prevBtn" onclick="playPrevTrack()" title="Previous track">
+              ⏮
+            </button>
             <button class="play-btn" id="playBtn" onclick="togglePlay()">
               ▶ LYRICS
+            </button>
+            <button class="nav-btn" id="nextBtn" onclick="playNextTrack()" title="Next track">
+              ⏭
+            </button>
+            <button
+              class="crossfade-btn"
+              id="crossfadeBtn"
+              onclick="toggleCrossfade()"
+              title="Auto transition with overlap fade"
+            >
+              XFADE
             </button>
             <button
               class="sync-btn"
@@ -2313,8 +2415,18 @@
             <div class="dot dot-g"></div>
           </div>
           <div class="config-title"><em>♪</em> select music — library</div>
-          <button class="library-add" onclick="openConfigFromLibrary()">＋ ADD</button>
-          <button class="config-close" onclick="closeLibrary()">✕</button>
+          <div class="library-actions">
+            <label class="library-order">
+              <span>Order</span>
+              <select id="libraryOrder">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="random">Random</option>
+              </select>
+            </label>
+            <button class="library-add" onclick="openConfigFromLibrary()">＋ ADD</button>
+            <button class="config-close" onclick="closeLibrary()">✕</button>
+          </div>
         </div>
         <div class="library-body">
           <div class="library-status" id="libraryStatus">Loading…</div>
@@ -2542,7 +2654,12 @@
 
       // ─── State ────────────────────────────────────────────────
       let ytPlayer = null;
+      let ytPlayerA = null;
+      let ytPlayerB = null;
       let ytReady = false;
+      let ytReadyA = false;
+      let ytReadyB = false;
+      let activePlayerKey = 'A';
       let playing = false;
       let raf = null;
       let waveTimer = null;
@@ -2578,6 +2695,9 @@
       const sectionLbl = $('sectionLabel');
       const idleMsg = $('idleMsg');
       const playBtn = $('playBtn');
+      const prevBtn = $('prevBtn');
+      const nextBtn = $('nextBtn');
+      const crossfadeBtn = $('crossfadeBtn');
       const statusText = $('statusText');
       const flashOver = $('flashOverlay');
       const glowOrb = $('glowOrb');
@@ -2657,6 +2777,7 @@
       const libraryOverlay = $('libraryOverlay');
       const libraryList = $('libraryList');
       const libraryStatus = $('libraryStatus');
+      const libraryOrderSelect = $('libraryOrder');
       const passOverlay = $('passOverlay');
       const passInput = $('passInput');
       const passError = $('passError');
@@ -2669,12 +2790,44 @@
       const savePassConfirm = $('savePassConfirm');
       const toastSuccess = $('toastSuccess');
       let pendingDeleteId = null;
+      let libraryTracksRaw = [];
+      let libraryTracks = [];
+      let libraryShuffle = [];
+      let currentTrackId = null;
+      let currentTrackIndex = -1;
+      let libraryLoadedOnce = false;
+      let libraryOrderMode =
+        localStorage.getItem('libraryOrder') || 'newest';
+      const CROSSFADE_SEC = 2;
+      let crossfadeEnabled =
+        (localStorage.getItem('crossfadeEnabled') ?? 'true') === 'true';
+      let crossfadeInProgress = false;
+      let crossfadeNextTrack = null;
+      let crossfadeTargetVol = null;
 
       libraryList.addEventListener('click', (e) => {
         const inItem = e.target.closest('.track-item');
         const inActions = e.target.closest('.track-actions');
         if (!inItem && !inActions) closeAllSwipes();
       });
+      if (libraryOrderSelect) {
+        libraryOrderSelect.value = libraryOrderMode;
+        libraryOrderSelect.addEventListener('change', () => {
+          libraryOrderMode = libraryOrderSelect.value || 'newest';
+          try {
+            localStorage.setItem('libraryOrder', libraryOrderMode);
+          } catch (err) {}
+          libraryTracks = applyLibraryOrder(
+            libraryOrderMode,
+            libraryTracksRaw,
+          );
+          updateCurrentIndex();
+          if (libraryOverlay.classList.contains('open')) {
+            renderLibraryList(libraryTracks);
+          }
+        });
+      }
+      updateCrossfadeBtn();
 
       // Supabase (REST)
       const SUPABASE_URL = 'https://uhfukcpnuakhxgzjdqyg.supabase.co';
@@ -2697,6 +2850,420 @@
         const fetchOptions = { ...options, headers };
         if (method === 'GET') fetchOptions.cache = 'no-store';
         return fetch(`${SUPABASE_URL}/rest/v1/${path}`, fetchOptions);
+      }
+
+      function shuffleArray(arr) {
+        const out = arr.slice();
+        for (let i = out.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [out[i], out[j]] = [out[j], out[i]];
+        }
+        return out;
+      }
+
+      function applyLibraryOrder(mode, tracksRaw) {
+        if (!Array.isArray(tracksRaw)) return [];
+        if (mode === 'oldest') {
+          return tracksRaw.slice().reverse();
+        }
+        if (mode === 'random') {
+          const ids = tracksRaw.map((t) => t.id);
+          const idSet = new Set(ids);
+          const validShuffle =
+            libraryShuffle.length === ids.length &&
+            libraryShuffle.every((id) => idSet.has(id));
+          if (!validShuffle) {
+            libraryShuffle = shuffleArray(ids);
+          }
+          const map = new Map(tracksRaw.map((t) => [t.id, t]));
+          return libraryShuffle.map((id) => map.get(id)).filter(Boolean);
+        }
+        return tracksRaw.slice();
+      }
+
+      async function fetchLibraryTracks() {
+        const resp = await sbFetch(
+          `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&order=created_at.desc`,
+          { method: 'GET' },
+        );
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        libraryLoadedOnce = true;
+        return Array.isArray(data) ? data : [];
+      }
+
+      function updateCurrentIndex() {
+        if (!currentTrackId || !libraryTracks.length) {
+          currentTrackIndex = -1;
+          updateNavButtons();
+          return;
+        }
+        currentTrackIndex = libraryTracks.findIndex(
+          (t) => String(t.id) === String(currentTrackId),
+        );
+        updateNavButtons();
+      }
+
+      function updateNavButtons() {
+        const disabled = libraryLoadedOnce && !libraryTracks.length;
+        if (prevBtn) prevBtn.disabled = disabled;
+        if (nextBtn) nextBtn.disabled = disabled;
+      }
+
+      function updateCrossfadeBtn() {
+        if (!crossfadeBtn) return;
+        crossfadeBtn.classList.toggle('is-on', crossfadeEnabled);
+        crossfadeBtn.classList.toggle('is-off', !crossfadeEnabled);
+        crossfadeBtn.textContent = crossfadeEnabled ? 'XFADE ON' : 'XFADE OFF';
+      }
+
+      function toggleCrossfade() {
+        crossfadeEnabled = !crossfadeEnabled;
+        try {
+          localStorage.setItem('crossfadeEnabled', String(crossfadeEnabled));
+        } catch (err) {}
+        updateCrossfadeBtn();
+      }
+
+      function getInactivePlayer() {
+        return activePlayerKey === 'A' ? ytPlayerB : ytPlayerA;
+      }
+
+      function setActivePlayer(key) {
+        activePlayerKey = key;
+        ytPlayer = key === 'A' ? ytPlayerA : ytPlayerB;
+        ytReady = key === 'A' ? ytReadyA : ytReadyB;
+      }
+
+      function getNextTrackFromLibrary() {
+        if (!libraryTracks.length) return null;
+        if (currentTrackIndex < 0) return libraryTracks[0];
+        const nextIndex =
+          currentTrackIndex + 1 >= libraryTracks.length
+            ? 0
+            : currentTrackIndex + 1;
+        return libraryTracks[nextIndex] || null;
+      }
+
+      async function startCrossfade() {
+        if (!crossfadeEnabled || crossfadeInProgress) return;
+        const ok = await ensureLibraryReady();
+        if (!ok || !libraryTracks.length) return;
+        const nextTrack = getNextTrackFromLibrary();
+        if (!nextTrack) return;
+
+        const inactive = getInactivePlayer();
+        const active = ytPlayer;
+        const inactiveReady = activePlayerKey === 'A' ? ytReadyB : ytReadyA;
+        if (!inactive || !active || !inactiveReady) return;
+
+        crossfadeInProgress = true;
+        crossfadeNextTrack = nextTrack;
+        crossfadeTargetVol = Number(pendingVolume ?? $('volSlider').value ?? 70);
+
+        try {
+          inactive.setVolume(0);
+        } catch (err) {}
+        try {
+          inactive.loadVideoById(nextTrack.yt_id, 0);
+          inactive.playVideo();
+        } catch (err) {}
+
+        const start = performance.now();
+        const step = () => {
+          if (!crossfadeInProgress) return;
+          const t = performance.now() - start;
+          const p = Math.min(1, t / (CROSSFADE_SEC * 1000));
+          const volA = Math.round(crossfadeTargetVol * (1 - p));
+          const volB = Math.round(crossfadeTargetVol * p);
+          try {
+            active.setVolume(volA);
+          } catch (err) {}
+          try {
+            inactive.setVolume(volB);
+          } catch (err) {}
+          if (p < 1) {
+            requestAnimationFrame(step);
+          } else {
+            finishCrossfade();
+          }
+        };
+        requestAnimationFrame(step);
+      }
+
+      function finishCrossfade() {
+        if (!crossfadeInProgress) return;
+        const nextTrack = crossfadeNextTrack;
+        const oldActive = ytPlayer;
+        const newActive = getInactivePlayer();
+        try {
+          if (oldActive) oldActive.pauseVideo();
+        } catch (err) {}
+        try {
+          if (oldActive) oldActive.setVolume(crossfadeTargetVol ?? 70);
+        } catch (err) {}
+        setActivePlayer(activePlayerKey === 'A' ? 'B' : 'A');
+        crossfadeInProgress = false;
+        crossfadeNextTrack = null;
+
+        if (nextTrack) {
+          currentTrackId = nextTrack.id || null;
+          updateCurrentIndex();
+          applyTrackData(
+            {
+              title: nextTrack.title || 'Untitled',
+              artist: nextTrack.artist || '',
+              ytId: nextTrack.yt_id,
+              lyricsRaw: nextTrack.lyrics || '',
+            },
+            { skipPlayerReload: true, keepTime: true },
+          );
+          playing = true;
+        }
+      }
+
+      function updateMediaSession(track) {
+        if (!('mediaSession' in navigator) || !track) return;
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title || 'Untitled',
+            artist: track.artist || '',
+            album: '',
+          });
+        } catch (err) {}
+      }
+
+      function renderLibraryList(tracks) {
+        libraryList.innerHTML = '';
+        closeAllSwipes();
+        if (!tracks.length) {
+          libraryStatus.textContent = 'No saved tracks yet.';
+          return;
+        }
+        libraryStatus.textContent = `Saved tracks: ${tracks.length}`;
+        tracks.forEach((track) => {
+          const swipe = document.createElement('div');
+          swipe.className = 'track-swipe';
+          swipe.setAttribute('data-track-id', track.id);
+
+          const actions = document.createElement('div');
+          actions.className = 'track-actions';
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete-btn';
+          delBtn.textContent = 'Delete';
+          actions.appendChild(delBtn);
+
+          const item = document.createElement('div');
+          item.className = 'track-item';
+
+          const meta = document.createElement('div');
+          meta.className = 'track-meta';
+          const t = document.createElement('div');
+          t.className = 'track-title';
+          t.textContent = (track.title || 'Untitled').toUpperCase();
+          const a = document.createElement('div');
+          a.className = 'track-artist';
+          a.textContent = track.artist || 'Unknown artist';
+
+          const btn = document.createElement('button');
+          btn.className = 'track-load';
+          btn.textContent = 'LOAD';
+
+          const more = document.createElement('button');
+          more.className = 'track-more';
+          more.textContent = '⋯';
+          const right = document.createElement('div');
+          right.className = 'track-actions-right';
+          right.appendChild(btn);
+          right.appendChild(more);
+
+          meta.appendChild(t);
+          meta.appendChild(a);
+          item.appendChild(meta);
+          item.appendChild(right);
+          swipe.appendChild(actions);
+          swipe.appendChild(item);
+
+          const loadTrack = () => {
+            const ok = loadTrackFromData(track, { autoplay: false });
+            if (ok) {
+              $('cfgTitle').value = track.title || '';
+              $('cfgArtist').value = track.artist || '';
+              $('cfgYtUrl').value = `https://youtu.be/${track.yt_id}`;
+              $('cfgLyrics').value = track.lyrics || '';
+              setStatus(cfgStatus, '');
+              closeLibrary();
+            } else {
+              libraryStatus.textContent =
+                'This track has invalid lyrics format.';
+            }
+          };
+
+          item.addEventListener('click', () => {
+            if (swipe.classList.contains('swiped')) {
+              swipe.classList.remove('swiped');
+              return;
+            }
+            loadTrack();
+          });
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            loadTrack();
+          });
+          more.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllSwipes();
+            swipe.classList.toggle('swiped');
+          });
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPass(track.id);
+          });
+
+          // Swipe handling
+          let startX = 0;
+          let startY = 0;
+          let dragging = false;
+          item.addEventListener(
+            'touchstart',
+            (e) => {
+              if (!e.touches || e.touches.length !== 1) return;
+              startX = e.touches[0].clientX;
+              startY = e.touches[0].clientY;
+              dragging = true;
+            },
+            { passive: true },
+          );
+          item.addEventListener(
+            'touchmove',
+            (e) => {
+              if (!dragging || !e.touches || e.touches.length !== 1) return;
+              const dx = e.touches[0].clientX - startX;
+              const dy = e.touches[0].clientY - startY;
+              if (Math.abs(dy) > Math.abs(dx)) return;
+              if (dx < -10) {
+                swipe.classList.remove('swiped');
+              }
+              if (dx > 35) {
+                closeAllSwipes();
+                swipe.classList.add('swiped');
+              }
+            },
+            { passive: true },
+          );
+          item.addEventListener('touchend', () => {
+            dragging = false;
+          });
+          item.addEventListener('touchcancel', () => {
+            dragging = false;
+          });
+
+          libraryList.appendChild(swipe);
+        });
+      }
+
+      function loadTrackFromData(track, { autoplay } = {}) {
+        if (crossfadeInProgress) {
+          crossfadeInProgress = false;
+          crossfadeNextTrack = null;
+        }
+        const ok = applyTrackData({
+          title: track.title || 'Untitled',
+          artist: track.artist || '',
+          ytId: track.yt_id,
+          lyricsRaw: track.lyrics || '',
+        });
+        if (!ok) return false;
+        currentTrackId = track.id || null;
+        updateCurrentIndex();
+        updateMediaSession(track);
+        try {
+          if (track.id) {
+            localStorage.setItem('lastTrackId', String(track.id));
+          }
+          localStorage.setItem(
+            'lastTrackKey',
+            JSON.stringify({
+              title_key: (track.title || '')
+                .trim()
+                .replace(/\\s+/g, ' ')
+                .toLowerCase(),
+              artist_key: (track.artist || '')
+                .trim()
+                .replace(/\\s+/g, ' ')
+                .toLowerCase(),
+            }),
+          );
+        } catch (err) {}
+        if (autoplay) {
+          _pendingPlay = true;
+          playBtn.textContent = '⏸ PAUSE';
+          statusText.textContent = 'LOADING…';
+        }
+        return true;
+      }
+
+      async function ensureLibraryReady() {
+        if (libraryTracksRaw.length) return true;
+        const data = await fetchLibraryTracks();
+        if (!data) return false;
+        libraryTracksRaw = data;
+        libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+        updateCurrentIndex();
+        return true;
+      }
+
+      async function playNextTrack(fromEnd = false) {
+        if (crossfadeInProgress) {
+          crossfadeInProgress = false;
+          crossfadeNextTrack = null;
+        }
+        const ok = await ensureLibraryReady();
+        if (!ok || !libraryTracks.length) {
+          if (fromEnd) {
+            playBtn.textContent = '↺ RESTART';
+            statusText.textContent = 'FINISHED';
+            if ('mediaSession' in navigator) {
+              try {
+                navigator.mediaSession.playbackState = 'none';
+              } catch (err) {}
+            }
+          }
+          return;
+        }
+        if (currentTrackIndex < 0) {
+          loadTrackFromData(libraryTracks[0], { autoplay: true });
+          return;
+        }
+        const nextIndex =
+          currentTrackIndex + 1 >= libraryTracks.length
+            ? 0
+            : currentTrackIndex + 1;
+        const track = libraryTracks[nextIndex];
+        if (!track) return;
+        loadTrackFromData(track, { autoplay: true });
+      }
+
+      async function playPrevTrack() {
+        if (crossfadeInProgress) {
+          crossfadeInProgress = false;
+          crossfadeNextTrack = null;
+        }
+        const ok = await ensureLibraryReady();
+        if (!ok || !libraryTracks.length) return;
+        if (currentTrackIndex < 0) {
+          loadTrackFromData(libraryTracks[libraryTracks.length - 1], {
+            autoplay: true,
+          });
+          return;
+        }
+        const prevIndex =
+          currentTrackIndex - 1 < 0
+            ? libraryTracks.length - 1
+            : currentTrackIndex - 1;
+        const track = libraryTracks[prevIndex];
+        if (!track) return;
+        loadTrackFromData(track, { autoplay: true });
       }
 
       // ─── Waveform ─────────────────────────────────────────────
@@ -2900,11 +3467,22 @@
         }
         freezeWave();
         stopDevBar();
+        if (crossfadeInProgress) {
+          crossfadeInProgress = false;
+          crossfadeNextTrack = null;
+        }
+        const inactive = getInactivePlayer();
         try {
           if (ytPlayer) ytPlayer.pauseVideo();
+          if (inactive) inactive.pauseVideo();
         } catch (err) {}
         playBtn.textContent = '▶ PLAY';
         statusText.textContent = 'PAUSED';
+        if ('mediaSession' in navigator) {
+          try {
+            navigator.mediaSession.playbackState = 'paused';
+          } catch (err) {}
+        }
       }
 
       function playAll() {
@@ -2916,6 +3494,11 @@
         } catch (err) {}
         playBtn.textContent = '⏸ PAUSE';
         statusText.textContent = 'PLAYING';
+        if ('mediaSession' in navigator) {
+          try {
+            navigator.mediaSession.playbackState = 'playing';
+          } catch (err) {}
+        }
         if (!raf) raf = requestAnimationFrame(loop);
       }
 
@@ -3021,6 +3604,14 @@
           showLyric(idx);
         }
 
+        if (
+          crossfadeEnabled &&
+          !crossfadeInProgress &&
+          total - t <= CROSSFADE_SEC + 0.05
+        ) {
+          startCrossfade();
+        }
+
         if (t >= total) {
           onEnd();
           return;
@@ -3029,14 +3620,14 @@
       }
 
       function onEnd() {
+        if (crossfadeInProgress) return;
         playing = false;
         raf = null;
         freezeWave();
         stopDevBar();
         clearInterval(_ytPollInterval);
         _ytPollInterval = null;
-        playBtn.textContent = '↺ RESTART';
-        statusText.textContent = 'FINISHED';
+        playNextTrack(true);
       }
 
       function syncNow() {
@@ -3293,88 +3884,115 @@
         const safeOrigin =
           proto === 'https:' || proto === 'http:' ? location.origin : '';
 
-        ytPlayer = new YT.Player('yt-player-container', {
-          videoId: YT_ID_current,
-          width: '100%',
-          height: '100%',
-          playerVars: {
-            autoplay: 0,
-            rel: 0,
-            modestbranding: 1,
-            iv_load_policy: 3,
-            playsinline: 1,
-            fs: 1,
-            cc_load_policy: 0,
-            ...(safeOrigin ? { origin: safeOrigin } : {}),
-          },
-          events: {
-            onReady(e) {
-              ytReady = true;
-
-              // Style the generated iframe correctly
-              const ifr = document.querySelector('#yt-player-container iframe');
-              if (ifr) {
-                ifr.style.cssText =
-                  'width:100%;height:100%;border:none;display:block';
-                ifr.setAttribute(
-                  'allow',
-                  'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture',
-                );
-                ifr.setAttribute('playsinline', '');
-                ifr.setAttribute('webkit-playsinline', '');
-              }
-
-              try {
-                applyVolume($('volSlider').value);
-              } catch (err) {}
-
-              // Start background time polling (Safari-safe)
-              _startYTTimePoll();
-
-              ytLabel.textContent = '— ready ✓';
-              ytLabel.style.color = 'var(--green)';
-              statusText.textContent = 'YT READY';
-
-              // Fire any queued play intent (user tapped ▶ before ready)
-              if (_pendingPlay) {
-                _pendingPlay = false;
-                playAll();
-              }
+        const buildPlayer = (containerId, key) =>
+          new YT.Player(containerId, {
+            videoId: YT_ID_current,
+            width: '100%',
+            height: '100%',
+            playerVars: {
+              autoplay: 0,
+              rel: 0,
+              modestbranding: 1,
+              iv_load_policy: 3,
+              playsinline: 1,
+              fs: 1,
+              cc_load_policy: 0,
+              ...(safeOrigin ? { origin: safeOrigin } : {}),
             },
-
-            onStateChange(e) {
-              const S = YT.PlayerState;
-              if (e.data === S.PLAYING) {
-                lastLoopTime = -1;
-                _startYTTimePoll();
-                applyVolume(pendingVolume ?? $('volSlider').value);
-                if (!playing) {
-                  playing = true;
-                  playBtn.textContent = '⏸ PAUSE';
-                  statusText.textContent = 'PLAYING';
-                  startWave();
-                  startDevBar();
-                  if (idleMsg) idleMsg.style.display = 'none';
+            events: {
+              onReady(e) {
+                if (key === 'A') {
+                  ytReadyA = true;
+                } else {
+                  ytReadyB = true;
                 }
-                if (!raf) raf = requestAnimationFrame(loop);
-              }
-              if (e.data === S.PAUSED) {
-                if (playing) pauseAll();
-              }
-              if (e.data === S.BUFFERING) {
-                statusText.textContent = 'BUFFERING...';
-              }
-              if (e.data === S.ENDED) onEnd();
-            },
+                if (key === activePlayerKey) {
+                  ytReady = true;
+                  ytPlayer = key === 'A' ? ytPlayerA : ytPlayerB;
+                }
 
-            onError(e) {
-              const msgs = {
-                2: 'bad id',
-                5: 'HTML5 err',
-                100: 'not found',
-                101: 'blocked',
-                150: 'blocked',
-              };
+                const ifr = document.querySelector(`#${containerId} iframe`);
+                if (ifr) {
+                  ifr.style.cssText =
+                    'width:100%;height:100%;border:none;display:block';
+                  ifr.setAttribute(
+                    'allow',
+                    'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture',
+                  );
+                  ifr.setAttribute('playsinline', '');
+                  ifr.setAttribute('webkit-playsinline', '');
+                }
+
+                if (key === activePlayerKey) {
+                  try {
+                    applyVolume($('volSlider').value);
+                  } catch (err) {}
+
+                  _startYTTimePoll();
+
+                  ytLabel.textContent = '? ready ?';
+                  ytLabel.style.color = 'var(--green)';
+                  statusText.textContent = 'YT READY';
+
+                  if (_pendingPlay) {
+                    _pendingPlay = false;
+                    playAll();
+                  }
+                } else {
+                  try {
+                    if (e.target && typeof e.target.setVolume === 'function') {
+                      e.target.setVolume(0);
+                    }
+                  } catch (err) {}
+                }
+              },
+
+              onStateChange(e) {
+                if (key !== activePlayerKey) return;
+                const S = YT.PlayerState;
+                if (e.data === S.PLAYING) {
+                  lastLoopTime = -1;
+                  _startYTTimePoll();
+                  applyVolume(pendingVolume ?? $('volSlider').value);
+                  if (!playing) {
+                    playing = true;
+                    playBtn.textContent = '? PAUSE';
+                    statusText.textContent = 'PLAYING';
+                    startWave();
+                    startDevBar();
+                    if (idleMsg) idleMsg.style.display = 'none';
+                  }
+                  if (!raf) raf = requestAnimationFrame(loop);
+                }
+                if (e.data === S.PAUSED) {
+                  if (playing) pauseAll();
+                }
+                if (e.data === S.BUFFERING) {
+                  statusText.textContent = 'BUFFERING...';
+                }
+                if (e.data === S.ENDED) onEnd();
+              },
+
+              onError(e) {
+                if (key !== activePlayerKey) return;
+                const msgs = {
+                  2: 'bad id',
+                  5: 'HTML5 err',
+                  100: 'not found',
+                  101: 'blocked',
+                  150: 'blocked',
+                };
+                ytLabel.textContent = '? ' + (msgs[e.data] || 'err ' + e.data);
+                ytLabel.style.color = 'var(--amber)';
+                statusText.textContent = 'YT ERROR';
+              },
+            },
+          });
+
+        ytPlayerA = buildPlayer('yt-player-container', 'A');
+        ytPlayerB = buildPlayer('yt-player-container-b', 'B');
+        setActivePlayer(activePlayerKey || 'A');
+      };
               ytLabel.textContent = '— ' + (msgs[e.data] || 'err ' + e.data);
               ytLabel.style.color = 'var(--amber)';
               statusText.textContent = 'YT ERROR';
@@ -3802,7 +4420,11 @@
         }
       }
 
-      function applyTrackData({ title, artist, ytId, lyricsRaw }) {
+      function applyTrackData(
+        { title, artist, ytId, lyricsRaw },
+        opts = {},
+      ) {
+        const { skipPlayerReload = false, keepTime = false } = opts || {};
         const newLyrics = parseLyrics(lyricsRaw);
         if (newLyrics.length === 0) return false;
 
@@ -3812,6 +4434,7 @@
         $('titlebarSongName').textContent = (
           title + (artist ? ' ft. ' + artist : '')
         ).toLowerCase();
+        updateMediaSession({ title, artist });
 
         // Update global lyrics + sections
         lyrics.length = 0;
@@ -3857,25 +4480,34 @@
         Object.keys(lyricIdxToRow).forEach((k) => delete lyricIdxToRow[k]);
         buildLyricsList();
 
-        // Reload YouTube player — destroy and recreate for Safari compatibility
-        pauseAll();
-        ytReady = false;
-        _lastGoodTime = 0;
-        _lastGoodStamp = 0;
-        clearInterval(_ytPollInterval);
-        _ytPollInterval = null;
-        try {
-          ytPlayer.destroy();
-        } catch (err) {}
-        const container = $('yt-player-container');
-        container.innerHTML = '';
-        YT_ID_current = ytId;
-        if (window.YT && window.YT.Player) {
-          window.onYouTubeIframeAPIReady();
+        // Reload YouTube player ? destroy and recreate for Safari compatibility
+        if (!skipPlayerReload) {
+          pauseAll();
+          ytReady = false;
+          ytReadyA = false;
+          ytReadyB = false;
+          _lastGoodTime = 0;
+          _lastGoodStamp = 0;
+          clearInterval(_ytPollInterval);
+          _ytPollInterval = null;
+          try {
+            if (ytPlayerA) ytPlayerA.destroy();
+            if (ytPlayerB) ytPlayerB.destroy();
+          } catch (err) {}
+          const containerA = $('yt-player-container');
+          const containerB = $('yt-player-container-b');
+          if (containerA) containerA.innerHTML = '';
+          if (containerB) containerB.innerHTML = '';
+          YT_ID_current = ytId;
+          setActivePlayer('A');
+          if (window.YT && window.YT.Player) {
+            window.onYouTubeIframeAPIReady();
+          }
+        } else {
+          YT_ID_current = ytId;
         }
 
         // Reset player state
-        pauseAll();
         currentIdx = -1;
         rowPrev.textContent = '';
         rowPrev.classList.remove('has-text');
@@ -3884,11 +4516,20 @@
         rowNext.textContent = '';
         rowNext.classList.remove('has-text');
         sectionLbl.classList.remove('show');
-        seekFill.style.width = '0%';
-        timeDisplay.textContent = '0:00';
-        timeDock.textContent = '0:00';
-        if (idleMsg) idleMsg.style.display = 'flex';
-        statusText.textContent = 'LOADED';
+        if (keepTime) {
+          const ct = safeGetTime();
+          seekFill.style.width = (ct / getTotal()) * 100 + '%';
+          timeDisplay.textContent = fmt(ct);
+          timeDock.textContent = fmt(ct);
+          if (idleMsg) idleMsg.style.display = 'none';
+          statusText.textContent = playing ? 'PLAYING' : 'LOADED';
+        } else {
+          seekFill.style.width = '0%';
+          timeDisplay.textContent = '0:00';
+          timeDock.textContent = '0:00';
+          if (idleMsg) idleMsg.style.display = 'flex';
+          statusText.textContent = 'LOADED';
+        }
         return true;
       }
 
@@ -4136,7 +4777,7 @@
           const cacheBust = `_ts=${Date.now()}`;
           if (lastId) {
             const resp = await sbFetch(
-              `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&id=eq.${encodeURIComponent(
+              `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&id=eq.${encodeURIComponent(
                 lastId,
               )}&limit=1&${cacheBust}`,
               { method: 'GET' },
@@ -4150,7 +4791,7 @@
             const key = JSON.parse(raw);
             if (key?.title_key && key?.artist_key) {
               const resp = await sbFetch(
-                `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&title_key=eq.${encodeURIComponent(
+                `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&title_key=eq.${encodeURIComponent(
                   key.title_key,
                 )}&artist_key=eq.${encodeURIComponent(
                   key.artist_key,
@@ -4165,7 +4806,7 @@
           }
           if (!track) {
             const resp = await sbFetch(
-              `${TRACKS_TABLE}?select=title,artist,yt_id,lyrics,created_at&order=created_at.desc&limit=1&${cacheBust}`,
+              `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&order=created_at.desc&limit=1&${cacheBust}`,
               { method: 'GET' },
             );
             if (resp.ok) {
@@ -4174,12 +4815,7 @@
             }
           }
           if (track) {
-            applyTrackData({
-              title: track.title || 'Untitled',
-              artist: track.artist || '',
-              ytId: track.yt_id,
-              lyricsRaw: track.lyrics || '',
-            });
+            loadTrackFromData(track, { autoplay: false });
           }
         } catch (err) {}
       }
@@ -4187,167 +4823,23 @@
       async function openLibrary() {
         libraryOverlay.classList.add('open');
         libraryList.innerHTML = '';
-        libraryStatus.textContent = 'Loading…';
+        libraryStatus.textContent = 'Loading...';
         closeAllSwipes();
+        if (libraryOrderSelect) {
+          libraryOrderSelect.value = libraryOrderMode;
+        }
 
         try {
-          const resp = await sbFetch(
-            `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&order=created_at.desc`,
-            { method: 'GET' },
-          );
-          if (!resp.ok) {
-            const t = await resp.text();
+          const data = await fetchLibraryTracks();
+          if (!data) {
             libraryStatus.textContent =
               'Failed to load library. Check Supabase table/RLS.';
-            if (t) libraryStatus.textContent += ' ' + t.slice(0, 120);
             return;
           }
-          const data = await resp.json();
-          if (!data.length) {
-            libraryStatus.textContent = 'No saved tracks yet.';
-            return;
-          }
-          libraryStatus.textContent = `Saved tracks: ${data.length}`;
-          data.forEach((track) => {
-            const swipe = document.createElement('div');
-            swipe.className = 'track-swipe';
-            swipe.setAttribute('data-track-id', track.id);
-
-            const actions = document.createElement('div');
-            actions.className = 'track-actions';
-            const delBtn = document.createElement('button');
-            delBtn.className = 'delete-btn';
-            delBtn.textContent = 'Delete';
-            actions.appendChild(delBtn);
-
-            const item = document.createElement('div');
-            item.className = 'track-item';
-
-            const meta = document.createElement('div');
-            meta.className = 'track-meta';
-            const t = document.createElement('div');
-            t.className = 'track-title';
-            t.textContent = (track.title || 'Untitled').toUpperCase();
-            const a = document.createElement('div');
-            a.className = 'track-artist';
-            a.textContent = track.artist || 'Unknown artist';
-
-            const btn = document.createElement('button');
-            btn.className = 'track-load';
-            btn.textContent = 'LOAD';
-
-            const more = document.createElement('button');
-            more.className = 'track-more';
-            more.textContent = '⋯';
-            const right = document.createElement('div');
-            right.className = 'track-actions-right';
-            right.appendChild(btn);
-            right.appendChild(more);
-
-            meta.appendChild(t);
-            meta.appendChild(a);
-            item.appendChild(meta);
-            item.appendChild(right);
-            swipe.appendChild(actions);
-            swipe.appendChild(item);
-
-            const loadTrack = () => {
-              const ok = applyTrackData({
-                title: track.title || 'Untitled',
-                artist: track.artist || '',
-                ytId: track.yt_id,
-                lyricsRaw: track.lyrics || '',
-              });
-              if (ok) {
-                $('cfgTitle').value = track.title || '';
-                $('cfgArtist').value = track.artist || '';
-                $('cfgYtUrl').value = `https://youtu.be/${track.yt_id}`;
-                $('cfgLyrics').value = track.lyrics || '';
-                setStatus(cfgStatus, '');
-                try {
-                  localStorage.setItem('lastTrackId', String(track.id));
-                  localStorage.setItem(
-                    'lastTrackKey',
-                    JSON.stringify({
-                      title_key: (track.title || '')
-                        .trim()
-                        .replace(/\s+/g, ' ')
-                        .toLowerCase(),
-                      artist_key: (track.artist || '')
-                        .trim()
-                        .replace(/\s+/g, ' ')
-                        .toLowerCase(),
-                    }),
-                  );
-                } catch (err) {}
-                closeLibrary();
-              } else {
-                libraryStatus.textContent =
-                  'This track has invalid lyrics format.';
-              }
-            };
-
-            item.addEventListener('click', () => {
-              if (swipe.classList.contains('swiped')) {
-                swipe.classList.remove('swiped');
-                return;
-              }
-              loadTrack();
-            });
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              loadTrack();
-            });
-            more.addEventListener('click', (e) => {
-              e.stopPropagation();
-              closeAllSwipes();
-              swipe.classList.toggle('swiped');
-            });
-            delBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              openPass(track.id);
-            });
-
-            // Swipe handling
-            let startX = 0;
-            let startY = 0;
-            let dragging = false;
-            item.addEventListener(
-              'touchstart',
-              (e) => {
-                if (!e.touches || e.touches.length !== 1) return;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                dragging = true;
-              },
-              { passive: true },
-            );
-            item.addEventListener(
-              'touchmove',
-              (e) => {
-                if (!dragging || !e.touches || e.touches.length !== 1) return;
-                const dx = e.touches[0].clientX - startX;
-                const dy = e.touches[0].clientY - startY;
-                if (Math.abs(dy) > Math.abs(dx)) return;
-                if (dx < -10) {
-                  swipe.classList.remove('swiped');
-                }
-                if (dx > 35) {
-                  closeAllSwipes();
-                  swipe.classList.add('swiped');
-                }
-              },
-              { passive: true },
-            );
-            item.addEventListener('touchend', () => {
-              dragging = false;
-            });
-            item.addEventListener('touchcancel', () => {
-              dragging = false;
-            });
-
-            libraryList.appendChild(swipe);
-          });
+          libraryTracksRaw = data;
+          libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+          updateCurrentIndex();
+          renderLibraryList(libraryTracks);
         } catch (err) {
           libraryStatus.textContent =
             'Failed to load library. Network or Supabase error.';
@@ -4411,13 +4903,13 @@
               : 'Delete failed.';
             return;
           }
-          const row = libraryList.querySelector(
-            `[data-track-id="${pendingDeleteId}"]`,
+          libraryTracksRaw = libraryTracksRaw.filter(
+            (t) => String(t.id) !== String(pendingDeleteId),
           );
-          if (row) row.remove();
-          const count = libraryList.querySelectorAll('.track-swipe').length;
-          libraryStatus.textContent =
-            count > 0 ? `Saved tracks: ${count}` : 'No saved tracks yet.';
+          libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+          updateCurrentIndex();
+          renderLibraryList(libraryTracks);
+          updateNavButtons();
           closePass();
         } catch (err) {
           passError.textContent = 'Delete failed.';
@@ -4508,6 +5000,18 @@
           return;
         }
 
+        const match =
+          libraryTracksRaw.find((t) => t.yt_id === newYtId) ||
+          libraryTracksRaw.find(
+            (t) =>
+              (t.title || '').trim().toLowerCase() ===
+                title.trim().toLowerCase() &&
+              (t.artist || '').trim().toLowerCase() ===
+                artist.trim().toLowerCase(),
+          );
+        currentTrackId = match ? match.id : null;
+        updateCurrentIndex();
+
         closeConfig();
       }
 
@@ -4517,6 +5021,19 @@
         s.src = 'https://www.youtube.com/iframe_api';
         document.head.appendChild(s);
       })();
+
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.setActionHandler('play', () => playAll());
+          navigator.mediaSession.setActionHandler('pause', () => pauseAll());
+          navigator.mediaSession.setActionHandler('nexttrack', () =>
+            playNextTrack(),
+          );
+          navigator.mediaSession.setActionHandler('previoustrack', () =>
+            playPrevTrack(),
+          );
+        } catch (err) {}
+      }
 
       // Try auto-load last saved track (if any)
       loadLastTrack();
