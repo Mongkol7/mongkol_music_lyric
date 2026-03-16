@@ -1358,6 +1358,21 @@
         line-height: 1.6;
         margin-top: 2px;
       }
+      .cfg-instructions {
+        margin-top: 2px;
+      }
+      .cfg-instructions a {
+        color: var(--cyan);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0, 229, 255, 0.45);
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease;
+      }
+      .cfg-instructions a:hover {
+        color: var(--green);
+        border-bottom-color: rgba(0, 255, 136, 0.6);
+      }
       .cfg-hint code {
         background: #13162a;
         padding: 1px 5px;
@@ -2236,6 +2251,19 @@
               />
               <div class="cfg-hint">
                 If YouTube blocks audio, upload a local audio file for alignment.
+              </div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-hint cfg-instructions">
+                1) Download MP3:
+                <a href="https://mp3juice.sc/" target="_blank" rel="noopener">mp3juice.sc</a><br />
+                2) Remove music:
+                <a href="https://vocalremover.org/" target="_blank" rel="noopener">vocalremover.org</a><br />
+                3) Compress file:
+                <a href="https://www.freeconvert.com/mp3-compressor" target="_blank" rel="noopener">freeconvert.com/mp3-compressor</a><br />
+                4) Fill out the form, paste lyrics (copy from Spotify in browser), click Auto Align and wait for timestamps, then Save to Library, then Apply &amp; Load.
               </div>
             </div>
           </div>
