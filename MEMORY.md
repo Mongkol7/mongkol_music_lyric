@@ -40,6 +40,8 @@
     - Known issue: YouTube may block download (410)
   - `api/align-upload.js` (upload audio + ElevenLabs) using `busboy`
 - Env var required in Vercel: `ELEVENLABS_API_KEY`
+- Alignment logic reverted to the original ElevenLabs matching (simple first-word anchor + cursor scan).
+- Reverted storage-based upload flow (bucket/CORS issues). Current upload still subject to Vercel payload limits.
 
 ## Commits (recent)
 - `9b3715f` Add audio upload auto align
@@ -48,6 +50,7 @@
 - `44a6082` Improve captions proxy fallbacks
 - `2de4305` Add captions proxy API for import
 - `0864962` Add library add button and caption tools
+- `f691463` Improve auto-align accuracy and password submit
 
 ## UI Notes
 - Dev credit glow with animated horizontal light-bar under name
