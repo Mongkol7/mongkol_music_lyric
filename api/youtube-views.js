@@ -1,5 +1,7 @@
 const CACHE_TTL_MS = 60 * 60 * 1000;
+const STALE_TTL_MS = 24 * 60 * 60 * 1000;
 const cache = new Map();
+const inFlight = new Map();
 
 function isValidId(id) {
   return typeof id === 'string' && /^[a-zA-Z0-9_-]{6,20}$/.test(id);
@@ -48,25 +50,50 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url =
-      `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${encodeURIComponent(videoId)}&key=${apiKey}`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      res.status(502).json({ error: 'YouTube API error' });
+    if (inFlight.has(videoId)) {
+      const data = await inFlight.get(videoId);
+      if (data) {
+        res.status(200).json({ ...data, cached: data.cached ?? false });
+        return;
+      }
+    }
+
+    const fetchPromise = (async () => {
+      const url =
+        `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${encodeURIComponent(videoId)}&key=${apiKey}`;
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const item = Array.isArray(data?.items) && data.items.length ? data.items[0] : null;
+      const rawViews = item?.statistics?.viewCount;
+      const views = Number(rawViews);
+      if (!Number.isFinite(views)) return null;
+      const formatted = formatViews(views);
+      const payload = { views, formatted, cached: false };
+      cache.set(videoId, { views, formatted, ts: Date.now() });
+      return payload;
+    })();
+
+    inFlight.set(videoId, fetchPromise);
+    const result = await fetchPromise;
+    inFlight.delete(videoId);
+
+    if (result) {
+      res.status(200).json(result);
       return;
     }
-    const data = await resp.json();
-    const item = Array.isArray(data?.items) && data.items.length ? data.items[0] : null;
-    const rawViews = item?.statistics?.viewCount;
-    const views = Number(rawViews);
-    if (!Number.isFinite(views)) {
-      res.status(502).json({ error: 'No view count' });
+
+    if (cached && now - cached.ts < STALE_TTL_MS) {
+      res.status(200).json({ views: cached.views, formatted: cached.formatted, cached: true, stale: true });
       return;
     }
-    const formatted = formatViews(views);
-    cache.set(videoId, { views, formatted, ts: now });
-    res.status(200).json({ views, formatted, cached: false });
+
+    res.status(502).json({ error: 'YouTube API error' });
   } catch (err) {
+    if (cached && now - cached.ts < STALE_TTL_MS) {
+      res.status(200).json({ views: cached.views, formatted: cached.formatted, cached: true, stale: true });
+      return;
+    }
     res.status(502).json({ error: 'Fetch failed' });
   }
 }

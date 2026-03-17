@@ -60,6 +60,9 @@ const rowPrev    = $('rowPrev');
 const rowCurrent = $('rowCurrent');
 const rowNext    = $('rowNext');
 
+const viewsCache = new Map();
+const viewsInFlight = new Map();
+
 if (volNote && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
   volNote.textContent = 'Use device volume';
   volNote.classList.add('show');
@@ -128,6 +131,7 @@ function updateYouTubeViews(ytId) {
     ytViewsEl.textContent = 'Views: unavailable';
     return;
   }
+  ytViewsEl.dataset.ytId = ytId;
   const cacheKey = `yt_views_${ytId}`;
   const now = Date.now();
   try {
@@ -135,28 +139,49 @@ function updateYouTubeViews(ytId) {
     if (cachedRaw) {
       const cached = JSON.parse(cachedRaw);
       if (cached && cached.formatted && now - cached.ts < 3600 * 1000) {
-        ytViewsEl.textContent = `Views: ${cached.formatted}`;
+        ytViewsEl.textContent = `${cached.formatted} views`;
         return;
       }
     }
   } catch (err) {}
 
+  const memCached = viewsCache.get(ytId);
+  if (memCached && now - memCached.ts < 3600 * 1000) {
+    ytViewsEl.textContent = `${memCached.formatted} views`;
+    return;
+  }
+
+  if (viewsInFlight.has(ytId)) {
+    viewsInFlight.get(ytId).then((data) => {
+      if (!data || ytViewsEl.dataset.ytId !== ytId) return;
+      ytViewsEl.textContent = `${data.formatted} views`;
+    });
+    return;
+  }
+
   ytViewsEl.textContent = 'Views: ...';
-  fetch(`/api/youtube-views?id=${encodeURIComponent(ytId)}`)
+  const req = fetch(`/api/youtube-views?id=${encodeURIComponent(ytId)}`)
     .then((resp) => (resp.ok ? resp.json() : null))
     .then((data) => {
-      if (!data || !data.formatted) {
-        ytViewsEl.textContent = 'Views: unavailable';
-        return;
-      }
-      ytViewsEl.textContent = `Views: ${data.formatted}`;
+      if (!data || !data.formatted) return null;
+      const payload = { formatted: data.formatted, ts: Date.now() };
+      viewsCache.set(ytId, payload);
       try {
-        localStorage.setItem(cacheKey, JSON.stringify({ formatted: data.formatted, ts: Date.now() }));
+        localStorage.setItem(cacheKey, JSON.stringify(payload));
       } catch (err) {}
+      return payload;
     })
-    .catch(() => {
-      ytViewsEl.textContent = 'Views: unavailable';
-    });
+    .catch(() => null)
+    .finally(() => viewsInFlight.delete(ytId));
+
+  viewsInFlight.set(ytId, req);
+  req.then((data) => {
+    if (!data || ytViewsEl.dataset.ytId !== ytId) {
+      if (!data && ytViewsEl.dataset.ytId === ytId) ytViewsEl.textContent = 'Views: unavailable';
+      return;
+    }
+    ytViewsEl.textContent = `${data.formatted} views`;
+  });
 }
 
 function triggerFlash() {
@@ -493,15 +518,27 @@ function loop() {
   timeDisplay.textContent    = tf;
   timeDock.textContent       = tf;
 
-  // Lyric index
-  let idx = -1;
-  for (let i = 0; i < lyrics.length; i++) {
-    if (lyrics[i].t <= t) idx = i;
-    else break;
-  }
-  if (idx !== currentIdx && idx >= 0) {
-    currentIdx = idx;
-    showLyric(idx);
+  // Lyric index (fast path using currentIdx)
+  if (lyrics.length) {
+    let idx = currentIdx;
+    if (idx < 0) {
+      let lo = 0;
+      let hi = lyrics.length - 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (lyrics[mid].t <= t) lo = mid + 1;
+        else hi = mid - 1;
+      }
+      idx = Math.max(0, hi);
+    } else if (lyrics[idx].t <= t) {
+      while (idx + 1 < lyrics.length && lyrics[idx + 1].t <= t) idx += 1;
+    } else {
+      while (idx - 1 >= 0 && lyrics[idx].t > t) idx -= 1;
+    }
+    if (idx !== currentIdx && idx >= 0) {
+      currentIdx = idx;
+      showLyric(idx);
+    }
   }
 
   // End detection

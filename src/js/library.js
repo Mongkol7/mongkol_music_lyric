@@ -61,6 +61,8 @@ const librarySearchListEl = $('librarySearchList');
 const librarySearchEmpty  = $('librarySearchEmpty');
 let   pendingDeleteId = null;
 let   lastCountedTrackId = null;
+let   searchDebounceId   = null;
+const SEARCH_DEBOUNCE_MS = 140;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function shuffleArray(arr) {
@@ -170,6 +172,7 @@ function renderSearchList(tracks, query = '', listEl = searchListEl, emptyEl = s
     return;
   }
   emptyEl.classList.remove('show');
+  const frag = document.createDocumentFragment();
   filtered.forEach((track) => {
     const item = document.createElement('div');
     item.className = 'search-item';
@@ -190,8 +193,9 @@ function renderSearchList(tracks, query = '', listEl = searchListEl, emptyEl = s
       closeSearch();
       closeLibrarySearch();
     });
-    listEl.appendChild(item);
+    frag.appendChild(item);
   });
+  listEl.appendChild(frag);
 }
 
 async function openSearch() {
@@ -440,7 +444,10 @@ if (searchBtn) {
 }
 if (searchInput) {
   searchInput.addEventListener('input', () => {
-    renderSearchList(libraryTracks, searchInput.value, searchListEl, searchEmpty);
+    clearTimeout(searchDebounceId);
+    searchDebounceId = setTimeout(() => {
+      renderSearchList(libraryTracks, searchInput.value, searchListEl, searchEmpty);
+    }, SEARCH_DEBOUNCE_MS);
   });
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSearch();
@@ -459,7 +466,10 @@ if (librarySearchBtn) {
 }
 if (librarySearchInput) {
   librarySearchInput.addEventListener('input', () => {
-    renderSearchList(libraryTracks, librarySearchInput.value, librarySearchListEl, librarySearchEmpty);
+    clearTimeout(searchDebounceId);
+    searchDebounceId = setTimeout(() => {
+      renderSearchList(libraryTracks, librarySearchInput.value, librarySearchListEl, librarySearchEmpty);
+    }, SEARCH_DEBOUNCE_MS);
   });
   librarySearchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLibrarySearch();
@@ -476,6 +486,7 @@ function renderLibraryList(tracks) {
   if (!tracks.length) { libraryStatus.textContent = 'No saved tracks yet.'; return; }
   libraryStatus.textContent = `Saved tracks: ${tracks.length}`;
 
+  const frag = document.createDocumentFragment();
   tracks.forEach((track) => {
     const swipe   = document.createElement('div');
     swipe.className = 'track-swipe';
@@ -563,8 +574,9 @@ function renderLibraryList(tracks) {
     item.addEventListener('touchend',   () => { dragging = false; });
     item.addEventListener('touchcancel', () => { dragging = false; });
 
-    libraryList.appendChild(swipe);
+    frag.appendChild(swipe);
   });
+  libraryList.appendChild(frag);
 }
 
 async function openLibrary() {
