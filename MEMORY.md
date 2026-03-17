@@ -68,7 +68,9 @@ mongkol_ai_app/
     - Known issue: YouTube may block download (410)
   - `api/align-upload.js` (upload audio + ElevenLabs) using `busboy`
 - Env var required in Vercel: `ELEVENLABS_API_KEY`
-- Alignment logic reverted to the original ElevenLabs matching (simple first-word anchor + cursor scan).
+- **Text Sanitization**: Before sending lyrics to ElevenLabs, the API strips all timestamps (`[01:23.45]`) and section tags (`[#CHORUS]`) so the AI only receives pure spoken text.
+- **Fuzzy Matching Algorithm**: Uses Levenshtein distance (`getEditDistance`) to map words from ElevenLabs back to the lyrics text. This allows for misspelling, slang (e.g. "shootin" vs "shooting"), and missing punctuation without breaking synchronization.
+- **Lookahead Windowing**: If the AI hallucinates words or recognizes background music as vocals, the algorithm checks up to 4 words into the future to find the true lyric line and skips the noise.
 - Reverted storage-based upload flow (bucket/CORS issues). Current upload still subject to Vercel payload limits.
 
 ## Playback
