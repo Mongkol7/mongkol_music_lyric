@@ -194,16 +194,15 @@ function renderSearchList(tracks, query = '', listEl = searchListEl, emptyEl = s
   });
 }
 
-function openSearch() {
+async function openSearch() {
   if (!searchWrap || !searchPanel) return;
   searchWrap.classList.add('open');
   if (searchInput) searchInput.value = '';
-  ensureLibraryReady((ok) => {
-    if (ok) {
-      renderSearchList(libraryTracks, '', searchListEl, searchEmpty);
-      if (searchInput) searchInput.focus();
-    }
-  });
+  const ok = await ensureLibraryReady();
+  if (ok) {
+    renderSearchList(libraryTracks, '', searchListEl, searchEmpty);
+    if (searchInput) searchInput.focus();
+  }
 }
 
 function closeSearch() {
@@ -218,16 +217,15 @@ function toggleSearch() {
   else openSearch();
 }
 
-function openLibrarySearch() {
+async function openLibrarySearch() {
   if (!librarySearchWrap || !librarySearchPanel) return;
   librarySearchWrap.classList.add('open');
   if (librarySearchInput) librarySearchInput.value = '';
-  ensureLibraryReady((ok) => {
-    if (ok) {
-      renderSearchList(libraryTracks, '', librarySearchListEl, librarySearchEmpty);
-      if (librarySearchInput) librarySearchInput.focus();
-    }
-  });
+  const ok = await ensureLibraryReady();
+  if (ok) {
+    renderSearchList(libraryTracks, '', librarySearchListEl, librarySearchEmpty);
+    if (librarySearchInput) librarySearchInput.focus();
+  }
 }
 
 function closeLibrarySearch() {
@@ -243,18 +241,33 @@ function toggleLibrarySearch() {
 }
 
 async function shareToCompanion() {
-  ensureLibraryReady((ok) => {
-    if (ok) syncCurrentTrackToLibrary();
-    const title  = ($('hdrTrackTitle')?.textContent || '').trim();
-    const artist = ($('hdrArtist')?.textContent || '').trim();
-    const params = new URLSearchParams();
-    if (currentTrackId) params.set('trackId', String(currentTrackId));
-    if (typeof YT_ID_current === 'string' && YT_ID_current) params.set('ytId', YT_ID_current);
-    if (title)  params.set('title', title);
-    if (artist) params.set('artist', artist);
-    const deepLink = `mongkolmusic://share?${params.toString()}`;
-    window.location.href = deepLink;
-  });
+  const ytId  = typeof YT_ID_current === 'string' ? YT_ID_current : '';
+  const url   = ytId ? `https://youtu.be/${ytId}` : '';
+  const title = ($('hdrTrackTitle')?.textContent || 'YouTube Track').trim();
+  const artist = ($('hdrArtist')?.textContent || '').trim();
+  const text  = artist ? `${title} — ${artist}` : title;
+  if (!url) return;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text, url });
+      return;
+    }
+  } catch (err) {}
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(url);
+      showToast('Link copied ✓');
+      return;
+    }
+  } catch (err) {}
+  const ta = document.createElement('textarea');
+  ta.value = url;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('Link copied ✓'); } catch (err) {}
+  document.body.removeChild(ta);
 }
 
 function bumpListenCount(trackId) {
@@ -342,32 +355,30 @@ function updateMediaSession(track) {
   } catch (err) {}
 }
 
-function ensureLibraryReady(cb) {
-  if (libraryTracksRaw.length) {
-    if (cb) cb(true);
-    return true;
-  }
-  fetchLibraryTracks().then((data) => {
-    if (!data) { if (cb) cb(false); return; }
-    libraryTracksRaw = data;
-    libraryTracks    = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
-    syncCurrentTrackToLibrary();
-    updateCurrentIndex();
-    if (cb) cb(true);
-  });
-  return false;
+async function ensureLibraryReady() {
+  if (libraryTracksRaw.length) return true;
+  const data = await fetchLibraryTracks();
+  if (!data) return false;
+  libraryTracksRaw = data;
+  libraryTracks    = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+  syncCurrentTrackToLibrary();
+  updateCurrentIndex();
+  return true;
 }
 
 // ── Track loading ──────────────────────────────────────────────────────────
 function loadTrackFromData(track, { autoplay } = {}) {
   endHandling = false;
   lastCountedTrackId = null;
-  const ok = applyTrackData({
-    title:      track.title  || 'Untitled',
-    artist:     track.artist || '',
-    ytId:       track.yt_id,
-    lyricsRaw:  track.lyrics || '',
-  });
+  const ok = applyTrackData(
+    {
+      title:      track.title  || 'Untitled',
+      artist:     track.artist || '',
+      ytId:       track.yt_id,
+      lyricsRaw:  track.lyrics || '',
+    },
+    { autoplay: !!autoplay },
+  );
   if (!ok) return false;
   currentTrackId = track.id || null;
   updateCurrentIndex();
@@ -379,57 +390,30 @@ function loadTrackFromData(track, { autoplay } = {}) {
       artist_key: (track.artist || '').trim().replace(/\s+/g, ' ').toLowerCase(),
     }));
   } catch (err) {}
-  if (autoplay) {
-    if (ytReady) {
-      playAll();
-    } else {
-      _pendingPlay = true;
-      playBtn.textContent    = '⏸ PAUSE';
-      statusText.textContent = 'LOADING…';
-      startPlayWatch(8000);
-    }
-  }
   return true;
 }
 
-function playNextTrack(fromEnd = false) {
+async function playNextTrack(fromEnd = false) {
   endHandling = false;
-  const ready = ensureLibraryReady((ok) => {
-    if (!ok && fromEnd) {
-      playBtn.textContent    = '↺ RESTART';
-      statusText.textContent = 'FINISHED';
-      return;
-    }
-    if (ok) {
-      const nextIndex = currentTrackIndex + 1 >= libraryTracks.length ? 0 : currentTrackIndex + 1;
-      const track     = libraryTracks[nextIndex];
-      if (track) loadTrackFromData(track, { autoplay: true });
-    }
-  });
-
-  if (ready) {
-    const nextIndex = currentTrackIndex + 1 >= libraryTracks.length ? 0 : currentTrackIndex + 1;
-    const track     = libraryTracks[nextIndex];
-    if (track) loadTrackFromData(track, { autoplay: true });
+  const ok = await ensureLibraryReady();
+  if (!ok && fromEnd) {
+    playBtn.textContent    = '? RESTART';
+    statusText.textContent = 'FINISHED';
+    return;
   }
+  if (!ok) return;
+  const nextIndex = currentTrackIndex + 1 >= libraryTracks.length ? 0 : currentTrackIndex + 1;
+  const track     = libraryTracks[nextIndex];
+  if (track) loadTrackFromData(track, { autoplay: true });
 }
 
-function playPrevTrack() {
-  const ready = ensureLibraryReady((ok) => {
-    if (ok) {
-      const prevIndex = currentTrackIndex - 1 < 0 ? libraryTracks.length - 1 : currentTrackIndex - 1;
-      const track     = libraryTracks[prevIndex];
-      if (track) loadTrackFromData(track, { autoplay: true });
-    }
-  });
-
-  if (ready) {
-    const prevIndex = currentTrackIndex - 1 < 0 ? libraryTracks.length - 1 : currentTrackIndex - 1;
-    const track     = libraryTracks[prevIndex];
-    if (track) loadTrackFromData(track, { autoplay: true });
-  }
+async function playPrevTrack() {
+  const ok = await ensureLibraryReady();
+  if (!ok) return;
+  const prevIndex = currentTrackIndex - 1 < 0 ? libraryTracks.length - 1 : currentTrackIndex - 1;
+  const track     = libraryTracks[prevIndex];
+  if (track) loadTrackFromData(track, { autoplay: true });
 }
-
 // ── Library UI ─────────────────────────────────────────────────────────────
 libraryList.addEventListener('click', (e) => {
   const inItem    = e.target.closest('.track-item');
@@ -725,3 +709,4 @@ async function loadLastTrack() {
     if (track) loadTrackFromData(track, { autoplay: false });
   } catch (err) {}
 }
+

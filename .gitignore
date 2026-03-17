@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+*.bak
+dist/
+.vercel/
+companion-app/node_modules/
+companion-app/android/
+companion-app/ios/
+package-lock.json
+companion-app/package-lock.json

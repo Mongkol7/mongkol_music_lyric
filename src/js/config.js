@@ -68,12 +68,13 @@ function mergeLyricsText(existingText, newText) {
 
 // ── applyTrackData — replaces lyrics/sections/player when loading a track ──
 function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
-  const { skipPlayerReload = false, keepTime = false } = opts || {};
+  const { skipPlayerReload = false, keepTime = false, autoplay = false } = opts || {};
   const newLyrics = parseLyrics(lyricsRaw);
   if (newLyrics.length === 0) return false;
 
   ytDuration = 0;
   if (_playWatchTimer) { clearInterval(_playWatchTimer); _playWatchTimer = null; }
+  if (!keepTime) pauseAll();
 
   document.title = title + (artist ? ' — ' + artist : '');
   $('hdrTrackTitle').textContent    = title.toUpperCase();
@@ -102,6 +103,13 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
 
   // Rebuild lyrics list panel
   rebuildLyricsList();
+
+  if (autoplay) {
+    _pendingPlay = true;
+    if (typeof _autoPlayTries !== 'undefined') _autoPlayTries = 0;
+    playBtn.textContent    = '⏸ PAUSE';
+    statusText.textContent = 'LOADING…';
+  }
 
   // Reload YouTube player
   if (!skipPlayerReload) {
@@ -153,7 +161,15 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
     if (idleMsg) idleMsg.style.display = 'flex';
     statusText.textContent = 'LOADED';
   }
-  if (opts.autoplay && ytReady) playAll();
+  if (autoplay && ytReady) {
+    try { if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo(); } catch (err) {}
+    if (typeof startPlayWatch === 'function') startPlayWatch(8000);
+    setTimeout(() => {
+      if (_pendingPlay && ytReady && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+        try { ytPlayer.playVideo(); } catch (err) {}
+      }
+    }, 300);
+  }
   return true;
 }
 

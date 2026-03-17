@@ -1,6 +1,4 @@
 {
-  "name": "MongkolMusic",
-  "displayName": "MongkolMusic",
   "expo": {
     "name": "MongkolMusic",
     "slug": "mongkolmusic",
@@ -12,9 +10,14 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "mongkolmusic" }
+            {
+              "scheme": "mongkolmusic"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -22,8 +25,23 @@
       "bundleIdentifier": "com.mongkol.music",
       "infoPlist": {
         "CFBundleURLTypes": [
-          { "CFBundleURLSchemes": ["mongkolmusic"] }
-        ]
+          {
+            "CFBundleURLSchemes": [
+              "mongkolmusic"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "mongkolmusic"
+            ]
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cfc9d1bd-cdf1-47ac-b8d9-bc8276e14687"
       }
     }
   }

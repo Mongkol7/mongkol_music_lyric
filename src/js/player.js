@@ -24,6 +24,7 @@ let _lastGoodStamp = 0;
 let _pendingPlay   = false;
 let _playWatchTimer = null;
 let _ytPollInterval = null;
+let _autoPlayTries  = 0;
 let isDragging  = false;
 let dragWasPlay = false;
 let pendingVolume = null;
@@ -127,28 +128,31 @@ function updateYouTubeViews(ytId) {
     ytViewsEl.textContent = 'Views: unavailable';
     return;
   }
+  const cacheKey = `yt_views_${ytId}`;
+  const now = Date.now();
+  try {
+    const cachedRaw = localStorage.getItem(cacheKey);
+    if (cachedRaw) {
+      const cached = JSON.parse(cachedRaw);
+      if (cached && cached.formatted && now - cached.ts < 3600 * 1000) {
+        ytViewsEl.textContent = `Views: ${cached.formatted}`;
+        return;
+      }
+    }
+  } catch (err) {}
+
   ytViewsEl.textContent = 'Views: ...';
-  const url =
-    `https://www.youtube.com/oembed?url=` +
-    encodeURIComponent(`https://www.youtube.com/watch?v=${ytId}`) +
-    `&format=json`;
-  fetch(url)
+  fetch(`/api/youtube-views?id=${encodeURIComponent(ytId)}`)
     .then((resp) => (resp.ok ? resp.json() : null))
     .then((data) => {
-      if (!data) {
+      if (!data || !data.formatted) {
         ytViewsEl.textContent = 'Views: unavailable';
         return;
       }
-      let views = null;
-      if (typeof data.view_count === 'number') views = data.view_count;
-      else if (typeof data.view_count === 'string') views = parseInt(data.view_count, 10);
-      else if (typeof data.views === 'number') views = data.views;
-      else if (typeof data.views === 'string') views = parseInt(data.views, 10);
-      if (Number.isFinite(views)) {
-        ytViewsEl.textContent = `Views: ${views.toLocaleString()}`;
-      } else {
-        ytViewsEl.textContent = 'Views: unavailable';
-      }
+      ytViewsEl.textContent = `Views: ${data.formatted}`;
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ formatted: data.formatted, ts: Date.now() }));
+      } catch (err) {}
     })
     .catch(() => {
       ytViewsEl.textContent = 'Views: unavailable';
@@ -353,6 +357,15 @@ function startPlayWatch(timeoutMs = 6000) {
       clearInterval(_playWatchTimer);
       _playWatchTimer = null;
       return;
+    }
+    if (_pendingPlay) {
+      _autoPlayTries += 1;
+      if (state === YT.PlayerState.UNSTARTED || state === YT.PlayerState.CUED || state === YT.PlayerState.PAUSED) {
+        try {
+          if (_autoPlayTries === 2 && ytPlayer.mute) ytPlayer.mute();
+          ytPlayer.playVideo();
+        } catch (err) {}
+      }
     }
     if (performance.now() - start >= timeoutMs) {
       clearInterval(_playWatchTimer);
@@ -573,7 +586,11 @@ window.onYouTubeIframeAPIReady = function () {
             ytLabel.textContent = '▶ ready';
             ytLabel.style.color = 'var(--green)';
             statusText.textContent = 'YT READY';
-            if (_pendingPlay) { _pendingPlay = false; playAll(); startPlayWatch(6000); }
+            if (_pendingPlay) {
+              _autoPlayTries = 0;
+              playAll();
+              startPlayWatch(8000);
+            }
           } else {
             try { if (e.target && typeof e.target.setVolume === 'function') e.target.setVolume(0); } catch (err) {}
           }
@@ -587,12 +604,20 @@ window.onYouTubeIframeAPIReady = function () {
             _startYTTimePoll();
             applyVolume(pendingVolume ?? $('volSlider').value);
             updateTotalFromPlayer();
+            _pendingPlay = false;
+            _autoPlayTries = 0;
             ensureLoopRunning();
             try {
               if (typeof recordListen === 'function') {
                 recordListen(currentTrackId);
               }
             } catch (err) {}
+          }
+          if (e.data === S.CUED) {
+            if (_pendingPlay && ytReady && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+              try { ytPlayer.playVideo(); } catch (err) {}
+              if (typeof startPlayWatch === 'function') startPlayWatch(8000);
+            }
           }
           if (e.data === S.PAUSED)    { if (playing) pauseAll(); }
           if (e.data === S.BUFFERING) { statusText.textContent = 'BUFFERING...'; }
