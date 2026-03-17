@@ -41,10 +41,11 @@ mongkol_ai_app/
 ## Key Features
 - YouTube lyric sync player with 3-row main lyrics + scrollable full lyrics list
 - Dual YouTube players kept for reliability; crossfade toggle removed
-- Auto-advance + prev/next
-- Supabase library save/load with unique matching and dedupe
+- Auto-advance + prev/next navigation with adaptive Next Up queue that mirrors the selected order (newest/oldest/random/most listened)
+- Supabase library save/load with unique matching, dedupe, listen-count tracking, and “Most listened” sort option
 - Swipe-to-delete (mobile) + three-dot delete (desktop) + password prompt (`007`)
 - Volume control for YouTube player
+- Disk toggle now reveals a glassmorphic ambient glow, a clickable/rotating vinyl plus full YouTube thumbnail center
 - Vercel Analytics script injected in `index.html`
 - Caption import + language detection + merge mode
 - Auto-align lyrics using ElevenLabs forced alignment (YouTube audio or uploaded audio)
@@ -101,10 +102,11 @@ mongkol_ai_app/
 - `0864962` Add library add button and caption tools
 - `f691463` Improve auto-align accuracy and password submit
 
-## UI Notes
+- ## UI Notes
 - Dev credit glow with animated horizontal light-bar under name
-- Desktop layout: lyrics left, YouTube + list right
-- Mobile: responsive adjustments and controls
+- Disk toggle shows a glassmorphic glowing vinyl with live thumbnail and subtle ambient halo; lyrics/dev-footer remain visible while disk overlay sits over the stage
+- Desktop layout: lyrics left, YouTube/player queue right; Next Up dropdown mirrors the library order and stays scrollable
+- Mobile: responsive adjustments, disk scales down, controls reorganize for compact screens
 
 ## Passwords
 - Delete password: `007`

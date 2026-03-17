@@ -130,13 +130,13 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 12px 0;
+  padding: 1vh 1vw;
 }
 
 /* ── TERMINAL ── */
 .terminal {
   width: 100%;
-  max-width: 920px;
+  max-width: none;
   flex: 1;
   min-height: 0;
   background: var(--term-bg);
@@ -444,7 +444,7 @@ body::after {
   transform: scale(1);
 }
 .disk-disc {
-  width: min(48vw, 340px);
+  width: min(92%, 380px);
   aspect-ratio: 1;
   border-radius: 50%;
   background:
@@ -714,7 +714,7 @@ body::after {
 
 /* ── RIGHT PANEL ── */
 .right-wrapper {
-  width: 240px;
+  width: 260px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1063,7 +1063,7 @@ body::after {
 /* ── PLAYER DOCK ── */
 .player-dock {
   width: 100%;
-  max-width: 920px;
+  max-width: none;
   background: #0b0d18;
   border: 1px solid var(--term-border);
   border-top: none;
@@ -1071,6 +1071,44 @@ body::after {
   padding-bottom: 12px;
   flex-shrink: 0;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+}
+
+@media (min-width: 1200px) {
+  .terminal-body {
+    padding: 22px 34px 16px;
+  }
+  .content-row {
+    gap: 22px;
+  }
+  .right-wrapper {
+    width: min(32vw, 380px);
+  }
+  .yt-stack {
+    min-height: 220px;
+  }
+  .lyric-row-prev,
+  .lyric-row-next {
+    font-size: clamp(22px, 2.2vw, 30px);
+  }
+  .lyric-row-current {
+    font-size: clamp(28px, 3vw, 40px);
+  }
+  .track-title {
+    font-size: 32px;
+  }
+  .disk-disc {
+    width: min(96%, 480px);
+  }
+  .play-btn,
+  .sync-btn,
+  .nav-btn {
+    padding: 10px 18px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+  .lyrics-list-panel .ll-row {
+    font-size: 13px;
+  }
 }
 
 /* Seek bar */
@@ -2082,7 +2120,7 @@ body::after {
    ══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .scene {
-    padding: 8px 8px 0;
+    padding: 1vh 1vw;
   }
   .right-wrapper {
     width: 200px;
@@ -2140,7 +2178,7 @@ body::after {
   .scene {
     position: fixed;
     inset: 0;
-    padding: 6px 6px 0;
+    padding: 1vh 1vw;
     display: grid;
     grid-template-rows: 1fr auto;
     align-items: stretch;
@@ -2282,7 +2320,7 @@ body::after {
     overflow-x: hidden;
   }
   .disk-disc {
-    width: min(72vw, 220px);
+    width: min(92%, 240px);
   }
   .queue-toggle {
     font-size: 9px;
@@ -2352,9 +2390,7 @@ body::after {
 }
 
 @media (max-width: 480px) {
-  .scene {
-    padding: 4px 4px 0;
-  }
+  .scene { padding: 1vh 1vw; }
   .lyrics-col {
     flex: 0 0 165px;
   }
@@ -2387,7 +2423,7 @@ body::after {
     padding: 6px 0 4px;
   }
   .disk-disc {
-    width: min(78vw, 200px);
+    width: min(92%, 210px);
   }
   .spotify-panel .panel-title {
     padding: 4px 8px;
