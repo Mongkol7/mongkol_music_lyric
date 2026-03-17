@@ -238,6 +238,20 @@ function toggleLibrarySearch() {
   else openLibrarySearch();
 }
 
+async function shareToCompanion() {
+  try { await ensureLibraryReady(); } catch (err) {}
+  try { syncCurrentTrackToLibrary(); } catch (err) {}
+  const title  = ($('hdrTrackTitle')?.textContent || '').trim();
+  const artist = ($('hdrArtist')?.textContent || '').trim();
+  const params = new URLSearchParams();
+  if (currentTrackId) params.set('trackId', String(currentTrackId));
+  if (typeof YT_ID_current === 'string' && YT_ID_current) params.set('ytId', YT_ID_current);
+  if (title)  params.set('title', title);
+  if (artist) params.set('artist', artist);
+  const deepLink = `mongkolmusic://share?${params.toString()}`;
+  window.location.href = deepLink;
+}
+
 function bumpListenCount(trackId) {
   if (!trackId) return;
   const bump = (arr) => {
@@ -356,10 +370,14 @@ function loadTrackFromData(track, { autoplay } = {}) {
     }));
   } catch (err) {}
   if (autoplay) {
-    _pendingPlay = true;
-    playBtn.textContent    = '⏸ PAUSE';
-    statusText.textContent = 'LOADING…';
-    startPlayWatch(8000);
+    if (ytReady) {
+      playAll();
+    } else {
+      _pendingPlay = true;
+      playBtn.textContent    = '⏸ PAUSE';
+      statusText.textContent = 'LOADING…';
+      startPlayWatch(8000);
+    }
   }
   return true;
 }

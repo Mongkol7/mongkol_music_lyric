@@ -105,18 +105,24 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
 
   // Reload YouTube player
   if (!skipPlayerReload) {
-    pauseAll();
-    ytReady = false; ytReadyA = false; ytReadyB = false;
-    _lastGoodTime = 0; _lastGoodStamp = 0;
-    clearInterval(_ytPollInterval); _ytPollInterval = null;
-    try { if (ytPlayerA) ytPlayerA.destroy(); if (ytPlayerB) ytPlayerB.destroy(); } catch (err) {}
-    const containerA = $('yt-player-container');
-    const containerB = $('yt-player-container-b');
-    if (containerA) containerA.innerHTML = '';
-    if (containerB) containerB.innerHTML = '';
-    YT_ID_current = ytId;
-    setActivePlayer('A');
-    if (window.YT && window.YT.Player) window.onYouTubeIframeAPIReady();
+    if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+      YT_ID_current = ytId;
+      ytPlayer.loadVideoById(ytId);
+      ytLabel.textContent = '▶ loading';
+    } else {
+      pauseAll();
+      ytReady = false; ytReadyA = false; ytReadyB = false;
+      _lastGoodTime = 0; _lastGoodStamp = 0;
+      clearInterval(_ytPollInterval); _ytPollInterval = null;
+      try { if (ytPlayerA) ytPlayerA.destroy(); if (ytPlayerB) ytPlayerB.destroy(); } catch (err) {}
+      const containerA = $('yt-player-container');
+      const containerB = $('yt-player-container-b');
+      if (containerA) containerA.innerHTML = '';
+      if (containerB) containerB.innerHTML = '';
+      YT_ID_current = ytId;
+      setActivePlayer('A');
+      if (window.YT && window.YT.Player) window.onYouTubeIframeAPIReady();
+    }
   } else {
     YT_ID_current = ytId;
   }
