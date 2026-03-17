@@ -261,11 +261,22 @@ body::after {
 }
 .search-list {
   margin-top: 8px;
-  max-height: 220px;
-  overflow: auto;
+  max-height: 240px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted2) transparent;
+}
+.search-list::-webkit-scrollbar {
+  width: 3px;
+}
+.search-list::-webkit-scrollbar-thumb {
+  background: var(--muted2);
+  border-radius: 2px;
 }
 .search-item {
   display: flex;
