@@ -198,9 +198,11 @@ function openSearch() {
   if (!searchWrap || !searchPanel) return;
   searchWrap.classList.add('open');
   if (searchInput) searchInput.value = '';
-  ensureLibraryReady().then(() => {
-    renderSearchList(libraryTracks, '', searchListEl, searchEmpty);
-    if (searchInput) searchInput.focus();
+  ensureLibraryReady((ok) => {
+    if (ok) {
+      renderSearchList(libraryTracks, '', searchListEl, searchEmpty);
+      if (searchInput) searchInput.focus();
+    }
   });
 }
 
@@ -220,9 +222,11 @@ function openLibrarySearch() {
   if (!librarySearchWrap || !librarySearchPanel) return;
   librarySearchWrap.classList.add('open');
   if (librarySearchInput) librarySearchInput.value = '';
-  ensureLibraryReady().then(() => {
-    renderSearchList(libraryTracks, '', librarySearchListEl, librarySearchEmpty);
-    if (librarySearchInput) librarySearchInput.focus();
+  ensureLibraryReady((ok) => {
+    if (ok) {
+      renderSearchList(libraryTracks, '', librarySearchListEl, librarySearchEmpty);
+      if (librarySearchInput) librarySearchInput.focus();
+    }
   });
 }
 
@@ -239,17 +243,18 @@ function toggleLibrarySearch() {
 }
 
 async function shareToCompanion() {
-  try { await ensureLibraryReady(); } catch (err) {}
-  try { syncCurrentTrackToLibrary(); } catch (err) {}
-  const title  = ($('hdrTrackTitle')?.textContent || '').trim();
-  const artist = ($('hdrArtist')?.textContent || '').trim();
-  const params = new URLSearchParams();
-  if (currentTrackId) params.set('trackId', String(currentTrackId));
-  if (typeof YT_ID_current === 'string' && YT_ID_current) params.set('ytId', YT_ID_current);
-  if (title)  params.set('title', title);
-  if (artist) params.set('artist', artist);
-  const deepLink = `mongkolmusic://share?${params.toString()}`;
-  window.location.href = deepLink;
+  ensureLibraryReady((ok) => {
+    if (ok) syncCurrentTrackToLibrary();
+    const title  = ($('hdrTrackTitle')?.textContent || '').trim();
+    const artist = ($('hdrArtist')?.textContent || '').trim();
+    const params = new URLSearchParams();
+    if (currentTrackId) params.set('trackId', String(currentTrackId));
+    if (typeof YT_ID_current === 'string' && YT_ID_current) params.set('ytId', YT_ID_current);
+    if (title)  params.set('title', title);
+    if (artist) params.set('artist', artist);
+    const deepLink = `mongkolmusic://share?${params.toString()}`;
+    window.location.href = deepLink;
+  });
 }
 
 function bumpListenCount(trackId) {
