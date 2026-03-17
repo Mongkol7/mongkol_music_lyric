@@ -47,7 +47,20 @@ const savePassError   = $('savePassError');
 const savePassCancel  = $('savePassCancel');
 const savePassConfirm = $('savePassConfirm');
 const toastSuccess    = $('toastSuccess');
+const searchWrap   = $('searchWrap');
+const searchBtn    = $('searchBtn');
+const searchPanel  = $('searchPanel');
+const searchInput  = $('searchInput');
+const searchListEl = $('searchList');
+const searchEmpty  = $('searchEmpty');
+const librarySearchWrap   = $('librarySearchWrap');
+const librarySearchBtn    = $('librarySearchBtn');
+const librarySearchPanel  = $('librarySearchPanel');
+const librarySearchInput  = $('librarySearchInput');
+const librarySearchListEl = $('librarySearchList');
+const librarySearchEmpty  = $('librarySearchEmpty');
 let   pendingDeleteId = null;
+let   lastCountedTrackId = null;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function shuffleArray(arr) {
@@ -59,9 +72,31 @@ function shuffleArray(arr) {
   return out;
 }
 
+function normalizeArtistText(text) {
+  return String(text || '')
+    .split('·')[0]
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeTitleText(text) {
+  return String(text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 function applyLibraryOrder(mode, tracksRaw) {
   if (!Array.isArray(tracksRaw)) return [];
   if (mode === 'oldest') return tracksRaw.slice().reverse();
+  if (mode === 'most_listened') {
+    return tracksRaw
+      .slice()
+      .sort((a, b) => {
+        const aCount = Number(a.listen_count || 0);
+        const bCount = Number(b.listen_count || 0);
+        if (bCount !== aCount) return bCount - aCount;
+        return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+      });
+  }
   if (mode === 'random') {
     const ids    = tracksRaw.map((t) => t.id);
     const idSet  = new Set(ids);
@@ -75,7 +110,7 @@ function applyLibraryOrder(mode, tracksRaw) {
 
 async function fetchLibraryTracks() {
   const resp = await sbFetch(
-    `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&order=created_at.desc`,
+    `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at,listen_count&order=created_at.desc`,
     { method: 'GET' },
   );
   if (!resp.ok) return null;
@@ -96,13 +131,21 @@ function updateCurrentIndex() {
 
 function syncCurrentTrackToLibrary() {
   if (currentTrackId || !libraryTracks.length) return;
-  const title  = (document.title.split('—')[0] || '').trim().toLowerCase();
-  const artist = ($('hdrArtist')?.textContent || '').trim().toLowerCase();
+  const title  = normalizeTitleText(document.title.split('—')[0] || '');
+  const artist = normalizeArtistText($('hdrArtist')?.textContent || '');
   let match    = libraryTracks.find((t) => t.yt_id === YT_ID_current);
   if (!match && title) {
     match = libraryTracks.find(
-      (t) => (t.title || '').trim().toLowerCase() === title && (t.artist || '').trim().toLowerCase() === artist,
+      (t) => normalizeTitleText(t.title) === title && normalizeArtistText(t.artist) === artist,
     );
+  }
+  if (!match && title && artist) {
+    match = libraryTracks.find((t) => {
+      const tTitle  = normalizeTitleText(t.title);
+      const tArtist = normalizeArtistText(t.artist);
+      if (!tTitle || !tArtist) return false;
+      return tTitle === title && (tArtist.includes(artist) || artist.includes(tArtist));
+    });
   }
   if (match) { currentTrackId = match.id; updateCurrentIndex(); }
 }
@@ -111,6 +154,162 @@ function updateNavButtons() {
   const disabled = libraryLoadedOnce && !libraryTracks.length;
   if (prevBtn) prevBtn.disabled = disabled;
   if (nextBtn) nextBtn.disabled = disabled;
+}
+
+function renderSearchList(tracks, query = '', listEl = searchListEl, emptyEl = searchEmpty) {
+  if (!listEl || !emptyEl) return;
+  const q = query.trim().toLowerCase();
+  const filtered = (tracks || []).filter((t) => {
+    const title  = (t.title  || '').toLowerCase();
+    const artist = (t.artist || '').toLowerCase();
+    return !q || title.includes(q) || artist.includes(q);
+  });
+  listEl.innerHTML = '';
+  if (!filtered.length) {
+    emptyEl.classList.add('show');
+    return;
+  }
+  emptyEl.classList.remove('show');
+  filtered.forEach((track) => {
+    const item = document.createElement('div');
+    item.className = 'search-item';
+    const tEl = document.createElement('div');
+    tEl.className = 'search-item-title';
+    tEl.textContent = (track.title || 'Untitled').toUpperCase();
+    const aEl = document.createElement('div');
+    aEl.className = 'search-item-artist';
+    aEl.textContent = track.artist || 'Unknown artist';
+    const pEl = document.createElement('div');
+    pEl.className = 'search-item-plays';
+    pEl.textContent = `Plays: ${Number(track.listen_count || 0).toLocaleString()}`;
+    item.appendChild(tEl);
+    item.appendChild(aEl);
+    item.appendChild(pEl);
+    item.addEventListener('click', () => {
+      loadTrackFromData(track, { autoplay: true });
+      closeSearch();
+      closeLibrarySearch();
+    });
+    listEl.appendChild(item);
+  });
+}
+
+function openSearch() {
+  if (!searchWrap || !searchPanel) return;
+  searchWrap.classList.add('open');
+  if (searchInput) searchInput.value = '';
+  ensureLibraryReady().then(() => {
+    renderSearchList(libraryTracks, '', searchListEl, searchEmpty);
+    if (searchInput) searchInput.focus();
+  });
+}
+
+function closeSearch() {
+  if (!searchWrap) return;
+  searchWrap.classList.remove('open');
+  if (searchInput) searchInput.value = '';
+}
+
+function toggleSearch() {
+  if (!searchWrap) return;
+  if (searchWrap.classList.contains('open')) closeSearch();
+  else openSearch();
+}
+
+function openLibrarySearch() {
+  if (!librarySearchWrap || !librarySearchPanel) return;
+  librarySearchWrap.classList.add('open');
+  if (librarySearchInput) librarySearchInput.value = '';
+  ensureLibraryReady().then(() => {
+    renderSearchList(libraryTracks, '', librarySearchListEl, librarySearchEmpty);
+    if (librarySearchInput) librarySearchInput.focus();
+  });
+}
+
+function closeLibrarySearch() {
+  if (!librarySearchWrap) return;
+  librarySearchWrap.classList.remove('open');
+  if (librarySearchInput) librarySearchInput.value = '';
+}
+
+function toggleLibrarySearch() {
+  if (!librarySearchWrap) return;
+  if (librarySearchWrap.classList.contains('open')) closeLibrarySearch();
+  else openLibrarySearch();
+}
+
+function bumpListenCount(trackId) {
+  if (!trackId) return;
+  const bump = (arr) => {
+    const t = arr.find((x) => String(x.id) === String(trackId));
+    if (!t) return;
+    t.listen_count = Number(t.listen_count || 0) + 1;
+  };
+  bump(libraryTracksRaw);
+  bump(libraryTracks);
+  libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+  if (searchWrap && searchWrap.classList.contains('open')) {
+    renderSearchList(libraryTracks, searchInput ? searchInput.value : '', searchListEl, searchEmpty);
+  }
+  if (librarySearchWrap && librarySearchWrap.classList.contains('open')) {
+    renderSearchList(libraryTracks, librarySearchInput ? librarySearchInput.value : '', librarySearchListEl, librarySearchEmpty);
+  }
+  if (libraryOverlay && libraryOverlay.classList.contains('open')) {
+    renderLibraryList(libraryTracks);
+  }
+}
+
+async function recordListen(trackId) {
+  let id = trackId;
+  if (!id) {
+    await ensureLibraryReady();
+    syncCurrentTrackToLibrary();
+    id = currentTrackId;
+  }
+  if (!id) {
+    const resolved = await resolveTrackIdFromMeta();
+    if (resolved) {
+      id = resolved;
+      currentTrackId = resolved;
+      updateCurrentIndex();
+    }
+  }
+  if (!id) return;
+  if (lastCountedTrackId === id) return;
+  lastCountedTrackId = id;
+  bumpListenCount(id);
+  try {
+    await sbFetch('rpc/increment_listen', {
+      method: 'POST',
+      body: JSON.stringify({ track_id: id }),
+    });
+  } catch (err) {}
+}
+
+async function resolveTrackIdFromMeta() {
+  const cacheBust = `_ts=${Date.now()}`;
+  const ytId = typeof YT_ID_current === 'string' ? YT_ID_current : '';
+  if (ytId) {
+    const resp = await sbFetch(
+      `${TRACKS_TABLE}?select=id,listen_count,yt_id&yt_id=eq.${encodeURIComponent(ytId)}&limit=1&${cacheBust}`,
+      { method: 'GET' },
+    );
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data) && data.length) return data[0].id;
+    }
+  }
+  const titleKey  = normalizeTitleText(document.title.split('—')[0] || '');
+  const artistKey = normalizeArtistText($('hdrArtist')?.textContent || '');
+  if (!titleKey || !artistKey) return null;
+  const resp = await sbFetch(
+    `${TRACKS_TABLE}?select=id,listen_count,title,artist&title_key=eq.${encodeURIComponent(titleKey)}&artist_key=eq.${encodeURIComponent(artistKey)}&order=created_at.desc&limit=1&${cacheBust}`,
+    { method: 'GET' },
+  );
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  if (!Array.isArray(data) || !data.length) return null;
+  return data[0].id;
 }
 
 function updateMediaSession(track) {
@@ -138,6 +337,7 @@ async function ensureLibraryReady() {
 // ── Track loading ──────────────────────────────────────────────────────────
 function loadTrackFromData(track, { autoplay } = {}) {
   endHandling = false;
+  lastCountedTrackId = null;
   const ok = applyTrackData({
     title:      track.title  || 'Untitled',
     artist:     track.artist || '',
@@ -212,6 +412,44 @@ if (libraryOrderSelect) {
   });
 }
 
+if (searchBtn) {
+  searchBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSearch();
+  });
+}
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    renderSearchList(libraryTracks, searchInput.value, searchListEl, searchEmpty);
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSearch();
+  });
+}
+document.addEventListener('click', (e) => {
+  if (!searchWrap) return;
+  if (!searchWrap.contains(e.target)) closeSearch();
+});
+
+if (librarySearchBtn) {
+  librarySearchBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleLibrarySearch();
+  });
+}
+if (librarySearchInput) {
+  librarySearchInput.addEventListener('input', () => {
+    renderSearchList(libraryTracks, librarySearchInput.value, librarySearchListEl, librarySearchEmpty);
+  });
+  librarySearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLibrarySearch();
+  });
+}
+document.addEventListener('click', (e) => {
+  if (!librarySearchWrap) return;
+  if (!librarySearchWrap.contains(e.target)) closeLibrarySearch();
+});
+
 function renderLibraryList(tracks) {
   libraryList.innerHTML = '';
   closeAllSwipes();
@@ -241,6 +479,9 @@ function renderLibraryList(tracks) {
     const aEl  = document.createElement('div');
     aEl.className   = 'track-artist';
     aEl.textContent = track.artist || 'Unknown artist';
+    const pEl  = document.createElement('div');
+    pEl.className   = 'track-plays';
+    pEl.textContent = `Plays: ${Number(track.listen_count || 0).toLocaleString()}`;
 
     const btn  = document.createElement('button');
     btn.className   = 'track-load';
@@ -257,6 +498,7 @@ function renderLibraryList(tracks) {
 
     meta.appendChild(tEl);
     meta.appendChild(aEl);
+    meta.appendChild(pEl);
     item.appendChild(meta);
     item.appendChild(right);
     swipe.appendChild(actions);
@@ -422,7 +664,7 @@ async function loadLastTrack() {
     const cacheBust = `_ts=${Date.now()}`;
     if (lastId) {
       const resp = await sbFetch(
-        `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&id=eq.${encodeURIComponent(lastId)}&limit=1&${cacheBust}`,
+        `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at,listen_count&id=eq.${encodeURIComponent(lastId)}&limit=1&${cacheBust}`,
         { method: 'GET' },
       );
       if (resp.ok) { const data = await resp.json(); if (data.length) track = data[0]; }
@@ -431,7 +673,7 @@ async function loadLastTrack() {
       const key = JSON.parse(raw);
       if (key?.title_key && key?.artist_key) {
         const resp = await sbFetch(
-          `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&title_key=eq.${encodeURIComponent(key.title_key)}&artist_key=eq.${encodeURIComponent(key.artist_key)}&order=created_at.desc&limit=1&${cacheBust}`,
+          `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at,listen_count&title_key=eq.${encodeURIComponent(key.title_key)}&artist_key=eq.${encodeURIComponent(key.artist_key)}&order=created_at.desc&limit=1&${cacheBust}`,
           { method: 'GET' },
         );
         if (resp.ok) { const data = await resp.json(); if (data.length) track = data[0]; }
@@ -439,7 +681,7 @@ async function loadLastTrack() {
     }
     if (!track) {
       const resp = await sbFetch(
-        `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at&order=created_at.desc&limit=1&${cacheBust}`,
+      `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at,listen_count&order=created_at.desc&limit=1&${cacheBust}`,
         { method: 'GET' },
       );
       if (resp.ok) { const data = await resp.json(); if (data.length) track = data[0]; }

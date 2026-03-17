@@ -54,6 +54,7 @@ const waveformEl  = $('waveformEl');
 const devBar      = $('devBar');
 const volNote     = $('volNote');
 const ytLabel     = $('ytStatusLabel');
+const ytViewsEl   = $('ytViewCount');
 const rowPrev    = $('rowPrev');
 const rowCurrent = $('rowCurrent');
 const rowNext    = $('rowNext');
@@ -118,6 +119,40 @@ function updateTotalFromPlayer(force = false) {
   renderSeekMarkers(d);
   const ct = safeGetTime();
   if (ct >= 0) seekFill.style.width = (ct / d) * 100 + '%';
+}
+
+function updateYouTubeViews(ytId) {
+  if (!ytViewsEl) return;
+  if (!ytId) {
+    ytViewsEl.textContent = 'Views: unavailable';
+    return;
+  }
+  ytViewsEl.textContent = 'Views: ...';
+  const url =
+    `https://www.youtube.com/oembed?url=` +
+    encodeURIComponent(`https://www.youtube.com/watch?v=${ytId}`) +
+    `&format=json`;
+  fetch(url)
+    .then((resp) => (resp.ok ? resp.json() : null))
+    .then((data) => {
+      if (!data) {
+        ytViewsEl.textContent = 'Views: unavailable';
+        return;
+      }
+      let views = null;
+      if (typeof data.view_count === 'number') views = data.view_count;
+      else if (typeof data.view_count === 'string') views = parseInt(data.view_count, 10);
+      else if (typeof data.views === 'number') views = data.views;
+      else if (typeof data.views === 'string') views = parseInt(data.views, 10);
+      if (Number.isFinite(views)) {
+        ytViewsEl.textContent = `Views: ${views.toLocaleString()}`;
+      } else {
+        ytViewsEl.textContent = 'Views: unavailable';
+      }
+    })
+    .catch(() => {
+      ytViewsEl.textContent = 'Views: unavailable';
+    });
 }
 
 function triggerFlash() {
@@ -553,6 +588,11 @@ window.onYouTubeIframeAPIReady = function () {
             applyVolume(pendingVolume ?? $('volSlider').value);
             updateTotalFromPlayer();
             ensureLoopRunning();
+            try {
+              if (typeof recordListen === 'function') {
+                recordListen(currentTrackId);
+              }
+            } catch (err) {}
           }
           if (e.data === S.PAUSED)    { if (playing) pauseAll(); }
           if (e.data === S.BUFFERING) { statusText.textContent = 'BUFFERING...'; }
@@ -580,6 +620,8 @@ window.onYouTubeIframeAPIReady = function () {
   s.src    = 'https://www.youtube.com/iframe_api';
   document.head.appendChild(s);
 })();
+
+updateYouTubeViews(YT_ID_current);
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 document.addEventListener('keydown', (e) => {

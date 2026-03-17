@@ -121,6 +121,7 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
     YT_ID_current = ytId;
   }
   updateTotalFromPlayer(true);
+  if (typeof updateYouTubeViews === 'function') updateYouTubeViews(ytId);
 
   // Reset player state
   currentIdx     = -1;

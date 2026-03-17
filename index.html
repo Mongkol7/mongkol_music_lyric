@@ -7,7 +7,10 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Flashing Lights — Kanye West</title>
-    <meta name="description" content="Mongkol Music Lyric — YouTube lyric sync player with auto-align and library." />
+    <meta
+      name="description"
+      content="Mongkol Music Lyric — YouTube lyric sync player with auto-align and library."
+    />
     <link rel="icon" type="image/png" href="./favicon.png" />
     <link rel="apple-touch-icon" href="./favicon.png" />
 
@@ -16,7 +19,7 @@
   </head>
   <body>
     <div class="flash-overlay" id="flashOverlay"></div>
-    <div class="glow-orb"      id="glowOrb"></div>
+    <div class="glow-orb" id="glowOrb"></div>
 
     <div class="scene">
       <div class="terminal">
@@ -29,13 +32,43 @@
           </div>
           <div class="titlebar-text">
             <em>lyrics</em> —
-            <span id="titlebarSongName">flashing_lights.js — Kanye West ft. Dwele</span>
+            <span id="titlebarSongName"
+              >flashing_lights.js — Kanye West ft. Dwele</span
+            >
           </div>
-          <div style="display: flex; align-items: center; gap: 8px">
-            <button class="cfg-trigger"     onclick="openConfig()">⚙ EDIT</button>
-            <button class="cfg-trigger alt" onclick="openLibrary()">♪ SELECT</button>
-            <div style="font-size:9px;color:var(--muted2);letter-spacing:0.06em;white-space:nowrap">
-              by <span style="color:var(--muted)">Thoeung Sereymongkol</span>
+          <div class="titlebar-actions">
+            <button class="cfg-trigger" onclick="openConfig()">⚙ EDIT</button>
+            <button class="cfg-trigger alt" onclick="openLibrary()">
+              ♪ SELECT
+            </button>
+            <div class="search-wrap" id="searchWrap">
+              <button class="search-btn" id="searchBtn" title="Search">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></circle>
+                  <path
+                    d="M20 20L17 17"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  ></path>
+                </svg>
+              </button>
+              <div class="search-panel" id="searchPanel">
+                <input
+                  class="search-input"
+                  id="searchInput"
+                  type="text"
+                  placeholder="Search title or artist..."
+                />
+                <div class="search-list" id="searchList"></div>
+                <div class="search-empty" id="searchEmpty">No matches</div>
+              </div>
             </div>
           </div>
         </div>
@@ -43,10 +76,20 @@
         <!-- Terminal body -->
         <div class="terminal-body">
           <div class="hdr">
-            <span class="cmd">$</span>
-            <span class="val">node flashing_lights.js --player=youtube --sync=auto</span><br />
-            <span class="track-title" id="hdrTrackTitle">FLASHING LIGHTS</span>
-            <span style="color:var(--muted)" id="hdrArtist">Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007) &nbsp;·&nbsp; 3:57</span>
+            <img class="hdr-icon" src="./favicon.png" alt="icon" />
+            <div class="hdr-text">
+              <span class="cmd">$</span>
+              <span class="val"
+                >node flashing_lights.js --player=youtube --sync=auto</span
+              ><br />
+              <span class="track-title" id="hdrTrackTitle"
+                >FLASHING LIGHTS</span
+              >
+              <span style="color: var(--muted)" id="hdrArtist"
+                >Kanye West ft. Dwele &nbsp;·&nbsp; Graduation (2007)
+                &nbsp;·&nbsp; 3:57</span
+              >
+            </div>
           </div>
 
           <div class="content-row">
@@ -56,12 +99,23 @@
               <div class="lyric-stage" id="lyricStage">
                 <div class="idle-msg" id="idleMsg">
                   <div class="idle-big">READY</div>
-                  <div>Press <span style="color:var(--green)">▶</span> on the video →<span class="cursor-blink"></span></div>
-                  <div style="font-size:9px;color:var(--muted2);margin-top:4px">lyrics auto-sync to YouTube time</div>
+                  <div>
+                    Press <span style="color: var(--green)">▶</span> on the
+                    video →<span class="cursor-blink"></span>
+                  </div>
+                  <div
+                    style="
+                      font-size: 9px;
+                      color: var(--muted2);
+                      margin-top: 4px;
+                    "
+                  >
+                    lyrics auto-sync to YouTube time
+                  </div>
                 </div>
-                <div class="lyric-row lyric-row-prev"    id="rowPrev"></div>
+                <div class="lyric-row lyric-row-prev" id="rowPrev"></div>
                 <div class="lyric-row lyric-row-current" id="rowCurrent"></div>
-                <div class="lyric-row lyric-row-next"    id="rowNext"></div>
+                <div class="lyric-row lyric-row-next" id="rowNext"></div>
               </div>
               <div class="timestamp">
                 <span class="cur" id="timeDisplay">0:00</span> /
@@ -79,15 +133,28 @@
                 <!-- YouTube player -->
                 <div class="spotify-panel">
                   <div class="panel-title">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#ff4444">
-                      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.25 3.5-6.25 3.5z"/>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="#ff4444"
+                    >
+                      <path
+                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5v-7l6.25 3.5-6.25 3.5z"
+                      />
                     </svg>
-                    <span style="color:#ff4444">YouTube</span>
-                    <span style="color:var(--muted)" id="ytStatusLabel">— loading...</span>
+                    <span style="color: #ff4444">YouTube</span>
+                    <span style="color: var(--muted)" id="ytStatusLabel"
+                      >— loading...</span
+                    >
+                    <span class="yt-views" id="ytViewCount">Views: ...</span>
                   </div>
                   <div class="yt-stack" id="ytStack">
-                    <div id="yt-player-container"   class="yt-frame"></div>
-                    <div id="yt-player-container-b" class="yt-frame is-hidden"></div>
+                    <div id="yt-player-container" class="yt-frame"></div>
+                    <div
+                      id="yt-player-container-b"
+                      class="yt-frame is-hidden"
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -96,7 +163,7 @@
               <div class="lyrics-list-panel">
                 <div class="lyrics-list-title">
                   <em>▸ LYRICS</em>
-                  <span style="color:var(--muted2)">— full track</span>
+                  <span style="color: var(--muted2)">— full track</span>
                 </div>
                 <div class="lyrics-list-scroll" id="llScroll">
                   <div class="lyrics-list-inner" id="llInner"></div>
@@ -116,19 +183,42 @@
             </div>
           </div>
           <div class="seek-markers" id="seekMarkers"></div>
-          <div class="seek-tip"     id="seekTip">0:00</div>
+          <div class="seek-tip" id="seekTip">0:00</div>
         </div>
         <div class="controls">
           <div class="ctrl-left">
             <div class="status-dot"></div>
             <span class="status-txt" id="statusText">IDLE</span>
-            <div class="waveform"    id="waveformEl"></div>
+            <div class="waveform" id="waveformEl"></div>
           </div>
           <div class="ctrl-mid">
-            <button class="nav-btn"  id="prevBtn" onclick="playPrevTrack()" title="Previous track">⏮</button>
-            <button class="play-btn" id="playBtn" onclick="togglePlay()">▶ LYRICS</button>
-            <button class="nav-btn"  id="nextBtn" onclick="playNextTrack()" title="Next track">⏭</button>
-            <button class="sync-btn" id="syncBtn" onclick="syncNow()" title="Press when song starts to sync lyrics">⟳ SYNC NOW</button>
+            <button
+              class="nav-btn"
+              id="prevBtn"
+              onclick="playPrevTrack()"
+              title="Previous track"
+            >
+              ⏮
+            </button>
+            <button class="play-btn" id="playBtn" onclick="togglePlay()">
+              ▶ LYRICS
+            </button>
+            <button
+              class="nav-btn"
+              id="nextBtn"
+              onclick="playNextTrack()"
+              title="Next track"
+            >
+              ⏭
+            </button>
+            <button
+              class="sync-btn"
+              id="syncBtn"
+              onclick="syncNow()"
+              title="Press when song starts to sync lyrics"
+            >
+              ⟳ SYNC NOW
+            </button>
             <span class="time-lbl">
               <span class="cur" id="timeDock">0:00</span> /
               <span class="total" id="timeTotalDock">3:57</span>
@@ -137,7 +227,15 @@
           <div class="ctrl-right">
             <div class="vol-wrap">
               <span class="vol-icon">VOL</span>
-              <input class="vol-slider" id="volSlider" type="range" min="0" max="100" value="70" oninput="setVol(this.value)" />
+              <input
+                class="vol-slider"
+                id="volSlider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+                oninput="setVol(this.value)"
+              />
               <span class="vol-note" id="volNote"></span>
             </div>
             <div class="kb-hint">
@@ -155,7 +253,11 @@
       <div class="config-panel">
         <div class="config-titlebar">
           <div class="dots">
-            <div class="dot dot-r" style="cursor:pointer" onclick="closeConfig()"></div>
+            <div
+              class="dot dot-r"
+              style="cursor: pointer"
+              onclick="closeConfig()"
+            ></div>
             <div class="dot dot-y"></div>
             <div class="dot dot-g"></div>
           </div>
@@ -166,84 +268,164 @@
           <div class="cfg-row">
             <div class="cfg-field">
               <div class="cfg-label">Track Title</div>
-              <input class="cfg-input" id="cfgTitle" placeholder="e.g. Flashing Lights" />
+              <input
+                class="cfg-input"
+                id="cfgTitle"
+                placeholder="e.g. Flashing Lights"
+              />
             </div>
             <div class="cfg-field">
               <div class="cfg-label">Artist / Singers</div>
-              <input class="cfg-input" id="cfgArtist" placeholder="e.g. Kanye West ft. Dwele" />
+              <input
+                class="cfg-input"
+                id="cfgArtist"
+                placeholder="e.g. Kanye West ft. Dwele"
+              />
             </div>
           </div>
           <div class="cfg-row">
             <div class="cfg-field">
               <div class="cfg-label">YouTube URL</div>
-              <input class="cfg-input" id="cfgYtUrl" placeholder="https://youtu.be/ZAz3rnLGthg" />
-              <div class="cfg-hint">Paste any YouTube URL — full link or short youtu.be link.</div>
+              <input
+                class="cfg-input"
+                id="cfgYtUrl"
+                placeholder="https://youtu.be/ZAz3rnLGthg"
+              />
+              <div class="cfg-hint">
+                Paste any YouTube URL — full link or short youtu.be link.
+              </div>
             </div>
           </div>
           <div class="cfg-row">
             <div class="cfg-field">
               <div class="cfg-label">Caption Language</div>
-              <input class="cfg-input" id="cfgCapLang" list="capLangList" placeholder="en" value="en" />
-              <div class="cfg-hint">Use a language code like <code>en</code>, <code>es</code>, <code>th</code>.</div>
+              <input
+                class="cfg-input"
+                id="cfgCapLang"
+                list="capLangList"
+                placeholder="en"
+                value="en"
+              />
+              <div class="cfg-hint">
+                Use a language code like <code>en</code>, <code>es</code>,
+                <code>th</code>.
+              </div>
             </div>
-            <div class="cfg-field" style="align-self:flex-end">
-              <button class="cfg-import" onclick="detectCaptionLanguages()">✦ DETECT LANGS</button>
+            <div class="cfg-field" style="align-self: flex-end">
+              <button class="cfg-import" onclick="detectCaptionLanguages()">
+                ✦ DETECT LANGS
+              </button>
             </div>
           </div>
           <datalist id="capLangList">
-            <option value="en"></option><option value="es"></option><option value="fr"></option>
-            <option value="de"></option><option value="it"></option><option value="pt"></option>
-            <option value="ja"></option><option value="ko"></option><option value="zh"></option>
+            <option value="en"></option>
+            <option value="es"></option>
+            <option value="fr"></option>
+            <option value="de"></option>
+            <option value="it"></option>
+            <option value="pt"></option>
+            <option value="ja"></option>
+            <option value="ko"></option>
+            <option value="zh"></option>
             <option value="th"></option>
           </datalist>
           <div class="cfg-row col">
             <div class="cfg-field">
               <div class="cfg-label">Lyrics with timestamps</div>
-              <textarea class="cfg-input cfg-textarea" id="cfgLyrics"
-                placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[#CHORUS]&#10;[01:23.66] As I recall..."></textarea>
+              <textarea
+                class="cfg-input cfg-textarea"
+                id="cfgLyrics"
+                placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[#CHORUS]&#10;[01:23.66] As I recall..."
+              ></textarea>
               <div class="cfg-hint">
-                Each lyric line: <code>[mm:ss]</code> or <code>[mm:ss.xx]</code> or <code>[ss.xx]</code><br />
-                Section header: start a line with <code>[#SECTION NAME]</code> e.g. <code>[#CHORUS]</code><br />
+                Each lyric line: <code>[mm:ss]</code> or
+                <code>[mm:ss.xx]</code> or <code>[ss.xx]</code><br />
+                Section header: start a line with
+                <code>[#SECTION NAME]</code> e.g. <code>[#CHORUS]</code><br />
                 Lines without a valid timestamp are ignored.
               </div>
             </div>
           </div>
           <div class="cfg-row">
             <div class="cfg-field">
-              <button class="cfg-align" id="autoAlignBtn" onclick="autoAlignLyrics()">✦ AUTO ALIGN (ADD TIMESTAMPS)</button>
-              <div class="cfg-hint">Paste plain lyrics, then auto-align using the YouTube audio.</div>
-            </div>
-          </div>
-          <div class="cfg-row">
-            <div class="cfg-field">
-              <div class="cfg-label">Audio File (Optional)</div>
-              <input class="cfg-input cfg-file" id="cfgAudioFile" type="file" accept="audio/*" />
-              <div class="cfg-hint">If YouTube blocks audio, upload a local audio file for alignment.</div>
-            </div>
-          </div>
-          <div class="cfg-row">
-            <div class="cfg-field">
-              <div class="cfg-hint cfg-instructions">
-                1) Download MP3: <a href="https://mp3juice.sc/" target="_blank" rel="noopener">mp3juice.sc</a><br />
-                2) Remove music: <a href="https://vocalremover.org/" target="_blank" rel="noopener">vocalremover.org</a><br />
-                3) Compress file: <a href="https://www.freeconvert.com/mp3-compressor" target="_blank" rel="noopener">freeconvert.com/mp3-compressor</a><br />
-                4) Fill form, paste lyrics, Auto Align → Save to Library → Apply &amp; Load.
+              <button
+                class="cfg-align"
+                id="autoAlignBtn"
+                onclick="autoAlignLyrics()"
+              >
+                ✦ AUTO ALIGN (ADD TIMESTAMPS)
+              </button>
+              <div class="cfg-hint">
+                Paste plain lyrics, then auto-align using the YouTube audio.
               </div>
             </div>
           </div>
           <div class="cfg-row">
             <div class="cfg-field">
-              <button class="cfg-align" id="autoAlignUploadBtn" onclick="autoAlignFromUpload()">✦ AUTO ALIGN (UPLOAD AUDIO)</button>
+              <div class="cfg-label">Audio File (Optional)</div>
+              <input
+                class="cfg-input cfg-file"
+                id="cfgAudioFile"
+                type="file"
+                accept="audio/*"
+              />
+              <div class="cfg-hint">
+                If YouTube blocks audio, upload a local audio file for
+                alignment.
+              </div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-hint cfg-instructions">
+                1) Download MP3:
+                <a href="https://mp3juice.sc/" target="_blank" rel="noopener"
+                  >mp3juice.sc</a
+                ><br />
+                2) Remove music:
+                <a
+                  href="https://vocalremover.org/"
+                  target="_blank"
+                  rel="noopener"
+                  >vocalremover.org</a
+                ><br />
+                3) Compress file:
+                <a
+                  href="https://www.freeconvert.com/mp3-compressor"
+                  target="_blank"
+                  rel="noopener"
+                  >freeconvert.com/mp3-compressor</a
+                ><br />
+                4) Fill form, paste lyrics, Auto Align → Save to Library → Apply
+                &amp; Load.
+              </div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <button
+                class="cfg-align"
+                id="autoAlignUploadBtn"
+                onclick="autoAlignFromUpload()"
+              >
+                ✦ AUTO ALIGN (UPLOAD AUDIO)
+              </button>
             </div>
           </div>
           <div class="cfg-error" id="cfgError"></div>
           <div class="cfg-actions">
-            <button class="cfg-apply" onclick="applyConfig()">▶ APPLY &amp; LOAD</button>
+            <button class="cfg-apply" onclick="applyConfig()">
+              ▶ APPLY &amp; LOAD
+            </button>
             <label class="cfg-merge">
               <input type="checkbox" id="cfgMergeCaptions" /> merge captions
             </label>
-            <button class="cfg-import" onclick="importCaptions()">⬇ IMPORT CAPTIONS</button>
-            <button class="cfg-save"   onclick="saveTrackToLibrary()">⬤ SAVE TO LIBRARY</button>
+            <button class="cfg-import" onclick="importCaptions()">
+              ⬇ IMPORT CAPTIONS
+            </button>
+            <button class="cfg-save" onclick="saveTrackToLibrary()">
+              ⬤ SAVE TO LIBRARY
+            </button>
             <div class="cfg-status" id="cfgStatus"></div>
           </div>
         </div>
@@ -255,7 +437,11 @@
       <div class="config-panel library-panel">
         <div class="config-titlebar">
           <div class="dots">
-            <div class="dot dot-r" style="cursor:pointer" onclick="closeLibrary()"></div>
+            <div
+              class="dot dot-r"
+              style="cursor: pointer"
+              onclick="closeLibrary()"
+            ></div>
             <div class="dot dot-y"></div>
             <div class="dot dot-g"></div>
           </div>
@@ -267,15 +453,53 @@
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
                 <option value="random">Random</option>
+                <option value="most_listened">Most listened</option>
               </select>
             </label>
-            <button class="library-add"  onclick="openConfigFromLibrary()">＋ ADD</button>
+            <div class="search-wrap library-search" id="librarySearchWrap">
+              <button
+                class="search-btn"
+                id="librarySearchBtn"
+                title="Search library"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></circle>
+                  <path
+                    d="M20 20L17 17"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  ></path>
+                </svg>
+              </button>
+              <div class="search-panel" id="librarySearchPanel">
+                <input
+                  class="search-input"
+                  id="librarySearchInput"
+                  type="text"
+                  placeholder="Search library..."
+                />
+                <div class="search-list" id="librarySearchList"></div>
+                <div class="search-empty" id="librarySearchEmpty">
+                  No matches
+                </div>
+              </div>
+            </div>
+            <button class="library-add" onclick="openConfigFromLibrary()">
+              ＋ ADD
+            </button>
             <button class="config-close" onclick="closeLibrary()">✕</button>
           </div>
         </div>
         <div class="library-body">
           <div class="library-status" id="libraryStatus">Loading…</div>
-          <div class="library-list"   id="libraryList"></div>
+          <div class="library-list" id="libraryList"></div>
         </div>
       </div>
     </div>
@@ -284,10 +508,15 @@
     <div class="pass-overlay" id="passOverlay">
       <div class="pass-panel">
         <div class="pass-title">Confirm Delete</div>
-        <input class="pass-input" id="passInput" type="password" placeholder="Enter password" />
+        <input
+          class="pass-input"
+          id="passInput"
+          type="password"
+          placeholder="Enter password"
+        />
         <div class="pass-error" id="passError"></div>
         <div class="pass-actions">
-          <button class="pass-cancel"  id="passCancel">Cancel</button>
+          <button class="pass-cancel" id="passCancel">Cancel</button>
           <button class="pass-confirm" id="passConfirm">Delete</button>
         </div>
       </div>
@@ -296,10 +525,15 @@
     <div class="pass-overlay" id="savePassOverlay">
       <div class="pass-panel">
         <div class="pass-title">Save to Library</div>
-        <input class="pass-input" id="savePassInput" type="password" placeholder="Enter password" />
+        <input
+          class="pass-input"
+          id="savePassInput"
+          type="password"
+          placeholder="Enter password"
+        />
         <div class="pass-error" id="savePassError"></div>
         <div class="pass-actions">
-          <button class="pass-cancel"  id="savePassCancel">Cancel</button>
+          <button class="pass-cancel" id="savePassCancel">Cancel</button>
           <button class="pass-confirm" id="savePassConfirm">Save</button>
         </div>
       </div>
