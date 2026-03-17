@@ -153,6 +153,7 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
     if (idleMsg) idleMsg.style.display = 'flex';
     statusText.textContent = 'LOADED';
   }
+  if (opts.autoplay && ytReady) playAll();
   return true;
 }
 

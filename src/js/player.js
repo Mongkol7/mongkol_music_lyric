@@ -498,7 +498,7 @@ function loop() {
       state = ytPlayer.getPlayerState();
     }
   } catch (err) {}
-  if (state === YT.PlayerState.ENDED || (hasRealDuration && t >= total)) {
+  if (state === YT.PlayerState.ENDED || (hasRealDuration && t >= total - 0.2)) {
     onEnd();
     return;
   }
