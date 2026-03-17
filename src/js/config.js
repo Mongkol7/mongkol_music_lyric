@@ -4,6 +4,8 @@
 'use strict';
 
 const cfgStatus = $('cfgStatus');
+const CFG_DRAFT_KEY = 'cfgDraft';
+let cfgDraftTimer = null;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function setStatus(el, msg, color) {
@@ -64,6 +66,65 @@ function mergeLyricsText(existingText, newText) {
   const merged = [...existing];
   incoming.forEach((line) => { if (!seen.has(line)) { seen.add(line); merged.push(line); } });
   return merged.join('\n');
+}
+
+function updateCfgLineNumbers() {
+  const linesEl = $('cfgLines');
+  const ta = $('cfgLyrics');
+  if (!linesEl || !ta) return;
+  const count = Math.max(1, ta.value.split('\n').length);
+  let out = '';
+  for (let i = 1; i <= count; i++) out += i + (i < count ? '\n' : '');
+  linesEl.textContent = out;
+  linesEl.scrollTop = ta.scrollTop;
+}
+
+function saveCfgDraft() {
+  try {
+    const draft = {
+      title: $('cfgTitle').value || '',
+      artist: $('cfgArtist').value || '',
+      ytUrl: $('cfgYtUrl').value || '',
+      capLang: $('cfgCapLang').value || '',
+      lyrics: $('cfgLyrics').value || '',
+      merge: $('cfgMergeCaptions').checked || false,
+    };
+    localStorage.setItem(CFG_DRAFT_KEY, JSON.stringify(draft));
+  } catch (err) {}
+}
+
+function scheduleCfgDraftSave() {
+  clearTimeout(cfgDraftTimer);
+  cfgDraftTimer = setTimeout(saveCfgDraft, 250);
+}
+
+function clearCfgDraft() {
+  try { localStorage.removeItem(CFG_DRAFT_KEY); } catch (err) {}
+}
+
+function loadCfgDraftIfEmpty() {
+  const title = $('cfgTitle').value.trim();
+  const artist = $('cfgArtist').value.trim();
+  const ytUrl = $('cfgYtUrl').value.trim();
+  const lyrics = $('cfgLyrics').value.trim();
+  if (title || artist || ytUrl || lyrics) return false;
+  try {
+    const raw = localStorage.getItem(CFG_DRAFT_KEY);
+    if (!raw) return false;
+    const draft = JSON.parse(raw);
+    if (!draft) return false;
+    $('cfgTitle').value = draft.title || '';
+    $('cfgArtist').value = draft.artist || '';
+    $('cfgYtUrl').value = draft.ytUrl || '';
+    $('cfgCapLang').value = draft.capLang || '';
+    $('cfgLyrics').value = draft.lyrics || '';
+    $('cfgMergeCaptions').checked = !!draft.merge;
+    updateCfgLineNumbers();
+    setStatus(cfgStatus, 'Draft restored.', 'var(--green)');
+    return true;
+  } catch (err) {
+    return false;
+  }
 }
 
 // ── applyTrackData — replaces lyrics/sections/player when loading a track ──
@@ -136,6 +197,7 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
   }
   updateTotalFromPlayer(true);
   if (typeof updateYouTubeViews === 'function') updateYouTubeViews(ytId);
+  if (typeof setDiskThumb === 'function') setDiskThumb(ytId);
 
   // Reset player state
   currentIdx     = -1;
@@ -160,6 +222,9 @@ function applyTrackData({ title, artist, ytId, lyricsRaw }, opts = {}) {
     timeDock.textContent    = '0:00';
     if (idleMsg) idleMsg.style.display = 'flex';
     statusText.textContent = 'LOADED';
+    if (typeof updateDiskFromTime === 'function' && typeof diskOpen !== 'undefined' && diskOpen) {
+      updateDiskFromTime(0);
+    }
   }
   if (autoplay && ytReady) {
     try { if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo(); } catch (err) {}
@@ -189,6 +254,7 @@ function openConfig() {
     .join('\n');
   $('cfgError').textContent = '';
   setStatus(cfgStatus, '');
+  updateCfgLineNumbers();
   $('configOverlay').classList.add('open');
   setTimeout(() => $('cfgTitle').focus(), 350);
 }
@@ -201,11 +267,16 @@ function openConfigFromLibrary() {
   $('cfgLyrics').value  = '';
   $('cfgError').textContent = '';
   setStatus(cfgStatus, '');
+  loadCfgDraftIfEmpty();
+  updateCfgLineNumbers();
   $('configOverlay').classList.add('open');
   setTimeout(() => $('cfgTitle').focus(), 350);
 }
 
-function closeConfig() { $('configOverlay').classList.remove('open'); }
+function closeConfig() {
+  saveCfgDraft();
+  $('configOverlay').classList.remove('open');
+}
 
 $('configOverlay').addEventListener('click', (e) => {
   if (e.target === $('configOverlay') && e.currentTarget === e.target) closeConfig();
@@ -214,6 +285,26 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if ($('configOverlay').classList.contains('open')) closeConfig();
 });
+
+// Draft autosave + line numbers
+['cfgTitle', 'cfgArtist', 'cfgYtUrl', 'cfgCapLang'].forEach((id) => {
+  const el = $(id);
+  if (!el) return;
+  el.addEventListener('input', scheduleCfgDraftSave);
+});
+const cfgLyricsEl = $('cfgLyrics');
+if (cfgLyricsEl) {
+  cfgLyricsEl.addEventListener('input', () => {
+    updateCfgLineNumbers();
+    scheduleCfgDraftSave();
+  });
+  cfgLyricsEl.addEventListener('scroll', () => {
+    const linesEl = $('cfgLines');
+    if (linesEl) linesEl.scrollTop = cfgLyricsEl.scrollTop;
+  });
+}
+const cfgMerge = $('cfgMergeCaptions');
+if (cfgMerge) cfgMerge.addEventListener('change', scheduleCfgDraftSave);
 
 function applyConfig() {
   const errEl  = $('cfgError');
@@ -234,6 +325,7 @@ function applyConfig() {
 
   const ok = applyTrackData({ title, artist, ytId: newYtId, lyricsRaw: raw });
   if (!ok) { errEl.textContent = '⚠ No valid timestamped lines found. Use format: [mm:ss.cs] lyric'; return; }
+  clearCfgDraft();
 
   const match =
     libraryTracksRaw.find((t) => t.yt_id === newYtId) ||
@@ -521,6 +613,7 @@ async function saveTrackToLibrary(savePassword) {
       if (upsertId) localStorage.setItem('lastTrackId', String(upsertId));
       localStorage.setItem('lastTrackKey', JSON.stringify({ title_key: titleKey, artist_key: artistKey }));
     } catch (err) {}
+    clearCfgDraft();
     return true;
   } catch (err) {
     errEl.textContent = '⚠ Save failed. Network or Supabase error.';

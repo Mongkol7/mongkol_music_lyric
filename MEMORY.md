@@ -13,7 +13,12 @@ mongkol_ai_app/
 │   ├── align.js              # ElevenLabs auto-align via YouTube audio
 │   ├── align-upload.js       # ElevenLabs auto-align via file upload
 │   ├── captions.js           # YouTube captions proxy
+│   ├── youtube-views.js      # YouTube Data API view count proxy (cached)
 │   └── update-track.js       # Password-protected Supabase update
+├── companion-app/             # Expo-based companion app skeleton (share to stories)
+│   ├── App.js
+│   ├── app.json
+│   └── eas.json
 ├── src/
 │   ├── css/
 │   │   └── main.css          # ALL styles (extracted from old index.html)
@@ -26,6 +31,7 @@ mongkol_ai_app/
 │       └── app.js            # Bootstrap (MediaSession + init calls)
 ├── index.html                # Clean HTML shell (links CSS + JS)
 ├── index.html.bak            # Backup of original monolithic file
+├── apple-touch-icon.png      # iOS home screen icon
 ├── vercel.json               # Vercel function config
 ├── package.json
 ├── MEMORY.md
@@ -42,6 +48,8 @@ mongkol_ai_app/
 - Vercel Analytics script injected in `index.html`
 - Caption import + language detection + merge mode
 - Auto-align lyrics using ElevenLabs forced alignment (YouTube audio or uploaded audio)
+- YouTube view counts via Data API proxy + caching (server + localStorage)
+- Share button now shares the current YouTube link (Web Share / copy fallback)
 
 ## Supabase
 - URL: `https://uhfukcpnuakhxgzjdqyg.supabase.co`
@@ -77,6 +85,7 @@ mongkol_ai_app/
 - Crossfade removed; auto-advance reloads the player per song.
 - Auto-advance uses YT duration when available; total time display updates from `ytPlayer.getDuration()`.
 - Added guard `endHandling` + `syncCurrentTrackToLibrary()` to reduce double-next and mis-synced lyrics/video.
+- Autoplay robustness: retries + muted kick if autoplay is blocked; `_pendingPlay` cleared on PLAYING.
 - **Lyric timing fix**: removed 180ms `setTimeout` in `showLyric()` — lyrics now display immediately at the correct timestamp. Entrance animation still uses double-`rAF` for smooth CSS transition.
 - Jump-detection delta raised from 2.5s → 3.5s to prevent false resets during buffering.
 - User-scroll auto-scroll lock reduced from 3000ms → 1500ms.

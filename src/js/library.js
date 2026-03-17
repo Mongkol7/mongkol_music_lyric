@@ -59,6 +59,12 @@ const librarySearchPanel  = $('librarySearchPanel');
 const librarySearchInput  = $('librarySearchInput');
 const librarySearchListEl = $('librarySearchList');
 const librarySearchEmpty  = $('librarySearchEmpty');
+const queueToggle = $('queueToggle');
+const queuePanel  = $('queuePanel');
+const queueBody   = $('queueBody');
+const queueListEl = $('queueList');
+const queueEmpty  = $('queueEmpty');
+const queueOrderLabel = $('queueOrderLabel');
 let   pendingDeleteId = null;
 let   lastCountedTrackId = null;
 let   searchDebounceId   = null;
@@ -198,6 +204,53 @@ function renderSearchList(tracks, query = '', listEl = searchListEl, emptyEl = s
   listEl.appendChild(frag);
 }
 
+function renderQueueList(tracks) {
+  if (!queueListEl || !queueEmpty) return;
+  queueListEl.innerHTML = '';
+  if (!tracks.length) {
+    queueEmpty.classList.add('show');
+    return;
+  }
+  queueEmpty.classList.remove('show');
+  const frag = document.createDocumentFragment();
+  tracks.forEach((track) => {
+    const item = document.createElement('div');
+    item.className = 'queue-item';
+    if (currentTrackId && String(track.id) === String(currentTrackId)) {
+      item.classList.add('is-current');
+    }
+    const tEl = document.createElement('div');
+    tEl.className = 'queue-title';
+    tEl.textContent = (track.title || 'Untitled').toUpperCase();
+    const aEl = document.createElement('div');
+    aEl.className = 'queue-artist';
+    aEl.textContent = track.artist || 'Unknown artist';
+    const pEl = document.createElement('div');
+    pEl.className = 'queue-plays';
+    pEl.textContent = `Plays: ${Number(track.listen_count || 0).toLocaleString()}`;
+    item.appendChild(tEl);
+    item.appendChild(aEl);
+    item.appendChild(pEl);
+    item.addEventListener('click', () => {
+      loadTrackFromData(track, { autoplay: false });
+      queuePanel?.classList.remove('open');
+    });
+    frag.appendChild(item);
+  });
+  queueListEl.appendChild(frag);
+}
+
+function updateQueueOrderLabel() {
+  if (!queueOrderLabel) return;
+  const labels = {
+    newest: 'Newest',
+    oldest: 'Oldest',
+    random: 'Random',
+    most_listened: 'Most listened',
+  };
+  queueOrderLabel.textContent = `• ${labels[libraryOrderMode] || 'Newest'}`;
+}
+
 async function openSearch() {
   if (!searchWrap || !searchPanel) return;
   searchWrap.classList.add('open');
@@ -242,6 +295,18 @@ function toggleLibrarySearch() {
   if (!librarySearchWrap) return;
   if (librarySearchWrap.classList.contains('open')) closeLibrarySearch();
   else openLibrarySearch();
+}
+
+if (queueToggle) {
+  queueToggle.addEventListener('click', async () => {
+    if (!queuePanel) return;
+    updateQueueOrderLabel();
+    const open = queuePanel.classList.toggle('open');
+    if (open) {
+      const ok = await ensureLibraryReady();
+      if (ok) renderQueueList(libraryTracks);
+    }
+  });
 }
 
 async function shareToCompanion() {
@@ -292,6 +357,9 @@ function bumpListenCount(trackId) {
   }
   if (libraryOverlay && libraryOverlay.classList.contains('open')) {
     renderLibraryList(libraryTracks);
+  }
+  if (queuePanel?.classList.contains('open')) {
+    renderQueueList(libraryTracks);
   }
 }
 
@@ -367,6 +435,7 @@ async function ensureLibraryReady() {
   libraryTracks    = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
   syncCurrentTrackToLibrary();
   updateCurrentIndex();
+  updateQueueOrderLabel();
   return true;
 }
 
@@ -386,6 +455,10 @@ function loadTrackFromData(track, { autoplay } = {}) {
   if (!ok) return false;
   currentTrackId = track.id || null;
   updateCurrentIndex();
+  updateQueueOrderLabel();
+  if (queuePanel?.classList.contains('open')) {
+    renderQueueList(libraryTracks);
+  }
   updateMediaSession(track);
   try {
     if (track.id) localStorage.setItem('lastTrackId', String(track.id));
@@ -425,16 +498,20 @@ libraryList.addEventListener('click', (e) => {
   if (!inItem && !inActions) closeAllSwipes();
 });
 
-if (libraryOrderSelect) {
-  libraryOrderSelect.value = libraryOrderMode;
-  libraryOrderSelect.addEventListener('change', () => {
-    libraryOrderMode = libraryOrderSelect.value || 'newest';
-    try { localStorage.setItem('libraryOrder', libraryOrderMode); } catch (err) {}
-    libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
-    updateCurrentIndex();
-    if (libraryOverlay.classList.contains('open')) renderLibraryList(libraryTracks);
-  });
-}
+  if (libraryOrderSelect) {
+    libraryOrderSelect.value = libraryOrderMode;
+    libraryOrderSelect.addEventListener('change', () => {
+      libraryOrderMode = libraryOrderSelect.value || 'newest';
+      try { localStorage.setItem('libraryOrder', libraryOrderMode); } catch (err) {}
+      libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+      updateCurrentIndex();
+      if (libraryOverlay.classList.contains('open')) renderLibraryList(libraryTracks);
+      if (queuePanel?.classList.contains('open')) {
+        renderQueueList(libraryTracks);
+      }
+      updateQueueOrderLabel();
+    });
+  }
 
 if (searchBtn) {
   searchBtn.addEventListener('click', (e) => {
@@ -581,19 +658,40 @@ function renderLibraryList(tracks) {
 
 async function openLibrary() {
   libraryOverlay.classList.add('open');
-  libraryList.innerHTML = '';
-  libraryStatus.textContent = 'Loading...';
   closeAllSwipes();
   if (libraryOrderSelect) libraryOrderSelect.value = libraryOrderMode;
+  if (libraryTracksRaw.length) {
+    libraryTracks = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
+    updateCurrentIndex();
+    renderLibraryList(libraryTracks);
+    libraryStatus.textContent = `Saved tracks: ${libraryTracks.length} (refreshing...)`;
+  } else {
+    libraryList.innerHTML = '';
+    libraryStatus.textContent = 'Loading...';
+  }
   try {
     const data = await fetchLibraryTracks();
-    if (!data) { libraryStatus.textContent = 'Failed to load library. Check Supabase table/RLS.'; return; }
+    if (!data) {
+      if (!libraryTracksRaw.length) {
+        libraryStatus.textContent = 'Failed to load library. Check Supabase table/RLS.';
+      } else {
+        libraryStatus.textContent = `Saved tracks: ${libraryTracksRaw.length}`;
+      }
+      return;
+    }
     libraryTracksRaw = data;
     libraryTracks    = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
     updateCurrentIndex();
     renderLibraryList(libraryTracks);
+    if (queueToggle && queueToggle.closest('.queue-panel')?.classList.contains('open')) {
+      renderQueueList(libraryTracks);
+    }
   } catch (err) {
-    libraryStatus.textContent = 'Failed to load library. Network or Supabase error.';
+    if (!libraryTracksRaw.length) {
+      libraryStatus.textContent = 'Failed to load library. Network or Supabase error.';
+    } else {
+      libraryStatus.textContent = `Saved tracks: ${libraryTracksRaw.length}`;
+    }
   }
 }
 
@@ -719,6 +817,7 @@ async function loadLastTrack() {
       if (resp.ok) { const data = await resp.json(); if (data.length) track = data[0]; }
     }
     if (track) loadTrackFromData(track, { autoplay: false });
+    updateQueueOrderLabel();
   } catch (err) {}
 }
 

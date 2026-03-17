@@ -80,7 +80,7 @@
         <!-- Terminal body -->
         <div class="terminal-body">
           <div class="hdr">
-            <img class="hdr-icon" src="./favicon.png" alt="icon" />
+            <img class="hdr-icon" id="hdrIcon" src="./favicon.png" alt="icon" />
             <div class="hdr-text">
               <span class="cmd">$</span>
               <span class="val"
@@ -99,9 +99,10 @@
           <div class="content-row">
             <!-- ── Lyrics 3-row stage ── -->
             <div class="lyrics-col">
+              <div class="lyric-ambient" id="lyricAmbient"></div>
               <div class="section-label" id="sectionLabel"></div>
-              <div class="lyric-stage" id="lyricStage">
-                <div class="idle-msg" id="idleMsg">
+            <div class="lyric-stage" id="lyricStage">
+              <div class="idle-msg" id="idleMsg">
                   <div class="idle-big">READY</div>
                   <div>
                     Press <span style="color: var(--green)">▶</span> on the
@@ -119,9 +120,17 @@
                 </div>
                 <div class="lyric-row lyric-row-prev" id="rowPrev"></div>
                 <div class="lyric-row lyric-row-current" id="rowCurrent"></div>
-                <div class="lyric-row lyric-row-next" id="rowNext"></div>
+              <div class="lyric-row lyric-row-next" id="rowNext"></div>
+            </div>
+            <div class="disk-overlay" id="diskOverlay">
+              <div class="disk-disc" id="diskDisc">
+                <div class="disk-label">
+                  <img id="diskThumb" alt="thumbnail" />
+                </div>
+                <div class="disk-center"></div>
               </div>
-              <div class="timestamp">
+            </div>
+            <div class="timestamp">
                 <span class="cur" id="timeDisplay">0:00</span> /
                 <span class="total" id="timeTotal">3:57</span>
               </div>
@@ -160,6 +169,19 @@
                       class="yt-frame is-hidden"
                     ></div>
                   </div>
+                </div>
+              </div>
+              <div class="queue-panel" id="queuePanel">
+                <button class="queue-toggle" id="queueToggle">
+                  <span class="queue-title">
+                    NEXT UP
+                    <span class="queue-order" id="queueOrderLabel">• Newest</span>
+                  </span>
+                  <span class="queue-caret">▾</span>
+                </button>
+                <div class="queue-body" id="queueBody">
+                  <div class="queue-list" id="queueList"></div>
+                  <div class="queue-empty" id="queueEmpty">No saved tracks.</div>
                 </div>
               </div>
 
@@ -336,11 +358,14 @@
           <div class="cfg-row col">
             <div class="cfg-field">
               <div class="cfg-label">Lyrics with timestamps</div>
-              <textarea
-                class="cfg-input cfg-textarea"
-                id="cfgLyrics"
-                placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[#CHORUS]&#10;[01:23.66] As I recall..."
-              ></textarea>
+              <div class="cfg-textarea-wrap">
+                <div class="cfg-lines" id="cfgLines">1</div>
+                <textarea
+                  class="cfg-input cfg-textarea"
+                  id="cfgLyrics"
+                  placeholder="[00:22.62] Flashing lights&#10;[00:27.92] Flashing lights&#10;[#CHORUS]&#10;[01:23.66] As I recall..."
+                ></textarea>
+              </div>
               <div class="cfg-hint">
                 Each lyric line: <code>[mm:ss]</code> or
                 <code>[mm:ss.xx]</code> or <code>[ss.xx]</code><br />

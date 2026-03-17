@@ -28,6 +28,12 @@ let _autoPlayTries  = 0;
 let isDragging  = false;
 let dragWasPlay = false;
 let pendingVolume = null;
+let diskOpen = false;
+let diskDragging = false;
+let diskWasPlaying = false;
+let diskAngle = 0;
+let lastDiskSeek = -1;
+let ambientPhase = 0;
 
 // ── DOM references ─────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -59,6 +65,12 @@ const ytViewsEl   = $('ytViewCount');
 const rowPrev    = $('rowPrev');
 const rowCurrent = $('rowCurrent');
 const rowNext    = $('rowNext');
+const hdrIcon    = $('hdrIcon');
+const lyricsCol  = document.querySelector('.lyrics-col');
+const diskOverlay = $('diskOverlay');
+const diskDisc    = $('diskDisc');
+const diskThumb   = $('diskThumb');
+const lyricAmbient = $('lyricAmbient');
 
 const viewsCache = new Map();
 const viewsInFlight = new Map();
@@ -184,6 +196,78 @@ function updateYouTubeViews(ytId) {
   });
 }
 
+function setDiskThumb(ytId) {
+  if (!diskThumb) return;
+  if (!ytId) {
+    diskThumb.removeAttribute('src');
+    diskThumb.alt = '';
+    return;
+  }
+  const url = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  diskThumb.src = url;
+  diskThumb.alt = 'YouTube thumbnail';
+  diskThumb.onerror = () => {
+    diskThumb.onerror = null;
+    diskThumb.src = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+  };
+}
+
+function setDiskAngle(deg) {
+  diskAngle = ((deg % 360) + 360) % 360;
+  if (diskDisc) {
+    diskDisc.style.setProperty('--disk-rot', `${diskAngle}deg`);
+  }
+}
+
+function angleFromEvent(e) {
+  if (!diskDisc) return 0;
+  const rect = diskDisc.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const x = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX) - cx;
+  const y = (e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY) - cy;
+  let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
+  if (angle < 0) angle += 360;
+  return angle;
+}
+
+function updateDiskFromTime(t) {
+  const total = getTotal();
+  if (!total) return;
+  const angle = (t / total) * 360;
+  setDiskAngle(angle);
+}
+
+function setDiskOpen(open) {
+  if (!lyricsCol) return;
+  diskOpen = open;
+  lyricsCol.classList.toggle('disk-open', open);
+  if (open) {
+    updateDiskFromTime(safeGetTime());
+  }
+}
+
+function setAmbientActive(active) {
+  if (!lyricsCol || !lyricAmbient) return;
+  lyricsCol.classList.toggle('ambient-on', active);
+  if (!active) lyricAmbient.style.setProperty('--amb-op', '0.08');
+}
+
+function updateAmbient() {
+  if (!lyricAmbient || prefersReduced) return;
+  ambientPhase += 0.028;
+  const x1 = 50 + 20 * Math.sin(ambientPhase * 0.8);
+  const y1 = 48 + 24 * Math.cos(ambientPhase * 0.6);
+  const x2 = 52 + 26 * Math.cos(ambientPhase * 0.5 + 1.7);
+  const y2 = 52 + 22 * Math.sin(ambientPhase * 0.7 + 2.1);
+  const op = 0.18 + 0.08 * Math.sin(ambientPhase * 1.4);
+  lyricAmbient.style.setProperty('--amb-x1', `${x1}%`);
+  lyricAmbient.style.setProperty('--amb-y1', `${y1}%`);
+  lyricAmbient.style.setProperty('--amb-x2', `${x2}%`);
+  lyricAmbient.style.setProperty('--amb-y2', `${y2}%`);
+  lyricAmbient.style.setProperty('--amb-op', op.toFixed(3));
+}
+
 function triggerFlash() {
   flashOver.classList.add('flash');
   setTimeout(() => flashOver.classList.remove('flash'), 65);
@@ -250,6 +334,53 @@ seekWrap.addEventListener('touchend', (e) => {
   isDragging = false;
   seekTo(getPct(e.changedTouches[0].clientX) * getTotal(), dragWasPlay);
 });
+
+if (hdrIcon) {
+  hdrIcon.addEventListener('click', () => {
+    setDiskOpen(!diskOpen);
+  });
+}
+
+if (diskDisc) {
+  diskDisc.addEventListener('pointerdown', (e) => {
+    if (!diskOpen) return;
+    e.preventDefault();
+    diskDragging = true;
+    diskWasPlaying = playing;
+    lastDiskSeek = -1;
+    try { diskDisc.setPointerCapture(e.pointerId); } catch (err) {}
+    pauseAll();
+    const angle = angleFromEvent(e);
+    setDiskAngle(angle);
+    const t = (angle / 360) * getTotal();
+    seekTo(t, false);
+    lastDiskSeek = t;
+  });
+  diskDisc.addEventListener('pointermove', (e) => {
+    if (!diskDragging) return;
+    e.preventDefault();
+    const angle = angleFromEvent(e);
+    setDiskAngle(angle);
+    const t = (angle / 360) * getTotal();
+    if (lastDiskSeek < 0 || Math.abs(t - lastDiskSeek) > 0.3) {
+      seekTo(t, false);
+      lastDiskSeek = t;
+    }
+  });
+  const stopDiskDrag = (e) => {
+    if (!diskDragging) return;
+    diskDragging = false;
+    try { diskDisc.releasePointerCapture(e.pointerId); } catch (err) {}
+    const angle = angleFromEvent(e);
+    setDiskAngle(angle);
+    const t = (angle / 360) * getTotal();
+    seekTo(t, diskWasPlaying);
+    diskWasPlaying = false;
+    lastDiskSeek = -1;
+  };
+  diskDisc.addEventListener('pointerup', stopDiskDrag);
+  diskDisc.addEventListener('pointercancel', stopDiskDrag);
+}
 
 // ── Waveform ───────────────────────────────────────────────────────────────
 for (let i = 0; i < 20; i++) {
@@ -364,6 +495,7 @@ function ensureLoopRunning() {
   _lastGoodStamp = performance.now();
   startWave();
   startDevBar();
+  setAmbientActive(true);
   if (idleMsg) idleMsg.style.display = 'none';
   playBtn.textContent     = '⏸ PAUSE';
   statusText.textContent  = 'PLAYING';
@@ -406,6 +538,7 @@ function pauseAll() {
   if (raf) { cancelAnimationFrame(raf); raf = null; }
   freezeWave();
   stopDevBar();
+  setAmbientActive(false);
   const inactive = getInactivePlayer();
   try {
     if (ytPlayer) ytPlayer.pauseVideo();
@@ -422,6 +555,7 @@ function playAll() {
   playing = true;
   startWave();
   startDevBar();
+  setAmbientActive(true);
   try { if (ytPlayer) ytPlayer.playVideo(); } catch (err) {}
   playBtn.textContent    = '⏸ PAUSE';
   statusText.textContent = 'PLAYING';
@@ -517,6 +651,10 @@ function loop() {
   const tf = fmt(t);
   timeDisplay.textContent    = tf;
   timeDock.textContent       = tf;
+  if (diskOpen && !diskDragging) {
+    updateDiskFromTime(t);
+  }
+  updateAmbient();
 
   // Lyric index (fast path using currentIdx)
   if (lyrics.length) {
@@ -562,6 +700,7 @@ function onEnd() {
   raf     = null;
   freezeWave();
   stopDevBar();
+  setAmbientActive(false);
   clearInterval(_ytPollInterval);
   _ytPollInterval = null;
   playNextTrack(true);
@@ -684,6 +823,8 @@ window.onYouTubeIframeAPIReady = function () {
 })();
 
 updateYouTubeViews(YT_ID_current);
+setDiskThumb(YT_ID_current);
+setAmbientActive(false);
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 document.addEventListener('keydown', (e) => {

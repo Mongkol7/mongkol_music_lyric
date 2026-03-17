@@ -16,3 +16,6 @@ if ('mediaSession' in navigator) {
 // ── Init ───────────────────────────────────────────────────────────────────
 loadLastTrack();   // restore last-played track from Supabase
 initDevBar();      // start the animated dev credit bar
+setTimeout(() => {
+  if (typeof ensureLibraryReady === 'function') ensureLibraryReady();
+}, 900);
