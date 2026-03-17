@@ -1,0 +1,30 @@
+{
+  "name": "MongkolMusic",
+  "displayName": "MongkolMusic",
+  "expo": {
+    "name": "MongkolMusic",
+    "slug": "mongkolmusic",
+    "scheme": "mongkolmusic",
+    "android": {
+      "package": "com.mongkol.music",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "mongkolmusic" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.mongkol.music",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          { "CFBundleURLSchemes": ["mongkolmusic"] }
+        ]
+      }
+    }
+  }
+}
