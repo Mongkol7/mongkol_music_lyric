@@ -392,12 +392,12 @@ body::after {
   position: absolute;
   inset: -12% -8%;
   background:
-    radial-gradient(42% 46% at var(--amb-x1, 45%) var(--amb-y1, 35%), rgba(124, 77, 255, 0.38), transparent 60%),
-    radial-gradient(48% 52% at var(--amb-x2, 65%) var(--amb-y2, 55%), rgba(0, 229, 255, 0.28), transparent 62%),
-    radial-gradient(38% 44% at 30% 70%, rgba(255, 120, 220, 0.22), transparent 58%),
-    radial-gradient(46% 52% at 70% 72%, rgba(0, 255, 136, 0.18), transparent 60%);
-  filter: blur(40px) saturate(135%);
-  opacity: var(--amb-op, 0.1);
+    radial-gradient(42% 46% at var(--amb-x1, 45%) var(--amb-y1, 35%), rgba(124, 77, 255, 0.48), transparent 60%),
+    radial-gradient(48% 52% at var(--amb-x2, 65%) var(--amb-y2, 55%), rgba(0, 229, 255, 0.36), transparent 62%),
+    radial-gradient(38% 44% at 30% 70%, rgba(255, 120, 220, 0.3), transparent 58%),
+    radial-gradient(46% 52% at 70% 72%, rgba(0, 255, 136, 0.26), transparent 60%);
+  filter: blur(40px) saturate(150%);
+  opacity: var(--amb-op, 0.16);
   transition: opacity 0.45s ease;
   pointer-events: none;
   z-index: 0;
@@ -417,7 +417,7 @@ body::after {
   mix-blend-mode: screen;
 }
 .lyrics-col.ambient-on .lyric-ambient {
-  opacity: var(--amb-op, 0.26);
+  opacity: var(--amb-op, 0.38);
 }
 .lyrics-col.disk-open .lyric-stage,
 .lyrics-col.disk-open .section-label {
@@ -2245,11 +2245,11 @@ body::after {
   }
   .lyric-ambient {
     inset: -4% -2%;
-    filter: blur(30px) saturate(120%);
-    opacity: 0.12;
+    filter: blur(30px) saturate(135%);
+    opacity: 0.2;
   }
   .lyrics-col.ambient-on .lyric-ambient {
-    opacity: 0.2;
+    opacity: 0.32;
   }
   .lyric-ambient::after {
     inset: 14% 16%;
@@ -2526,11 +2526,11 @@ body::after {
   }
   .lyric-ambient {
     inset: -2% -1%;
-    filter: blur(26px) saturate(125%);
-    opacity: 0.14;
+    filter: blur(26px) saturate(140%);
+    opacity: 0.22;
   }
   .lyrics-col.ambient-on .lyric-ambient {
-    opacity: 0.22;
+    opacity: 0.34;
   }
   .lyric-ambient::after {
     inset: 16% 18%;
