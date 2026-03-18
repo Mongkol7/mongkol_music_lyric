@@ -386,6 +386,7 @@ body::after {
   min-width: 0;
   position: relative;
   overflow: hidden;
+  transition: flex-basis 0.35s ease;
 }
 .lyric-ambient {
   position: absolute;
@@ -444,7 +445,7 @@ body::after {
   transform: scale(1);
 }
 .disk-disc {
-  width: min(92%, 380px);
+  width: min(98%, 520px);
   aspect-ratio: 1;
   border-radius: 50%;
   background:
@@ -721,6 +722,7 @@ body::after {
   gap: 10px;
   overflow: hidden;
   min-height: 0;
+  transition: width 0.35s ease;
 }
 .right-col {
   display: flex;
@@ -728,6 +730,7 @@ body::after {
   gap: 10px;
   overflow: hidden;
   flex-shrink: 0;
+  transition: flex-basis 0.35s ease;
 }
 
 .spotify-panel {
@@ -736,6 +739,7 @@ body::after {
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
+  transition: flex-basis 0.35s ease;
 }
 .panel-title {
   padding: 7px 10px;
@@ -746,9 +750,23 @@ body::after {
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
 }
 .panel-title svg {
   flex-shrink: 0;
+}
+.yt-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.yt-toggle:hover svg {
+  filter: drop-shadow(0 0 6px rgba(255, 68, 68, 0.45));
 }
 .panel-title .yt-views {
   margin-left: auto;
@@ -757,6 +775,11 @@ body::after {
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
+.yt-caret {
+  color: var(--muted2);
+  margin-left: 6px;
+  transition: transform 0.25s ease;
+}
 
 .yt-stack {
   position: relative;
@@ -764,6 +787,13 @@ body::after {
   aspect-ratio: 16/9;
   background: #000;
   min-height: 150px;
+  max-height: 320px;
+  overflow: hidden;
+  transition:
+    max-height 0.35s ease,
+    opacity 0.25s ease,
+    transform 0.35s ease;
+  will-change: max-height, opacity, transform;
 }
 .yt-frame {
   position: absolute;
@@ -780,6 +810,47 @@ body::after {
   opacity: 0;
   pointer-events: none;
 }
+.spotify-panel:not(.open) .yt-stack {
+  max-height: 0;
+  min-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.spotify-panel.open .yt-caret {
+  transform: rotate(180deg);
+}
+
+.content-row.yt-compact .right-wrapper {
+  width: min(24vw, 320px);
+}
+.content-row.yt-compact .lyric-row-prev,
+.content-row.yt-compact .lyric-row-next {
+  font-size: clamp(22px, 2.4vw, 32px);
+}
+.content-row.yt-compact .lyric-row-current {
+  font-size: clamp(30px, 3.4vw, 44px);
+}
+.content-row.yt-compact .disk-disc {
+  width: min(98%, 520px);
+}
+@media (min-width: 641px) {
+  .content-row.yt-compact .disk-disc {
+    width: min(98%, 520px);
+    height: auto;
+  }
+}
+.content-row.yt-compact .right-col {
+  flex: 0 0 auto;
+}
+.content-row.yt-compact .spotify-panel {
+  flex: 0 0 auto;
+}
+.content-row.yt-compact .queue-panel.open .queue-body {
+  max-height: 40vh;
+}
+.content-row.yt-compact .lyrics-list-panel {
+  flex: 1.25;
+}
 
 /* ── LYRICS LIST PANEL ── */
 .lyrics-list-panel {
@@ -792,13 +863,14 @@ body::after {
   display: flex;
   flex-direction: column;
   position: relative;
+  transition: flex-basis 0.35s ease;
 }
 .queue-panel {
   border: 1px solid var(--term-border);
   border-radius: 8px;
   background: #0d0f1c;
   overflow: hidden;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, flex-basis 0.35s ease;
 }
 .queue-panel.open {
   border-color: rgba(0, 255, 136, 0.35);
@@ -2166,6 +2238,17 @@ body::after {
   .kb-hint {
     display: none;
   }
+  .lyric-ambient {
+    inset: -4% -2%;
+    filter: blur(30px) saturate(120%);
+    opacity: 0.12;
+  }
+  .lyrics-col.ambient-on .lyric-ambient {
+    opacity: 0.2;
+  }
+  .lyric-ambient::after {
+    inset: 14% 16%;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2245,10 +2328,25 @@ body::after {
     gap: 5px;
     overflow: hidden;
   }
+  .content-row.yt-compact .right-col {
+    flex: 0 0 auto;
+  }
+  .content-row.yt-compact .lyrics-col {
+    flex: 0 0 240px;
+  }
+  .content-row.yt-compact .queue-panel.open .queue-body {
+    max-height: 220px;
+  }
+  .content-row.yt-compact .lyrics-list-panel {
+    flex: 1.2;
+  }
   .lyrics-col {
     flex: 0 0 185px;
     min-height: 0;
     overflow: hidden;
+  }
+  .disk-overlay {
+    padding: 6px;
   }
   .lyric-stage {
     gap: 8px;
@@ -2277,6 +2375,13 @@ body::after {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+  .content-row.yt-compact .right-wrapper {
+    width: 100%;
+  }
+  .content-row.yt-compact .queue-panel,
+  .content-row.yt-compact .lyrics-list-panel {
+    width: 100%;
   }
   .right-col {
     flex: 0 0 165px;
@@ -2319,8 +2424,18 @@ body::after {
     overflow-y: auto;
     overflow-x: hidden;
   }
+  .lyrics-col.disk-open {
+    overflow: hidden;
+  }
   .disk-disc {
-    width: min(92%, 240px);
+    width: min(78vw, 240px);
+    height: min(78vw, 240px);
+    max-width: none;
+    max-height: none;
+  }
+  .content-row.yt-compact .disk-disc {
+    width: min(74vw, 220px);
+    height: min(74vw, 220px);
   }
   .queue-toggle {
     font-size: 9px;
@@ -2387,6 +2502,17 @@ body::after {
   .config-body {
     padding: 16px 16px 18px;
   }
+  .lyric-ambient {
+    inset: -2% -1%;
+    filter: blur(26px) saturate(125%);
+    opacity: 0.14;
+  }
+  .lyrics-col.ambient-on .lyric-ambient {
+    opacity: 0.22;
+  }
+  .lyric-ambient::after {
+    inset: 16% 18%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2423,7 +2549,14 @@ body::after {
     padding: 6px 0 4px;
   }
   .disk-disc {
-    width: min(92%, 210px);
+    width: min(82vw, 210px);
+    height: min(82vw, 210px);
+    max-width: none;
+    max-height: none;
+  }
+  .content-row.yt-compact .disk-disc {
+    width: min(78vw, 200px);
+    height: min(78vw, 200px);
   }
   .spotify-panel .panel-title {
     padding: 4px 8px;

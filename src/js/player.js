@@ -34,6 +34,15 @@ let diskWasPlaying = false;
 let diskAngle = 0;
 let lastDiskSeek = -1;
 let ambientPhase = 0;
+let diskTargetAngle = 0;
+let diskDragRaf = null;
+let scratchCtx = null;
+let scratchSource = null;
+let scratchGain = null;
+let scratchFilter = null;
+let lastScratchAngle = 0;
+let lastScratchTime = 0;
+let ytOpen = true;
 
 // ── DOM references ─────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -219,6 +228,76 @@ function setDiskAngle(deg) {
   }
 }
 
+function setDiskTargetAngle(deg) {
+  diskTargetAngle = ((deg % 360) + 360) % 360;
+}
+
+function stepDiskDrag() {
+  if (!diskDragging) {
+    if (diskDragRaf) cancelAnimationFrame(diskDragRaf);
+    diskDragRaf = null;
+    return;
+  }
+  const diff = ((diskTargetAngle - diskAngle + 540) % 360) - 180;
+  const next = diskAngle + diff * 0.28;
+  setDiskAngle(next);
+  diskDragRaf = requestAnimationFrame(stepDiskDrag);
+}
+
+function ensureScratchAudio() {
+  if (scratchCtx) return;
+  try {
+    scratchCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const bufferSize = 2 * scratchCtx.sampleRate;
+    const buffer = scratchCtx.createBuffer(1, bufferSize, scratchCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.3;
+    }
+    scratchSource = scratchCtx.createBufferSource();
+    scratchSource.buffer = buffer;
+    scratchSource.loop = true;
+    scratchFilter = scratchCtx.createBiquadFilter();
+    scratchFilter.type = 'bandpass';
+    scratchFilter.frequency.value = 1800;
+    scratchGain = scratchCtx.createGain();
+    scratchGain.gain.value = 0;
+    scratchSource.connect(scratchFilter);
+    scratchFilter.connect(scratchGain);
+    scratchGain.connect(scratchCtx.destination);
+  } catch (err) {
+    scratchCtx = null;
+  }
+}
+
+function startScratchSound() {
+  ensureScratchAudio();
+  if (!scratchCtx || !scratchSource || !scratchGain) return;
+  try {
+    if (scratchCtx.state === 'suspended') scratchCtx.resume();
+    if (scratchSource && !scratchSource._started) {
+      scratchSource.start(0);
+      scratchSource._started = true;
+    }
+    scratchGain.gain.setTargetAtTime(0.0, scratchCtx.currentTime, 0.01);
+  } catch (err) {}
+}
+
+function updateScratchSound(speed) {
+  if (!scratchCtx || !scratchGain || !scratchFilter) return;
+  const v = Math.min(1, Math.max(0, speed / 140));
+  const now = scratchCtx.currentTime;
+  scratchGain.gain.setTargetAtTime(0.05 + v * 0.14, now, 0.02);
+  scratchFilter.frequency.setTargetAtTime(1200 + v * 2800, now, 0.02);
+}
+
+function stopScratchSound() {
+  if (!scratchCtx || !scratchGain) return;
+  try {
+    scratchGain.gain.setTargetAtTime(0.0, scratchCtx.currentTime, 0.05);
+  } catch (err) {}
+}
+
 function angleFromEvent(e) {
   if (!diskDisc) return 0;
   const rect = diskDisc.getBoundingClientRect();
@@ -348,11 +427,14 @@ if (diskDisc) {
     diskDragging = true;
     diskWasPlaying = playing;
     lastDiskSeek = -1;
+    setDiskTargetAngle(angleFromEvent(e));
+    startScratchSound();
+    lastScratchAngle = diskTargetAngle;
+    lastScratchTime = performance.now();
     try { diskDisc.setPointerCapture(e.pointerId); } catch (err) {}
     pauseAll();
-    const angle = angleFromEvent(e);
-    setDiskAngle(angle);
-    const t = (angle / 360) * getTotal();
+    if (!diskDragRaf) diskDragRaf = requestAnimationFrame(stepDiskDrag);
+    const t = (diskTargetAngle / 360) * getTotal();
     seekTo(t, false);
     lastDiskSeek = t;
   });
@@ -360,23 +442,31 @@ if (diskDisc) {
     if (!diskDragging) return;
     e.preventDefault();
     const angle = angleFromEvent(e);
-    setDiskAngle(angle);
-    const t = (angle / 360) * getTotal();
+    setDiskTargetAngle(angle);
+    const t = (diskTargetAngle / 360) * getTotal();
     if (lastDiskSeek < 0 || Math.abs(t - lastDiskSeek) > 0.3) {
       seekTo(t, false);
       lastDiskSeek = t;
     }
+    const now = performance.now();
+    const dAngle = Math.abs(((diskTargetAngle - lastScratchAngle + 540) % 360) - 180);
+    const dt = Math.max(16, now - lastScratchTime);
+    updateScratchSound((dAngle / dt) * 1000);
+    lastScratchAngle = diskTargetAngle;
+    lastScratchTime = now;
   });
   const stopDiskDrag = (e) => {
     if (!diskDragging) return;
     diskDragging = false;
     try { diskDisc.releasePointerCapture(e.pointerId); } catch (err) {}
     const angle = angleFromEvent(e);
+    setDiskTargetAngle(angle);
     setDiskAngle(angle);
-    const t = (angle / 360) * getTotal();
+    const t = (diskTargetAngle / 360) * getTotal();
     seekTo(t, diskWasPlaying);
     diskWasPlaying = false;
     lastDiskSeek = -1;
+    stopScratchSound();
   };
   diskDisc.addEventListener('pointerup', stopDiskDrag);
   diskDisc.addEventListener('pointercancel', stopDiskDrag);
@@ -825,6 +915,23 @@ window.onYouTubeIframeAPIReady = function () {
 updateYouTubeViews(YT_ID_current);
 setDiskThumb(YT_ID_current);
 setAmbientActive(false);
+
+const ytToggle = $('ytToggle');
+const ytPanel = document.querySelector('.spotify-panel');
+const contentRow = document.querySelector('.content-row');
+const ytTitleBar = ytPanel ? ytPanel.querySelector('.panel-title') : null;
+if (ytToggle && ytPanel) {
+  const toggleYtPanel = () => {
+    ytOpen = !ytOpen;
+    ytPanel.classList.toggle('open', ytOpen);
+    if (contentRow) contentRow.classList.toggle('yt-compact', !ytOpen);
+  };
+  ytToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleYtPanel();
+  });
+  if (ytTitleBar) ytTitleBar.addEventListener('click', toggleYtPanel);
+}
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 document.addEventListener('keydown', (e) => {
