@@ -722,7 +722,7 @@ body::after {
   gap: 10px;
   overflow: hidden;
   min-height: 0;
-  transition: width 0.35s ease;
+  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .right-col {
   display: flex;
@@ -730,7 +730,7 @@ body::after {
   gap: 10px;
   overflow: hidden;
   flex-shrink: 0;
-  transition: flex-basis 0.35s ease;
+  transition: flex-basis 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .spotify-panel {
@@ -739,7 +739,7 @@ body::after {
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  transition: flex-basis 0.35s ease;
+  transition: flex-basis 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .panel-title {
   padding: 7px 10px;
@@ -778,7 +778,7 @@ body::after {
 .yt-caret {
   color: var(--muted2);
   margin-left: 6px;
-  transition: transform 0.25s ease;
+  transition: transform 0.3s ease;
 }
 
 .yt-stack {
@@ -790,9 +790,9 @@ body::after {
   max-height: 320px;
   overflow: hidden;
   transition:
-    max-height 0.35s ease,
-    opacity 0.25s ease,
-    transform 0.35s ease;
+    max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.32s ease,
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: max-height, opacity, transform;
 }
 .yt-frame {
@@ -820,8 +820,10 @@ body::after {
   transform: rotate(180deg);
 }
 
-.content-row.yt-compact .right-wrapper {
-  width: min(24vw, 320px);
+@media (min-width: 641px) and (max-width: 1199px) {
+  .content-row.yt-compact .right-wrapper {
+    width: 260px;
+  }
 }
 .content-row.yt-compact .lyric-row-prev,
 .content-row.yt-compact .lyric-row-next {
@@ -914,9 +916,9 @@ body::after {
   opacity: 0;
   transform: translateY(-6px);
   transition:
-    max-height 0.35s ease,
-    opacity 0.25s ease,
-    transform 0.35s ease;
+    max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.32s ease,
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: max-height, opacity, transform;
 }
 .queue-panel.open .queue-body {
@@ -1157,6 +1159,9 @@ body::after {
   }
   .yt-stack {
     min-height: 220px;
+  }
+  .content-row.yt-compact .right-wrapper {
+    width: min(32vw, 380px);
   }
   .lyric-row-prev,
   .lyric-row-next {
@@ -2248,6 +2253,23 @@ body::after {
   }
   .lyric-ambient::after {
     inset: 14% 16%;
+  }
+}
+
+@media (max-width: 1200px) and (min-width: 901px) and (pointer: coarse) {
+  .disk-disc,
+  .content-row.yt-compact .disk-disc {
+    width: min(88%, 420px);
+  }
+}
+
+@media (max-width: 1200px) {
+  .yt-stack,
+  .queue-body {
+    transition:
+      max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.36s ease,
+      transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
