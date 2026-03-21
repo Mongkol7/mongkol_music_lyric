@@ -50,7 +50,7 @@ mongkol_ai_app/
 - Caption import + language detection + merge mode
 - Auto-align lyrics using ElevenLabs forced alignment (YouTube audio or uploaded audio)
 - YouTube view counts via Data API proxy + caching (server + localStorage)
-- Share button now shares the current YouTube link (Web Share / copy fallback)
+- Share button now shares the current **site URL** with `?track=` (or `?yt=` fallback), includes a QR code overlay, and uses Web Share + copy fallback
 
 ## Supabase
 - URL: `https://uhfukcpnuakhxgzjdqyg.supabase.co`
@@ -107,6 +107,7 @@ mongkol_ai_app/
 - Disk toggle shows a glassmorphic glowing vinyl with live thumbnail and subtle ambient halo; lyrics/dev-footer remain visible while disk overlay sits over the stage
 - Desktop layout: lyrics left, YouTube/player queue right; Next Up dropdown mirrors the library order and stays scrollable
 - Mobile: responsive adjustments, disk scales down, controls reorganize for compact screens
+- Small lyrics list can collapse/expand with smooth animation (caret toggle), expanding other panels
 
 ## Passwords
 - Delete password: `007`
