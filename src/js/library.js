@@ -53,6 +53,7 @@ const shareUrlEl      = $('shareUrl');
 const shareNativeBtn  = $('shareNativeBtn');
 const shareCopyBtn    = $('shareCopyBtn');
 const shareCloseBtn   = $('shareCloseBtn');
+let lastSharePayload  = null;
 const toastSuccess    = $('toastSuccess');
 const searchWrap   = $('searchWrap');
 const searchBtn    = $('searchBtn');
@@ -331,11 +332,12 @@ function getSharePayload() {
 
 function openShareOverlay(payload) {
   if (!shareOverlay || !payload) return;
+  lastSharePayload = payload;
   if (shareTrackEl) shareTrackEl.textContent = payload.text || payload.title || 'Track';
   if (shareUrlEl) shareUrlEl.textContent = payload.url;
   if (shareQrEl) {
     const size = '240x240';
-    shareQrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}&data=${encodeURIComponent(payload.url)}`;
+    shareQrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}&data=${encodeURIComponent(payload.url)}&t=${Date.now()}`;
   }
   if (shareNativeBtn) {
     const supported = !!navigator.share;
@@ -828,14 +830,14 @@ savePassOverlay.addEventListener('keydown', (e) => {
 
 if (shareNativeBtn) {
   shareNativeBtn.addEventListener('click', async () => {
-    const payload = getSharePayload();
+    const payload = lastSharePayload || getSharePayload();
     if (!payload || !navigator.share) return;
     try { await navigator.share(payload); } catch (err) {}
   });
 }
 if (shareCopyBtn) {
   shareCopyBtn.addEventListener('click', async () => {
-    const payload = getSharePayload();
+    const payload = lastSharePayload || getSharePayload();
     if (!payload) return;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {

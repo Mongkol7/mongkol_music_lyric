@@ -191,6 +191,8 @@ body::after {
   flex-shrink: 0;
   backdrop-filter: blur(10px) saturate(140%);
   -webkit-backdrop-filter: blur(10px) saturate(140%);
+  position: relative;
+  z-index: 50;
 }
 .dots {
   display: flex;
@@ -263,7 +265,10 @@ body::after {
   border: 1px solid var(--term-border);
   border-radius: 8px;
   padding: 8px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.45),
+    0 0 16px rgba(0, 255, 136, 0.18);
+  z-index: 2600;
   opacity: 0;
   transform: translateY(-6px);
   pointer-events: none;
@@ -299,6 +304,7 @@ body::after {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  scroll-behavior: smooth;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -362,6 +368,8 @@ body::after {
   padding: 16px 24px 12px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .hdr {
@@ -1074,9 +1082,9 @@ body::after {
   opacity: 0;
   transform: translateY(-6px);
   transition:
-    max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.32s ease,
-    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.36s ease,
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: max-height, opacity, transform;
 }
 .lyrics-list-panel.open .lyrics-list-body {
@@ -2425,9 +2433,9 @@ body::after {
   .queue-body,
   .lyrics-list-body {
     transition:
-      max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 0.36s ease,
-      transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.4s ease,
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
