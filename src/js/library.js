@@ -46,6 +46,13 @@ const savePassInput   = $('savePassInput');
 const savePassError   = $('savePassError');
 const savePassCancel  = $('savePassCancel');
 const savePassConfirm = $('savePassConfirm');
+const shareOverlay    = $('shareOverlay');
+const shareTrackEl    = $('shareTrack');
+const shareQrEl       = $('shareQr');
+const shareUrlEl      = $('shareUrl');
+const shareNativeBtn  = $('shareNativeBtn');
+const shareCopyBtn    = $('shareCopyBtn');
+const shareCloseBtn   = $('shareCloseBtn');
 const toastSuccess    = $('toastSuccess');
 const searchWrap   = $('searchWrap');
 const searchBtn    = $('searchBtn');
@@ -309,34 +316,80 @@ if (queueToggle) {
   });
 }
 
-async function shareToCompanion() {
+function getSharePayload() {
   const ytId  = typeof YT_ID_current === 'string' ? YT_ID_current : '';
-  const url   = ytId ? `https://youtu.be/${ytId}` : '';
+  const base  = `${window.location.origin}${window.location.pathname}`;
+  const url   = currentTrackId
+    ? `${base}?track=${encodeURIComponent(currentTrackId)}`
+    : (ytId ? `${base}?yt=${encodeURIComponent(ytId)}` : '');
+  if (!url) return null;
   const title = ($('hdrTrackTitle')?.textContent || 'YouTube Track').trim();
   const artist = ($('hdrArtist')?.textContent || '').trim();
-  const text  = artist ? `${title} — ${artist}` : title;
-  if (!url) return;
+  const text  = artist ? `${title} - ${artist}` : title;
+  return { title, text, url };
+}
+
+function openShareOverlay(payload) {
+  if (!shareOverlay || !payload) return;
+  if (shareTrackEl) shareTrackEl.textContent = payload.text || payload.title || 'Track';
+  if (shareUrlEl) shareUrlEl.textContent = payload.url;
+  if (shareQrEl) {
+    const size = '240x240';
+    shareQrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}&data=${encodeURIComponent(payload.url)}`;
+  }
+  if (shareNativeBtn) {
+    const supported = !!navigator.share;
+    shareNativeBtn.disabled = !supported;
+    shareNativeBtn.textContent = supported ? 'Share' : 'Share';
+  }
+  shareOverlay.classList.add('open');
+}
+
+function closeShareOverlay() {
+  if (!shareOverlay) return;
+  shareOverlay.classList.remove('open');
+}
+
+async function shareToCompanion() {
+  const payload = getSharePayload();
+  if (!payload) return;
   try {
-    if (navigator.share) {
-      await navigator.share({ title, text, url });
-      return;
+    if (navigator.share) await navigator.share(payload);
+  } catch (err) {}
+  openShareOverlay(payload);
+}
+
+
+// ── Load track from shared URL ───────────────────────────────────────────
+async function loadTrackFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search || '');
+    const trackId = params.get('track');
+    const ytId = params.get('yt');
+    if (!trackId && !ytId) return false;
+    const cacheBust = `_ts=${Date.now()}`;
+    let resp = null;
+    if (trackId) {
+      resp = await sbFetch(
+        `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at,listen_count&id=eq.${encodeURIComponent(trackId)}&limit=1&${cacheBust}`,
+        { method: 'GET' },
+      );
+    } else if (ytId) {
+      resp = await sbFetch(
+        `${TRACKS_TABLE}?select=id,title,artist,yt_id,lyrics,created_at,listen_count&yt_id=eq.${encodeURIComponent(ytId)}&limit=1&${cacheBust}`,
+        { method: 'GET' },
+      );
+    }
+    if (resp && resp.ok) {
+      const data = await resp.json();
+      if (data.length) {
+        loadTrackFromData(data[0], { autoplay: false });
+        updateQueueOrderLabel();
+        return true;
+      }
     }
   } catch (err) {}
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(url);
-      showToast('Link copied ✓');
-      return;
-    }
-  } catch (err) {}
-  const ta = document.createElement('textarea');
-  ta.value = url;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  try { document.execCommand('copy'); showToast('Link copied ✓'); } catch (err) {}
-  document.body.removeChild(ta);
+  return false;
 }
 
 function bumpListenCount(trackId) {
@@ -773,15 +826,47 @@ savePassOverlay.addEventListener('keydown', (e) => {
   submitSavePassword();
 });
 
+if (shareNativeBtn) {
+  shareNativeBtn.addEventListener('click', async () => {
+    const payload = getSharePayload();
+    if (!payload || !navigator.share) return;
+    try { await navigator.share(payload); } catch (err) {}
+  });
+}
+if (shareCopyBtn) {
+  shareCopyBtn.addEventListener('click', async () => {
+    const payload = getSharePayload();
+    if (!payload) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(payload.url);
+        showToast('Link copied ✓');
+        return;
+      }
+    } catch (err) {}
+    const ta = document.createElement('textarea');
+    ta.value = payload.url;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('Link copied ✓'); } catch (err) {}
+    document.body.removeChild(ta);
+  });
+}
+if (shareCloseBtn) shareCloseBtn.addEventListener('click', () => closeShareOverlay());
+
 // ── Overlay close handlers ─────────────────────────────────────────────────
 libraryOverlay.addEventListener('click', (e) => { if (e.target === libraryOverlay) closeLibrary(); });
 passOverlay.addEventListener('click',    (e) => { if (e.target === passOverlay)    closePass(); });
+if (shareOverlay) shareOverlay.addEventListener('click', (e) => { if (e.target === shareOverlay) closeShareOverlay(); });
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (libraryOverlay.classList.contains('open')) closeLibrary();
   if (passOverlay.classList.contains('open'))    closePass();
   if (savePassOverlay.classList.contains('open')) closeSavePass();
+  if (shareOverlay && shareOverlay.classList.contains('open')) closeShareOverlay();
 });
 
 // ── Auto-load last track on startup ───────────────────────────────────────

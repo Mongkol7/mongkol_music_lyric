@@ -705,7 +705,8 @@ body::after {
     transition: none;
   }
   .disk-overlay,
-  .queue-body {
+  .queue-body,
+  .lyrics-list-body {
     transition: none;
   }
   .disk-disc {
@@ -850,8 +851,11 @@ body::after {
 .content-row.yt-compact .queue-panel.open .queue-body {
   max-height: 40vh;
 }
-.content-row.yt-compact .lyrics-list-panel {
+.content-row.yt-compact .lyrics-list-panel.open {
   flex: 1.25;
+}
+.content-row.ll-compact .queue-panel.open .queue-body {
+  max-height: 50vh;
 }
 
 /* ── LYRICS LIST PANEL ── */
@@ -859,13 +863,16 @@ body::after {
   background: #0d0f1c;
   border: 1px solid var(--term-border);
   border-radius: 8px;
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: flex-basis 0.35s ease;
+}
+.lyrics-list-panel.open {
+  flex: 1 1 0;
 }
 .queue-panel {
   border: 1px solid var(--term-border);
@@ -990,19 +997,55 @@ body::after {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   position: relative;
   z-index: 3;
   background: #0d0f1c;
+  width: 100%;
+  text-align: left;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
 }
 .lyrics-list-title em {
   color: var(--green);
   font-style: normal;
 }
+.lyrics-list-toggle {
+  font-family: 'Share Tech Mono', monospace;
+  background: transparent;
+}
+.ll-caret {
+  color: var(--muted2);
+  transition: transform 0.25s ease;
+}
+.lyrics-list-panel.open .ll-caret {
+  transform: rotate(180deg);
+}
+
+.lyrics-list-body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.32s ease,
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: max-height, opacity, transform;
+}
+.lyrics-list-panel.open .lyrics-list-body {
+  max-height: 60vh;
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .lyrics-list-scroll {
   flex: 1;
   min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
@@ -1826,6 +1869,59 @@ body::after {
   gap: 8px;
   justify-content: flex-end;
 }
+
+/* Share overlay */
+.share-panel {
+  width: min(420px, 92vw);
+  background: #0b0d1a;
+  border: 1px solid var(--term-border);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 40px 90px rgba(0, 0, 0, 0.9);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.share-title {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.share-track {
+  font-size: 12px;
+  color: var(--white);
+  letter-spacing: 0.04em;
+}
+.share-qr-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0f1222;
+  border: 1px solid var(--term-border);
+  border-radius: 12px;
+  padding: 10px;
+}
+.share-qr {
+  width: min(220px, 70vw);
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  background: #0a0c16;
+}
+.share-url {
+  font-size: 10px;
+  color: var(--muted2);
+  word-break: break-all;
+}
+.share-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .pass-cancel,
 .pass-confirm {
   background: none;
@@ -1840,6 +1936,11 @@ body::after {
 .pass-confirm {
   border-color: #ff3b30;
   color: #ff9b96;
+}
+.pass-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 .pass-confirm.is-loading {
   opacity: 0.7;
@@ -2265,7 +2366,8 @@ body::after {
 
 @media (max-width: 1200px) {
   .yt-stack,
-  .queue-body {
+  .queue-body,
+  .lyrics-list-body {
     transition:
       max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1),
       opacity 0.36s ease,
@@ -2356,11 +2458,20 @@ body::after {
   .content-row.yt-compact .lyrics-col {
     flex: 0 0 240px;
   }
+  .content-row.ll-compact .lyrics-col {
+    flex: 0 0 260px;
+  }
   .content-row.yt-compact .queue-panel.open .queue-body {
     max-height: 220px;
   }
-  .content-row.yt-compact .lyrics-list-panel {
+  .content-row.yt-compact .lyrics-list-panel.open {
     flex: 1.2;
+  }
+  .content-row.ll-compact .queue-panel.open .queue-body {
+    max-height: 260px;
+  }
+  .lyrics-list-panel.open .lyrics-list-body {
+    max-height: 220px;
   }
   .lyrics-col {
     flex: 0 0 185px;
@@ -2430,12 +2541,15 @@ body::after {
     min-height: 155px;
   }
   .lyrics-list-panel {
-    flex: 1 1 0 !important;
+    flex: 0 0 auto;
     min-height: 0 !important;
     width: 100%;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden;
+  }
+  .lyrics-list-panel.open {
+    flex: 1 1 0 !important;
   }
   .lyrics-list-title {
     flex-shrink: 0;
@@ -2554,8 +2668,11 @@ body::after {
     min-height: 140px;
   }
   .lyrics-list-panel {
-    flex: 1 1 0 !important;
+    flex: 0 0 auto;
     min-height: 0 !important;
+  }
+  .lyrics-list-panel.open {
+    flex: 1 1 0 !important;
   }
   .lyric-row-current,
   .lyric-row-prev,

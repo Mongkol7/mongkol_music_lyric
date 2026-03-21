@@ -920,6 +920,10 @@ const ytToggle = $('ytToggle');
 const ytPanel = document.querySelector('.spotify-panel');
 const contentRow = document.querySelector('.content-row');
 const ytTitleBar = ytPanel ? ytPanel.querySelector('.panel-title') : null;
+const lyricsListPanel = document.getElementById('lyricsListPanel');
+const lyricsListToggle = document.getElementById('lyricsListToggle');
+let llOpen = lyricsListPanel ? lyricsListPanel.classList.contains('open') : true;
+if (contentRow && lyricsListPanel) contentRow.classList.toggle('ll-compact', !llOpen);
 if (ytToggle && ytPanel) {
   const toggleYtPanel = () => {
     ytOpen = !ytOpen;
@@ -931,6 +935,13 @@ if (ytToggle && ytPanel) {
     toggleYtPanel();
   });
   if (ytTitleBar) ytTitleBar.addEventListener('click', toggleYtPanel);
+}
+if (lyricsListToggle && lyricsListPanel) {
+  lyricsListToggle.addEventListener('click', () => {
+    llOpen = !llOpen;
+    lyricsListPanel.classList.toggle('open', llOpen);
+    if (contentRow) contentRow.classList.toggle('ll-compact', !llOpen);
+  });
 }
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────
@@ -948,9 +959,8 @@ let clickAudioCtx = null;
 let lastClickAt   = 0;
 
 function playClickSound() {
-  if (!isTouchDevice) return;
   const now = performance.now();
-  if (now - lastClickAt < 60) return;
+  if (now - lastClickAt < 45) return;
   lastClickAt = now;
   try {
     if (!clickAudioCtx) clickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -971,7 +981,7 @@ function hapticTap() {
   try { if (navigator.vibrate) navigator.vibrate([20, 10, 20]); } catch (err) {}
 }
 document.addEventListener('click', (e) => {
-  if (e.target.closest('button, .track-item, .track-load, .track-more, .cfg-trigger, .cfg-import, .cfg-align')) {
+  if (e.target.closest('button, [role=\"button\"], .track-item, .track-load, .track-more, .cfg-trigger, .cfg-import, .cfg-align')) {
     hapticTap();
     playClickSound();
   }

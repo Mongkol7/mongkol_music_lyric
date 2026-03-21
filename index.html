@@ -189,13 +189,18 @@
               </div>
 
               <!-- Lyrics list panel -->
-              <div class="lyrics-list-panel">
-                <div class="lyrics-list-title">
-                  <em>▸ LYRICS</em>
-                  <span style="color: var(--muted2)">— full track</span>
-                </div>
-                <div class="lyrics-list-scroll" id="llScroll">
-                  <div class="lyrics-list-inner" id="llInner"></div>
+              <div class="lyrics-list-panel open" id="lyricsListPanel">
+                <button class="lyrics-list-title lyrics-list-toggle" id="lyricsListToggle">
+                  <span>
+                    <em>▸ LYRICS</em>
+                    <span style="color: var(--muted2)">— full track</span>
+                  </span>
+                  <span class="ll-caret">▾</span>
+                </button>
+                <div class="lyrics-list-body" id="lyricsListBody">
+                  <div class="lyrics-list-scroll" id="llScroll">
+                    <div class="lyrics-list-inner" id="llInner"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -567,6 +572,22 @@
         <div class="pass-actions">
           <button class="pass-cancel" id="savePassCancel">Cancel</button>
           <button class="pass-confirm" id="savePassConfirm">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pass-overlay" id="shareOverlay">
+      <div class="share-panel">
+        <div class="share-title">Share Track</div>
+        <div class="share-track" id="shareTrack">Track</div>
+        <div class="share-qr-wrap">
+          <img class="share-qr" id="shareQr" alt="QR code" />
+        </div>
+        <div class="share-url" id="shareUrl"></div>
+        <div class="share-actions">
+          <button class="pass-confirm" id="shareNativeBtn">Share</button>
+          <button class="pass-cancel" id="shareCopyBtn">Copy Link</button>
+          <button class="pass-cancel" id="shareCloseBtn">Close</button>
         </div>
       </div>
     </div>
