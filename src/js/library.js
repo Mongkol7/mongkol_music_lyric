@@ -418,6 +418,23 @@ function bumpListenCount(trackId) {
   }
 }
 
+async function trackSiteVisit() {
+  try {
+    const sessionKey = 'mongkol_visit_logged';
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, '1');
+
+    await sbFetch('site_visits', {
+      method: 'POST',
+      body: JSON.stringify({
+        page_url: window.location.pathname + window.location.search,
+        user_agent: (navigator.userAgent || '').slice(0, 255),
+        referrer: document.referrer ? document.referrer.slice(0, 255) : 'direct',
+      }),
+    });
+  } catch (err) {}
+}
+
 async function recordListen(trackId) {
   let id = trackId;
   if (!id) {
@@ -438,10 +455,24 @@ async function recordListen(trackId) {
   lastCountedTrackId = id;
   bumpListenCount(id);
   try {
-    await sbFetch('rpc/increment_listen', {
+    const rpcResp = await sbFetch('rpc/increment_listen', {
       method: 'POST',
       body: JSON.stringify({ track_id: id }),
     });
+    if (!rpcResp || !rpcResp.ok) {
+      const getResp = await sbFetch(
+        `${TRACKS_TABLE}?select=listen_count&id=eq.${encodeURIComponent(id)}&limit=1`,
+        { method: 'GET' }
+      );
+      if (getResp && getResp.ok) {
+        const rows = await getResp.json();
+        const currentCount = (rows && rows[0]) ? Number(rows[0].listen_count || 0) : 0;
+        await sbFetch(`${TRACKS_TABLE}?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ listen_count: currentCount + 1 }),
+        });
+      }
+    }
   } catch (err) {}
 }
 

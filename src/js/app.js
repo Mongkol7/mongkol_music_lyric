@@ -23,6 +23,9 @@ if ('mediaSession' in navigator) {
     loadLastTrack(); // restore last-played track from Supabase
   }
   initDevBar(); // start the animated dev credit bar
+  if (typeof trackSiteVisit === 'function') {
+    trackSiteVisit(); // Supabase visitor logging (Brave & adblock proof)
+  }
   setTimeout(() => {
     if (typeof ensureLibraryReady === 'function') ensureLibraryReady();
   }, 900);

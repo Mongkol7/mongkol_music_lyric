@@ -53,9 +53,10 @@ mongkol_ai_app/
 - Share button now shares the current **site URL** with `?track=` (or `?yt=` fallback), includes a QR code overlay, and uses Web Share + copy fallback
 
 ## Analytics & Tracking
+- **Supabase Visitor Tracking**: Brave & adblock-proof session logger (`trackSiteVisit()` in `src/js/library.js`) posting to `site_visits` table.
+- **Supabase Song Listen Tracking**: Automatically increments `listen_count` in `tracks` table on song play (`recordListen()` in `src/js/library.js` with RPC + direct PATCH fallback).
 - Google Tag Manager container: `GTM-N33HCMSF`
 - Google Analytics 4 (GA4) property: `G-JFZZWLHGCM`
-- Direct script + GTM script injected into `<head>` & `<body>` of [`index.html`](file:///d:/Document/CODES%20DEV/Mongkol_Project/mongkol_ai_app/index.html)
 
 ## Supabase
 - URL: `https://uhfukcpnuakhxgzjdqyg.supabase.co`
