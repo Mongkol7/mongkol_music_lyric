@@ -46,11 +46,16 @@ mongkol_ai_app/
 - Swipe-to-delete (mobile) + three-dot delete (desktop) + password prompt (`007`)
 - Volume control for YouTube player
 - Disk toggle now reveals a glassmorphic ambient glow, a clickable/rotating vinyl plus full YouTube thumbnail center
-- Vercel Analytics script injected in `index.html`
+- Google Tag Manager (GTM-N33HCMSF) + Google Analytics 4 (G-JFZZWLHGCM) visitor tracking injected in `index.html`
 - Caption import + language detection + merge mode
 - Auto-align lyrics using ElevenLabs forced alignment (YouTube audio or uploaded audio)
 - YouTube view counts via Data API proxy + caching (server + localStorage)
 - Share button now shares the current **site URL** with `?track=` (or `?yt=` fallback), includes a QR code overlay, and uses Web Share + copy fallback
+
+## Analytics & Tracking
+- Google Tag Manager container: `GTM-N33HCMSF`
+- Google Analytics 4 (GA4) property: `G-JFZZWLHGCM`
+- Direct script + GTM script injected into `<head>` & `<body>` of [`index.html`](file:///d:/Document/CODES%20DEV/Mongkol_Project/mongkol_ai_app/index.html)
 
 ## Supabase
 - URL: `https://uhfukcpnuakhxgzjdqyg.supabase.co`
@@ -92,6 +97,8 @@ mongkol_ai_app/
 - User-scroll auto-scroll lock reduced from 3000ms → 1500ms.
 
 ## Commits (recent)
+- `102ce84` Add Google Analytics 4 tag (G-JFZZWLHGCM) to index.html
+- `e6239b2` Add Google Tag Manager (GTM-N33HCMSF) to index.html
 - `(pending)` Reorganize file structure: extract CSS/JS from index.html into src/
 - `(pending)` Fix lyric timing: remove 180ms setTimeout delay in showLyric
 - `9b3715f` Add audio upload auto align
