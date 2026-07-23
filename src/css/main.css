@@ -235,25 +235,27 @@ body::after {
   position: relative;
 }
 .search-btn {
-  background: none;
-  border: 1px solid var(--term-border);
-  color: var(--muted);
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  color: var(--cyan);
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
   padding: 5px 8px;
   border-radius: 4px;
   cursor: pointer;
   letter-spacing: 0.06em;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.12);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
 }
 .search-btn:hover {
-  color: var(--green);
-  border-color: rgba(0, 255, 136, 0.45);
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+  color: #ffffff;
+  background: rgba(0, 229, 255, 0.22);
+  border-color: #00e5ff;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.65), 0 0 28px rgba(0, 255, 136, 0.35);
+  transform: translateY(-1px);
 }
 
 .search-panel {
