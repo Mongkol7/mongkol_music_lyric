@@ -2835,3 +2835,37 @@ body::after {
     opacity: 0.5;
   }
 }
+
+/* ── Library Stats Bar ── */
+.library-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(13, 16, 29, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono, 'Share Tech Mono', monospace);
+  font-size: 11px;
+}
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: var(--muted, #a0a0b0);
+}
+.stat-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+.stat-val {
+  color: #00f2fe;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.4);
+}
+.stat-val.alt {
+  color: #ff007f;
+  text-shadow: 0 0 8px rgba(255, 0, 127, 0.4);
+}

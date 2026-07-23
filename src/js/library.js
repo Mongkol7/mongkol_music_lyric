@@ -742,6 +742,41 @@ function renderLibraryList(tracks) {
   libraryList.appendChild(frag);
 }
 
+async function updateLibraryStatsUI() {
+  const statWebVisitors = $('statWebVisitors');
+  const statTotalListens = $('statTotalListens');
+
+  if (statTotalListens && Array.isArray(libraryTracksRaw)) {
+    const totalListens = libraryTracksRaw.reduce((sum, t) => sum + Number(t.listen_count || 0), 0);
+    statTotalListens.textContent = totalListens.toLocaleString();
+  }
+
+  if (statWebVisitors) {
+    try {
+      const resp = await sbFetch('site_visits?select=id', {
+        method: 'GET',
+        headers: { Prefer: 'count=exact', Range: '0-0' },
+      });
+      if (resp.ok) {
+        const contentRange = resp.headers.get('content-range');
+        if (contentRange) {
+          const count = contentRange.split('/')[1];
+          if (count && count !== '*') {
+            statWebVisitors.textContent = Number(count).toLocaleString();
+            return;
+          }
+        }
+        const data = await resp.json();
+        if (Array.isArray(data)) statWebVisitors.textContent = data.length.toLocaleString();
+      } else {
+        statWebVisitors.textContent = 'Active';
+      }
+    } catch (err) {
+      statWebVisitors.textContent = 'Active';
+    }
+  }
+}
+
 async function openLibrary() {
   libraryOverlay.classList.add('open');
   closeAllSwipes();
@@ -751,6 +786,7 @@ async function openLibrary() {
     updateCurrentIndex();
     renderLibraryList(libraryTracks);
     libraryStatus.textContent = `Saved tracks: ${libraryTracks.length} (refreshing...)`;
+    updateLibraryStatsUI();
   } else {
     libraryList.innerHTML = '';
     libraryStatus.textContent = 'Loading...';
@@ -763,12 +799,14 @@ async function openLibrary() {
       } else {
         libraryStatus.textContent = `Saved tracks: ${libraryTracksRaw.length}`;
       }
+      updateLibraryStatsUI();
       return;
     }
     libraryTracksRaw = data;
     libraryTracks    = applyLibraryOrder(libraryOrderMode, libraryTracksRaw);
     updateCurrentIndex();
     renderLibraryList(libraryTracks);
+    updateLibraryStatsUI();
     if (queueToggle && queueToggle.closest('.queue-panel')?.classList.contains('open')) {
       renderQueueList(libraryTracks);
     }
@@ -778,6 +816,7 @@ async function openLibrary() {
     } else {
       libraryStatus.textContent = `Saved tracks: ${libraryTracksRaw.length}`;
     }
+    updateLibraryStatsUI();
   }
 }
 
