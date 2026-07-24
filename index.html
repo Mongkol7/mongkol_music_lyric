@@ -561,7 +561,12 @@
           <div class="library-stats-bar" id="libraryStatsBar">
             <div class="stat-pill">
               <span class="stat-icon">👥</span>
-              <span class="stat-label">Visitors:</span>
+              <span class="stat-label">Visitors</span>
+              <select id="visitorTimeframe" class="stat-select" onchange="updateLibraryStatsUI()">
+                <option value="both" selected>Today / Total</option>
+                <option value="today">Today</option>
+                <option value="total">Total</option>
+              </select>
               <strong id="statWebVisitors" class="stat-val">...</strong>
             </div>
             <div class="stat-pill">

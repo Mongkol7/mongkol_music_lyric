@@ -2871,3 +2871,23 @@ body::after {
   color: #ff007f;
   text-shadow: 0 0 8px rgba(255, 0, 127, 0.4);
 }
+.stat-select {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  color: var(--cyan, #00e5ff);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+.stat-select:hover {
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.2);
+}
+.stat-select option {
+  background: #0d0f1c;
+  color: #ffffff;
+}

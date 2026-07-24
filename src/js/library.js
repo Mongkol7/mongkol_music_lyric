@@ -745,6 +745,8 @@ function renderLibraryList(tracks) {
 async function updateLibraryStatsUI() {
   const statWebVisitors = $('statWebVisitors');
   const statTotalListens = $('statTotalListens');
+  const timeframeSelect = $('visitorTimeframe');
+  const mode = timeframeSelect ? timeframeSelect.value : 'both';
 
   if (statTotalListens && Array.isArray(libraryTracksRaw)) {
     const totalListens = libraryTracksRaw.reduce((sum, t) => sum + Number(t.listen_count || 0), 0);
@@ -753,23 +755,48 @@ async function updateLibraryStatsUI() {
 
   if (statWebVisitors) {
     try {
-      const resp = await sbFetch('site_visits?select=id', {
-        method: 'GET',
-        headers: { Prefer: 'count=exact', Range: '0-0' },
-      });
-      if (resp.ok) {
+      const getCountFromResp = async (resp) => {
+        if (!resp || !resp.ok) return null;
         const contentRange = resp.headers.get('content-range');
         if (contentRange) {
-          const count = contentRange.split('/')[1];
-          if (count && count !== '*') {
-            statWebVisitors.textContent = Number(count).toLocaleString();
-            return;
-          }
+          const countStr = contentRange.split('/')[1];
+          if (countStr && countStr !== '*') return Number(countStr);
         }
         const data = await resp.json();
-        if (Array.isArray(data)) statWebVisitors.textContent = data.length.toLocaleString();
+        return Array.isArray(data) ? data.length : 0;
+      };
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayISO = todayStart.toISOString();
+
+      let totalCount = null;
+      let todayCount = null;
+
+      if (mode === 'total' || mode === 'both') {
+        const totalResp = await sbFetch('site_visits?select=id', {
+          method: 'GET',
+          headers: { Prefer: 'count=exact', Range: '0-0' },
+        });
+        totalCount = await getCountFromResp(totalResp);
+      }
+
+      if (mode === 'today' || mode === 'both') {
+        const todayResp = await sbFetch(`site_visits?select=id&created_at=gte.${encodeURIComponent(todayISO)}`, {
+          method: 'GET',
+          headers: { Prefer: 'count=exact', Range: '0-0' },
+        });
+        todayCount = await getCountFromResp(todayResp);
+      }
+
+      if (mode === 'today') {
+        statWebVisitors.textContent = todayCount !== null ? `${todayCount.toLocaleString()} Today` : 'Active';
+      } else if (mode === 'total') {
+        statWebVisitors.textContent = totalCount !== null ? `${totalCount.toLocaleString()} Total` : 'Active';
       } else {
-        statWebVisitors.textContent = 'Active';
+        const tStr = todayCount !== null ? todayCount.toLocaleString() : '0';
+        const totStr = totalCount !== null ? totalCount.toLocaleString() : '0';
+        statWebVisitors.textContent = `${tStr} Today / ${totStr} Total`;
       }
     } catch (err) {
       statWebVisitors.textContent = 'Active';
